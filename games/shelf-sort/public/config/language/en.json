@@ -1,0 +1,65 @@
+{
+  "lang": "en",
+  "documentTitle": "Shelf Sort",
+  "game": {
+    "title": "Shelf Sort",
+    "tagline": "Fill every shelf with three matching goods"
+  },
+  "loading": {
+    "progress": "Loading {pct}%",
+    "enter": "Enter game"
+  },
+  "buttons": {
+    "play": "Play",
+    "continue": "Continue",
+    "undo": "Undo",
+    "restart": "Restart",
+    "levels": "Levels",
+    "next": "Next level",
+    "replay": "Replay",
+    "close": "Close",
+    "mute": "Mute sound",
+    "unmute": "Unmute sound",
+    "language": "Change language"
+  },
+  "hud": {
+    "level": "Level",
+    "moves": "Moves"
+  },
+  "goods": {
+    "milk": "Milk",
+    "soda": "Soda",
+    "cereal": "Cereal",
+    "jam": "Jam",
+    "tuna": "Tuna",
+    "juice": "Juice",
+    "chips": "Chips",
+    "soap": "Soap"
+  },
+  "result": {
+    "win": "Shelves sorted!",
+    "stars": "{n} of 3 stars",
+    "score": "Moves {moves} · Par {par}"
+  },
+  "levels": {
+    "title": "Levels",
+    "level": "Level {n}",
+    "locked": "Locked",
+    "best": "Best {n} stars",
+    "unplayed": "Not cleared yet"
+  },
+  "a11y": {
+    "slot": "Shelf {shelf}, slot {slot}: {content}",
+    "slotSelected": "Shelf {shelf}, slot {slot}: {content}, lifted",
+    "empty": "empty",
+    "boardLabel": "Shelves",
+    "help": "Tap a goods item to lift it, then tap an empty slot to place it; tap the lifted item again to put it down. Arrow keys move between slots, Enter or Space lifts and places, Z undoes a move, R restarts the level.",
+    "selected": "Lifted {name}.",
+    "placed": "Placed {name}.",
+    "putDown": "Put {name} back down.",
+    "cleared": "Shelf of {name} sorted.",
+    "won": "Level complete in {moves} moves, {stars} of 3 stars.",
+    "nothing": "That slot is empty.",
+    "titleDemo": "Title screen: the game is sorting itself."
+  }
+}

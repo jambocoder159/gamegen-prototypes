@@ -13,7 +13,7 @@ import { useViewport } from './platform/layout';
 import { useReducedMotion } from './platform/reducedMotion';
 import { LoadingScreen } from './game/LoadingScreen';
 import { TitleScreen } from './game/TitleScreen';
-import { GameScreen } from './game/GameScreen';
+import { GardenScreen } from './game/GardenScreen';
 import { Art } from './game/components/Art';
 
 type Phase = 'loading' | 'ready';
@@ -21,19 +21,15 @@ type Phase = 'loading' | 'ready';
 function GameRoot() {
   const vp = useViewport();
   const reduced = useReducedMotion();
-  const [play, setPlay] = useState<{ on: boolean; level: number }>({ on: false, level: 1 });
+  const [playing, setPlaying] = useState(false);
   const bgKey: ImageKey = vp.layout === 'portrait' ? 'bgPortrait' : 'bgBase';
   return (
     <div className={`app app--${vp.layout}`}>
       <Art imgKey={bgKey} alt="" className="app__bg" />
-      {play.on ? (
-        <GameScreen layout={vp.layout} reduced={reduced} startLevel={play.level} />
+      {playing ? (
+        <GardenScreen layout={vp.layout} reduced={reduced} />
       ) : (
-        <TitleScreen
-          layout={vp.layout}
-          reduced={reduced}
-          onPlay={(level) => setPlay({ on: true, level })}
-        />
+        <TitleScreen layout={vp.layout} reduced={reduced} onPlay={() => setPlaying(true)} />
       )}
     </div>
   );

@@ -1,9 +1,9 @@
 {
   "lang": "en",
-  "documentTitle": "Shelf Sort",
+  "documentTitle": "Tap Garden",
   "game": {
-    "title": "Shelf Sort",
-    "tagline": "Fill every shelf with three matching goods"
+    "title": "Tap Garden",
+    "tagline": "Tap the pot, grow dew, merge your way to the Golden World Tree"
   },
   "loading": {
     "progress": "Loading {pct}%",
@@ -11,55 +11,69 @@
   },
   "buttons": {
     "play": "Play",
-    "continue": "Continue",
-    "undo": "Undo",
-    "restart": "Restart",
-    "levels": "Levels",
-    "next": "Next level",
-    "replay": "Replay",
-    "close": "Close",
+    "tapPot": "Tap the magic pot to collect dew",
+    "buySeed": "Buy seed",
+    "buySeedAria": "Buy seed, costs {cost} dew",
+    "upgrade": "Tap power",
+    "upgradeAria": "Upgrade tap power, costs {cost} dew",
+    "reset": "Reset",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
     "language": "Change language"
   },
   "hud": {
-    "level": "Level",
-    "moves": "Moves"
+    "dew": "Dew",
+    "rate": "Per second",
+    "perSec": "{n}/s"
   },
-  "goods": {
-    "milk": "Milk",
-    "soda": "Soda",
-    "cereal": "Cereal",
-    "jam": "Jam",
-    "tuna": "Tuna",
-    "juice": "Juice",
-    "chips": "Chips",
-    "soap": "Soap"
+  "plant": {
+    "1": "Seedling",
+    "2": "Clover",
+    "3": "Daisy",
+    "4": "Tulip",
+    "5": "Sunflower",
+    "6": "Toadstool",
+    "7": "Cactus Flower",
+    "8": "Bonsai",
+    "9": "Golden World Tree"
   },
-  "result": {
-    "win": "Shelves sorted!",
-    "stars": "{n} of 3 stars",
-    "score": "Moves {moves} · Par {par}"
+  "dex": {
+    "title": "Plant collection",
+    "found": "{name}: discovered",
+    "missing": "{name}: not discovered yet"
   },
-  "levels": {
-    "title": "Levels",
-    "level": "Level {n}",
-    "locked": "Locked",
-    "best": "Best {n} stars",
-    "unplayed": "Not cleared yet"
+  "offline": {
+    "title": "Welcome back!",
+    "body": "Your garden kept dripping dew while you were away.",
+    "collect": "Collect"
+  },
+  "celebrate": {
+    "title": "Golden World Tree!",
+    "body": "You grew the legendary Golden World Tree. The garden keeps growing — enjoy!",
+    "continue": "Keep growing"
+  },
+  "reset": {
+    "title": "Reset progress?",
+    "body": "This clears your garden, dew and upgrades. It cannot be undone.",
+    "confirm": "Reset",
+    "cancel": "Cancel"
   },
   "a11y": {
-    "slot": "Shelf {shelf}, slot {slot}: {content}",
-    "slotSelected": "Shelf {shelf}, slot {slot}: {content}, lifted",
-    "empty": "empty",
-    "boardLabel": "Shelves",
-    "help": "Tap a goods item to lift it, then tap an empty slot to place it; tap the lifted item again to put it down. Arrow keys move between slots, Enter or Space lifts and places, Z undoes a move, R restarts the level.",
-    "selected": "Lifted {name}.",
-    "placed": "Placed {name}.",
-    "putDown": "Put {name} back down.",
-    "cleared": "Shelf of {name} sorted.",
-    "won": "Level complete in {moves} moves, {stars} of 3 stars.",
-    "nothing": "That slot is empty.",
-    "titleDemo": "Title screen: the game is sorting itself."
+    "boardLabel": "Garden, 16 plots",
+    "help": "Tap the pot to collect dew. Buy seeds, then tap a plant to select it and tap a matching plant to merge them into the next level. Tap an empty plot to move a selected plant. Keys: arrow keys move between plots, Enter or Space select and act, T taps the pot, B buys a seed, U upgrades tap power.",
+    "plot": "Plot {n}: {name}, level {level}",
+    "plotSelected": "Plot {n}: {name}, level {level}, selected",
+    "plotEmpty": "Plot {n}: empty",
+    "selected": "Selected {name}, level {level}.",
+    "deselected": "Selection cleared.",
+    "moved": "Plant moved.",
+    "merged": "Merged into {name}, level {level}.",
+    "newMax": "New plant discovered: {name}, level {level}!",
+    "bought": "Seed planted.",
+    "upgraded": "Tap power upgraded to level {level}.",
+    "full": "The garden is full or you need more dew.",
+    "nothing": "Nothing happened.",
+    "dewTotal": "{n} dew",
+    "titleDemo": "Title screen: the garden is playing itself."
   }
 }

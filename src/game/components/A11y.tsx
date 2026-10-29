@@ -1,7 +1,9 @@
-// Screen-reader support: the in-game help text and a polite aria-live region that
-// announces the result of each action. All strings are localised.
+// Screen-reader support: the in-game help/keys text, a polite live region that
+// announces the result of each action, and a separate polite region for the dew
+// total (refreshed at most once per second so it does not chatter).
 import { useI18n } from '../../i18n';
-import type { GameEvent } from '../useGame';
+import { formatDew } from '../format';
+import type { GameEvent } from '../useGarden';
 
 export function Help() {
   const { t } = useI18n();
@@ -12,22 +14,31 @@ export function Announcer({ event }: { event: GameEvent | null }) {
   const { t } = useI18n();
   let message = '';
   if (event) {
-    const name = event.name ? t(`goods.${event.name}`) : '';
+    const name = event.level ? t(`plant.${event.level}`) : '';
     switch (event.kind) {
       case 'selected':
-        message = t('a11y.selected', { name });
+        message = t('a11y.selected', { name, level: event.level ?? 0 });
         break;
-      case 'placed':
-        message = t('a11y.placed', { name });
+      case 'deselected':
+        message = t('a11y.deselected');
         break;
-      case 'putDown':
-        message = t('a11y.putDown', { name });
+      case 'moved':
+        message = t('a11y.moved');
         break;
-      case 'cleared':
-        message = t('a11y.cleared', { name });
+      case 'merged':
+        message = t('a11y.merged', { name, level: event.level ?? 0 });
         break;
-      case 'won':
-        message = t('a11y.won', { moves: event.moves ?? 0, stars: event.stars ?? 0 });
+      case 'newMax':
+        message = t('a11y.newMax', { name, level: event.level ?? 0 });
+        break;
+      case 'bought':
+        message = t('a11y.bought');
+        break;
+      case 'upgraded':
+        message = t('a11y.upgraded', { level: event.level ?? 0 });
+        break;
+      case 'full':
+        message = t('a11y.full');
         break;
       case 'nothing':
         message = t('a11y.nothing');
@@ -37,6 +48,15 @@ export function Announcer({ event }: { event: GameEvent | null }) {
   return (
     <div className="sr-only" aria-live="polite" aria-atomic="true">
       {message ? `${message} ` : ''}
+    </div>
+  );
+}
+
+export function DewLive({ dew }: { dew: number }) {
+  const { t, lang } = useI18n();
+  return (
+    <div className="sr-only" aria-live="polite" aria-atomic="true">
+      {t('a11y.dewTotal', { n: formatDew(dew, lang) })}
     </div>
   );
 }

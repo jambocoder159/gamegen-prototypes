@@ -1,6 +1,9 @@
 // Base button: a real <button> that plays sfx_hover on pointer-enter and
 // sfx_click on press. Used for text buttons and (via IconButton) icon buttons.
-import type { ReactNode } from 'react';
+// `dimmed` marks a button whose action is currently unavailable: it stays
+// focusable and reports aria-disabled, dims via opacity, and its handler gives
+// feedback rather than failing silently.
+import type { ReactNode, RefObject } from 'react';
 import { useAudio } from '../../platform/AudioContext';
 import { Art } from './Art';
 import type { ImageKey } from '../../config/assets';
@@ -10,18 +13,32 @@ interface ButtonProps {
   className?: string;
   ariaLabel?: string;
   ariaPressed?: boolean;
+  dimmed?: boolean;
   title?: string;
+  buttonRef?: RefObject<HTMLButtonElement | null>;
   children: ReactNode;
 }
 
-export function Button({ onClick, className, ariaLabel, ariaPressed, title, children }: ButtonProps) {
+export function Button({
+  onClick,
+  className,
+  ariaLabel,
+  ariaPressed,
+  dimmed,
+  title,
+  buttonRef,
+  children,
+}: ButtonProps) {
   const { manager } = useAudio();
+  const cls = `${className ?? ''}${dimmed ? ' is-dim' : ''}`.trim();
   return (
     <button
       type="button"
-      className={className}
+      ref={buttonRef}
+      className={cls || undefined}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
+      aria-disabled={dimmed || undefined}
       title={title ?? ariaLabel}
       onPointerEnter={() => manager.playSfx('sfxHover')}
       onClick={() => {

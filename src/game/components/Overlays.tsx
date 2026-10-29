@@ -1,67 +1,38 @@
-// Win overlay (star rating + Next / Replay / Levels, clerk cheering) and the
-// level-picker overlay (12 levels, locked/unlocked, best stars).
+// Modal overlays: the "welcome back" offline-earnings greeting, the once-only
+// Golden World Tree celebration, and the reset-progress confirmation. Each is a
+// real dialog with a localised accessible name; Escape / the close button
+// dismiss. Focus moves to the dialog's primary button on open.
+
+import { useEffect, useRef } from 'react';
 import { useI18n } from '../../i18n';
-import { LEVEL_COUNT, type Level } from '../levels';
-import type { Progress } from '../progress';
-import type { WinInfo } from '../useGame';
+import { formatDew } from '../format';
 import { Button } from './Button';
 import { Art } from './Art';
+import { Mascot } from './Mascot';
 
-function Stars({ value, size }: { value: number; size: 'lg' | 'sm' }) {
-  return (
-    <div className={`stars stars--${size}`} aria-hidden>
-      {[0, 1, 2].map((i) => (
-        <Art
-          key={i}
-          imgKey="iconStar"
-          alt=""
-          className={`stars__star${i < value ? '' : ' stars__star--off'}`}
-        />
-      ))}
-    </div>
-  );
+function useAutoFocus() {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
+  return ref;
 }
 
-export function WinOverlay({
-  win,
-  levelNumber,
-  reduced,
-  onNext,
-  onReplay,
-  onLevels,
-}: {
-  win: WinInfo;
-  levelNumber: number;
-  reduced: boolean;
-  onNext: () => void;
-  onReplay: () => void;
-  onLevels: () => void;
-}) {
-  const { t } = useI18n();
-  const canNext = levelNumber < LEVEL_COUNT;
+export function OfflineDialog({ amount, onCollect }: { amount: number; onCollect: () => void }) {
+  const { t, lang } = useI18n();
+  const btnRef = useAutoFocus();
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('result.win')}>
-      <div className="panel panel--win">
-        <Art
-          imgKey="clerk3"
-          alt=""
-          className={`panel__clerk${reduced ? '' : ' panel__clerk--cheer'}`}
-        />
-        <h2 className="panel__title">{t('result.win')}</h2>
-        <Stars value={win.stars} size="lg" />
-        <p className="panel__stars">{t('result.stars', { n: win.stars })}</p>
-        <p className="panel__score">{t('result.score', { moves: win.moves, par: win.par })}</p>
+    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('offline.title')}>
+      <div className="panel">
+        <h2 className="panel__title">{t('offline.title')}</h2>
+        <div className="panel__reward">
+          <Art imgKey="iconDew" alt="" className="panel__dew" />
+          <span className="panel__amount">{formatDew(amount, lang)}</span>
+        </div>
+        <p className="panel__text">{t('offline.body')}</p>
         <div className="panel__actions">
-          {canNext && (
-            <Button className="btn btn--primary" onClick={onNext}>
-              {t('buttons.next')}
-            </Button>
-          )}
-          <Button className="btn" onClick={onReplay}>
-            {t('buttons.replay')}
-          </Button>
-          <Button className="btn" onClick={onLevels}>
-            {t('buttons.levels')}
+          <Button className="btn btn--primary" onClick={onCollect} buttonRef={btnRef}>
+            {t('offline.collect')}
           </Button>
         </div>
       </div>
@@ -69,50 +40,54 @@ export function WinOverlay({
   );
 }
 
-export function LevelPicker({
-  levels,
-  progress,
-  current,
-  onPick,
-  onClose,
-}: {
-  levels: Level[];
-  progress: Progress;
-  current: number; // current level number
-  onPick: (n: number) => void;
-  onClose: () => void;
-}) {
+export function CelebrationOverlay({ reduced, onClose }: { reduced: boolean; onClose: () => void }) {
   const { t } = useI18n();
+  const btnRef = useAutoFocus();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('levels.title')}>
-      <div className="panel panel--levels">
-        <h2 className="panel__title">{t('levels.title')}</h2>
-        <ul className="levelgrid">
-          {levels.map((lv) => {
-            const unlocked = lv.number <= progress.unlocked;
-            const stars = progress.stars[lv.index];
-            const isCurrent = lv.number === current;
-            return (
-              <li key={lv.number}>
-                <Button
-                  className={`levelcell${unlocked ? '' : ' levelcell--locked'}${isCurrent ? ' levelcell--current' : ''}`}
-                  ariaLabel={
-                    unlocked
-                      ? `${t('levels.level', { n: lv.number })}, ${stars > 0 ? t('levels.best', { n: stars }) : t('levels.unplayed')}`
-                      : `${t('levels.level', { n: lv.number })}, ${t('levels.locked')}`
-                  }
-                  onClick={() => unlocked && onPick(lv.number)}
-                >
-                  <span className="levelcell__n">{lv.number}</span>
-                  <Stars value={unlocked ? stars : 0} size="sm" />
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
+    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('celebrate.title')}>
+      <div className="panel panel--celebrate">
+        <Mascot reduced={reduced} className="panel__mascot" />
+        <Art imgKey="plant9" alt="" className="panel__tree" />
+        <h2 className="panel__title">{t('celebrate.title')}</h2>
+        <p className="panel__text">{t('celebrate.body')}</p>
         <div className="panel__actions">
-          <Button className="btn" onClick={onClose}>
-            {t('buttons.close')}
+          <Button className="btn btn--primary" onClick={onClose} buttonRef={btnRef}>
+            {t('celebrate.continue')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ResetConfirm({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  const { t } = useI18n();
+  const btnRef = useAutoFocus();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('reset.title')}>
+      <div className="panel">
+        <h2 className="panel__title">{t('reset.title')}</h2>
+        <p className="panel__text">{t('reset.body')}</p>
+        <div className="panel__actions">
+          <Button className="btn" onClick={onCancel} buttonRef={btnRef}>
+            {t('reset.cancel')}
+          </Button>
+          <Button className="btn btn--danger" onClick={onConfirm}>
+            {t('reset.confirm')}
           </Button>
         </div>
       </div>

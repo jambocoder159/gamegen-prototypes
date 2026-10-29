@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'tap-garden';
-const DEFAULT_PORT = 4186;
+const DEFAULT_PORT = 4226;
 const LANG_KEY = 'tap-garden.lang';
 const SCREENS = [
   { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },

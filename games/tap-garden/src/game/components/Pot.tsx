@@ -25,12 +25,14 @@ export interface TapOutcome {
 
 export function Pot({
   onTap,
+  autoRate, autoValue, floating,
   bloom,
   reduced,
   label,
   buttonRef,
 }: {
   onTap: () => TapOutcome;
+  autoRate: number; autoValue: number; floating: boolean;
   bloom: number;
   reduced: boolean;
   label: string;
@@ -56,21 +58,28 @@ export function Pot({
     return id;
   };
 
-  const handleTap = useCallback(() => {
-    const { gained, crit } = onTap();
+  const showTap = useCallback(({ gained, crit }: TapOutcome) => {
     frameTimers.current.forEach(id => window.clearTimeout(id));
     frameTimers.current.forEach(id => timers.current.delete(id));
-    manager.playSfx('sfxClick');
     setFrame(2);
     frameTimers.current = [schedule(() => setFrame(3), 80), schedule(() => setFrame(1), 180)];
     const id = ++floatId.current;
-    setFloats((f) => [...f.slice(-5), { id, text: `+${formatNumber(gained)}`, crit }]);
+    if (floating) setFloats((f) => [...f.slice(-3), { id, text: `+${formatNumber(gained)}`, crit }]);
     schedule(() => setFloats((f) => f.filter((x) => x.id !== id)), 900);
     if (crit) {
       setBurst((b) => b + 1);
       schedule(() => setBurst(0), 500);
     }
-  }, [onTap, manager]);
+  }, [floating]);
+  const handleTap = () => { manager.playSfx('sfxClick'); showTap(onTap()); };
+  useEffect(() => {
+    if (autoRate <= 0) return;
+    // At most two visual taps/sec, aggregating the income between cues.
+    const ms = Math.max(500, 1000 / autoRate);
+    const id = window.setInterval(() => showTap({ gained: autoValue * autoRate * ms / 1000, crit: false }), ms);
+    return () => window.clearInterval(id);
+  }, [autoRate, autoValue, showTap]);
+  useEffect(() => { if (!floating) setFloats([]); }, [floating]);
 
   const lastBloom = useRef(bloom);
   useEffect(() => {
@@ -83,7 +92,7 @@ export function Pot({
   }, [bloom]);
 
   return (
-    <button type="button" ref={buttonRef} className="pot" aria-label={label} onPointerEnter={() => manager.playSfx('sfxHover')} onClick={handleTap}>
+    <button type="button" ref={buttonRef} className={`pot${burst > 0 ? ' pot--crit' : ''}`} aria-label={label} onPointerEnter={() => manager.playSfx('sfxHover')} onClick={handleTap}>
       <Art imgKey={potFrameKey(frame)} alt="" className="pot__img" />
       {burst > 0 && (
         <span className={`pot__burst${reduced ? ' pot__burst--still' : ''}`} aria-hidden>
@@ -94,6 +103,7 @@ export function Pot({
         {floats.map((f) => (
           <span
             key={f.id}
+            style={{ left: `${35 + f.id % 3 * 15}%`, top: `${10 + f.id % 2 * 18}%` }}
             className={`pot__float${f.crit ? ' pot__float--crit' : ''}${
               reduced ? ' pot__float--still' : ''
             }`}

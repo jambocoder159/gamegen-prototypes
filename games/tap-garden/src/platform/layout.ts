@@ -18,9 +18,9 @@ function read(): Viewport {
   const aspect = w / h; // width / height
   // Tall phones are "portrait"; the foldable/tablet band around square (and mild
   // landscape) is "near-square"; clearly wide screens are "wide". Thresholds are
-  // tuned so the spec's resize matrix maps as intended (e.g. 626×890 → near-sq).
+  // follow the portrait cutoff (height / width ≥ 1.15).
   let layout: Layout;
-  if (aspect < 0.66) layout = 'portrait';
+  if (aspect <= 1 / 1.15) layout = 'portrait';
   else if (aspect <= 1.5) layout = 'nearSquare';
   else layout = 'wide';
   return { w, h, layout };

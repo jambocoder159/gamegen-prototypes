@@ -8,9 +8,11 @@ import { formatNumber } from '../format';
 import { Button } from './Button';
 import { Art } from './Art';
 import { Mascot } from './Mascot';
+import type { GameState } from '../logic';
+import { OfflineRatio } from './GardenExtras';
 import { Dialog } from './Dialog';
 
-export function OfflineDialog({ amount, onCollect }: { amount: number; onCollect: () => void }) {
+export function OfflineDialog({ state, amount, onCollect }: { state: GameState; amount: number; onCollect: () => void }) {
   const { t } = useI18n();
   return (
     <Dialog title={t('offline.title')} onClose={onCollect}>
@@ -20,6 +22,7 @@ export function OfflineDialog({ amount, onCollect }: { amount: number; onCollect
           <span className="panel__amount">{formatNumber(amount)}</span>
         </div>
         <p className="panel__text">{t('offline.body')}</p>
+        <OfflineRatio state={state} />
         <div className="panel__actions">
           <Button className="btn btn--primary" onClick={onCollect}>
             {t('offline.collect')}

@@ -16,6 +16,9 @@ export function Announcer({ event }: { event: GameEvent | null }) {
   if (event) {
     const name = event.level ? t(`plant.${event.level}`) : '';
     switch (event.kind) {
+      case 'plotBought': message = t('upgrade.plotBought', { n: (event.plot ?? 0) + 1 }); break;
+      case 'bulkMerged': message = t('extra.mergedCount', { n: event.level ?? 0 }); break;
+      case 'needDew': message = t('extra.needDew'); break;
       case 'selected':
         message = t('a11y.selected', { name, level: event.level ?? 0 });
         break;

@@ -52,7 +52,7 @@ eq('format negative', f(-1500), '-1.5K');
 
 // --- config formulas ---------------------------------------------------------
 approx('incomeForLevel 1', Config.incomeForLevel(1), 0.5);
-approx('incomeForLevel 9', Config.incomeForLevel(9), 0.5 * 2 ** 8);
+approx('incomeForLevel 9', Config.incomeForLevel(9), Config.INCOME_BASE * Config.INCOME_GROWTH ** 8);
 eq('incomeForLevel 0', Config.incomeForLevel(0), 0);
 eq('stageGoal 1', Config.stageGoal(1), Config.STAGE_BASE);
 ok('isBossStage 5', Config.isBossStage(5));
@@ -280,6 +280,54 @@ globalThis.localStorage = { getItem() { throw Error('unavailable'); }, setItem()
 ok('unavailable storage reads safely', Save.loadSave() === null);
 Save.writeSave(s, false, 123); Save.clearSave();
 ok('unavailable storage writes and resets safely', true);
+
+// Merge production must rise at every supported tier (including sunflowers).
+for (let lv = 1; lv < Config.MAX_LEVEL; lv++) {
+  s = Logic.newGame(); s.plots[0] = lv; s.plots[1] = lv;
+  const result = Logic.merge(s,0,1);
+  ok(`tier ${lv} merge raises production by at least 20%`, Logic.derive(result.state).passivePerSec >= Logic.derive(s).passivePerSec * 1.2);
+}
+s = Logic.newGame(); s.plots[0] = 1; s.plots[1] = 1; s.plots[2] = 2;
+const pass = Logic.mergeAll(s);
+eq('merge all is one pass without reusing new plants', pass.merged, 1);
+eq('merge all preserves unpaired plant', pass.state.plots[2], 2);
+eq('merge all counts merge', pass.state.stats.merges, 1);
+ok('auto merge locked at stage 1', !Logic.toggleAutoMerge(s).autoMerge);
+s = {...s, stage:2, maxStage:2};
+s = Logic.toggleAutoMerge(s);
+ok('auto merge unlocks at stage 2', s.autoMerge);
+const emptyAuto = Logic.tick(s,1);
+eq('auto merge waits until full',emptyAuto.state.stats.merges,0);
+for (const i of Config.unlockedPlots(s.unlocked)) s.plots[i] = 1;
+const auto = Logic.tick(s,1);
+ok('full garden auto merges matching pairs', auto.state.stats.merges === 4 && Logic.hasEmptyPlot(auto.state));
+ok('auto merge can be switched off', !Logic.toggleAutoMerge(s).autoMerge);
+s = Logic.newGame(); s.plots[0] = 1; s.upgrades[Config.U.auto] = 2; s.upgrades[Config.U.crit] = 50;
+const clicked = Logic.tap(s);
+eq('tap counter increments',clicked.state.stats.taps,1);
+eq('crit counter follows actual crit',clicked.state.stats.crits,clicked.crit ? 1 : 0);
+approx('click source equals tap earned',clicked.state.runStats.click,clicked.gained);
+const elapsed = Logic.tick(clicked.state,10).state;
+ok('auto and passive counters both accrue',elapsed.stats.auto > 0 && elapsed.stats.passive > 0);
+approx('income accounting reconciles',elapsed.stats.dew,elapsed.stats.click + elapsed.stats.auto + elapsed.stats.passive + elapsed.stats.bonus + elapsed.stats.offline);
+approx('play time advances',elapsed.stats.seconds,10);
+const away = Logic.applyOffline(elapsed,60).state;
+ok('offline earned is persisted in totals',away.stats.offline > 0 && away.stats.dew > elapsed.stats.dew);
+const resetRun = Rebirth.applyRebirth({...away,maxStage:10}).state;
+eq('rebirth clears run counters',resetRun.runStats.dew,0);
+eq('rebirth retains lifetime counters',resetRun.stats.taps,1);
+installLocalStorage(); Save.writeSave(away,false,123);
+const restoredStats = Save.loadSave().state;
+eq('v2 save round-trips all counters',JSON.stringify(restoredStats.stats),JSON.stringify(away.stats));
+localStorage.setItem('tap-garden.save',JSON.stringify({v:2,stats:{taps:-5,crits:'bad',dew:1e309},runStats:[]}));
+const safeCounters = Save.loadSave().state;
+ok('malformed counters migrate safely',Object.values(safeCounters.stats).every(v=>Number.isFinite(v) && v >= 0));
+localStorage.setItem('tap-garden.save',JSON.stringify({v:2,dew:77}));
+ok('older v2 saves initialize new counters',Save.loadSave().state.stats.taps === 0 && Save.loadSave().state.dew === 77);
+localStorage.setItem('tap-garden.save',' '.repeat(50001));
+ok('oversized saves reset safely',Save.loadSave() === null);
+ok('seed curve is slower than original',Config.seedCost(50,0) < 10 * 1.1**50);
+ok('seed curve soft cap is linear and increasing',Config.seedCost(200,0) > Config.seedCost(100,0) && Config.seedCost(200,0) < Config.seedCost(100,0)*5);
 
 console.log(`\n${passed}/${passed + failed} logic tests passed.`);
 if (failed) process.exit(1);

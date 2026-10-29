@@ -8,6 +8,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  hasEmptyPlot as hasSpace,
+  mergeAll as mergeAllFn,
+  toggleAutoMerge as toggleAutoMergeFn,
   newGame,
   derive,
   tap,
@@ -23,11 +26,12 @@ import { buyUpgrade as buyUpgradeFn, buyPlot as buyPlotFn } from './upgrades';
 import { drawRelic as drawRelicFn, buyRelic as buyRelicFn, upgradeRelic as upgradeRelicFn } from './relics';
 import { applyRebirth } from './rebirth';
 import { loadSave, writeSave, clearSave } from './save';
-import { MAX_LEVEL, SAVE_INTERVAL_MS, OFFLINE_MIN_SEC, isPlotUnlocked } from './config';
+import { MAX_LEVEL, SAVE_INTERVAL_MS, OFFLINE_MIN_SEC, PLOT_UNLOCK_ORDER, isPlotUnlocked } from './config';
 import type { AudioManager } from '../platform/audio';
 
 export type EventKind =
   | 'selected' | 'deselected' | 'moved' | 'merged' | 'bought'
+  | 'plotBought' | 'needDew' | 'bulkMerged'
   | 'newMax' | 'full' | 'nothing' | 'freeSeed';
 
 export interface GameEvent {
@@ -64,6 +68,8 @@ export interface UseGarden {
   d: Derived;
   selected: number | null;
   bloom: number;
+  mergeAll: () => void;
+  toggleAutoMerge: () => void;
   event: GameEvent | null;
   stageToast: StageToast | null;
   liveDew: number;
@@ -136,6 +142,7 @@ export function useGarden(audio: AudioManager): UseGarden {
   const commit = useCallback((next: GameState) => {
     gsRef.current = next;
     setSnap(next);
+    writeSave(next, celebratedRef.current, Date.now());
   }, []);
 
   const maybeCelebrate = useCallback(() => {
@@ -150,8 +157,14 @@ export function useGarden(audio: AudioManager): UseGarden {
       let dt = (now - last) / 1000;
       last = now;
       if (dt > 0.25) dt = 0.25;
+      const previousMerges = gsRef.current.stats.merges;
       const res = tick(gsRef.current, dt);
       gsRef.current = res.state;
+      const merged = res.state.stats.merges - previousMerges;
+      if (merged > 0) {
+        setSelected(null); setBloom(b => b + 1); audio.playSfx('sfxMerge');
+        emit('bulkMerged', merged); maybeCelebrate();
+      }
       if (res.info.stageAdvanced > 0) noteInfo(res.info, res.state);
       raf = requestAnimationFrame(frame);
     };
@@ -172,7 +185,7 @@ export function useGarden(audio: AudioManager): UseGarden {
       window.clearInterval(commitTimer);
       window.clearInterval(liveTimer);
     };
-  }, [audio, noteInfo, maybeCelebrate]);
+  }, [audio, noteInfo, maybeCelebrate, emit]);
 
   // --- autosave ---------------------------------------------------------------
   useEffect(() => {
@@ -208,7 +221,7 @@ export function useGarden(audio: AudioManager): UseGarden {
   const buy = useCallback(() => {
     const res = buySeed(gsRef.current);
     if (!res.ok) {
-      emit('full');
+      emit(hasSpace(gsRef.current) ? 'needDew' : 'full');
       return;
     }
     commit(res.state);
@@ -219,7 +232,13 @@ export function useGarden(audio: AudioManager): UseGarden {
   const tapPlot = useCallback(
     (i: number) => {
       const s = gsRef.current;
-      if (!isPlotUnlocked(i, s.unlocked)) return;
+      if (!isPlotUnlocked(i, s.unlocked)) {
+        if (PLOT_UNLOCK_ORDER[s.unlocked] !== i) { emit('nothing'); return; }
+        const res = buyPlotFn(s);
+        if (res.ok) { commit(res.state); audio.playSfx('sfxUpgrade'); emit('plotBought', undefined, i); }
+        else emit('needDew');
+        return;
+      }
       const level = s.plots[i];
       if (selected === null) {
         if (level > 0) {
@@ -357,10 +376,20 @@ export function useGarden(audio: AudioManager): UseGarden {
     emit('deselected');
   }, [emit]);
 
+  const mergeAll = useCallback(() => {
+    const result = mergeAllFn(gsRef.current);
+    if (!result.merged) { emit('nothing'); return; }
+    const cleared = result.state.stage - gsRef.current.stage;
+    commit(result.state); setSelected(null); setBloom(b => b + 1);
+    audio.playSfx('sfxMerge'); emit('bulkMerged', result.merged); maybeCelebrate();
+    noteInfo({ stageAdvanced: cleared, chestDew: 0 }, result.state);
+  }, [commit, emit, audio, maybeCelebrate, noteInfo]);
+  const toggleAutoMerge = useCallback(() => commit(toggleAutoMergeFn(gsRef.current)), [commit]);
   const d = useMemo(() => derive(snap), [snap]);
 
   return {
     snap,
+    mergeAll, toggleAutoMerge,
     d,
     selected,
     bloom,

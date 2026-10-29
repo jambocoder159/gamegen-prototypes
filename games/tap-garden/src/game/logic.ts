@@ -5,6 +5,7 @@
 // the state, so a given sequence of actions always plays out the same way.
 
 import {
+  AUTO_MERGE_STAGE,
   PLOT_COUNT,
   unlockedPlots,
   isPlotUnlocked,
@@ -44,7 +45,27 @@ import { nextRng, pickIndex } from './rng';
 import { relicFx, seedDiscount, costDiscount, freshRelics } from './relics';
 import { settleStages, bossSatisfied } from './stages';
 
+export interface Counters {
+  taps: number; crits: number; dew: number; click: number; auto: number;
+  passive: number; bonus: number; offline: number; merges: number; stages: number; seconds: number;
+}
+export function freshCounters(): Counters {
+  return { taps: 0, crits: 0, dew: 0, click: 0, auto: 0, passive: 0, bonus: 0, offline: 0, merges: 0, stages: 0, seconds: 0 };
+}
+type Source = 'click' | 'auto' | 'passive' | 'bonus' | 'offline';
+function count(s: GameState, increments: Partial<Counters>): GameState {
+  const add = (c: Counters): Counters => {
+    const next = { ...c };
+    for (const key of Object.keys(increments) as (keyof Counters)[]) next[key] += increments[key] ?? 0;
+    return next;
+  };
+  return { ...s, stats: add(s.stats), runStats: add(s.runStats) };
+}
+
 export interface GameState {
+  stats: Counters;
+  runStats: Counters;
+  autoMerge: boolean;
   dew: number; // floating dew balance
   plots: number[]; // length 16; plant level 1..9 or 0 = empty
   unlocked: number; // number of unlocked plots (START_PLOTS..PLOT_COUNT)
@@ -66,6 +87,9 @@ export interface GameState {
 /** A fresh garden for a brand-new player. */
 export function newGame(seed: number = RNG_SEED): GameState {
   return {
+    stats: freshCounters(),
+    runStats: freshCounters(),
+    autoMerge: false,
     dew: 0,
     plots: new Array(PLOT_COUNT).fill(0),
     unlocked: START_PLOTS,
@@ -229,7 +253,7 @@ export interface EarnInfo {
  * possible. The chest reward is added on top (it does not itself count toward the
  * next stage, so clears cannot cascade off their own rewards).
  */
-function earn(s: GameState, amount: number): { state: GameState; info: EarnInfo } {
+function earn(s: GameState, amount: number, source: Source = 'bonus'): { state: GameState; info: EarnInfo } {
   if (amount <= 0) return { state: s, info: { stageAdvanced: 0, chestDew: 0 } };
   const d = derive(s);
   const passiveBaseNoStage = d.passiveBase; // already excludes the stage multiplier
@@ -252,7 +276,7 @@ function earn(s: GameState, amount: number): { state: GameState; info: EarnInfo 
     maxStage: settle.maxStage,
     maxStageEver: Math.max(s.maxStageEver, settle.maxStage),
   };
-  return { state, info: { stageAdvanced: settle.advanced, chestDew: settle.chestDew } };
+  return { state: count(state, { dew: amount + settle.chestDew, [source]: amount, bonus: (source === 'bonus' ? amount : 0) + settle.chestDew, stages: settle.advanced }), info: { stageAdvanced: settle.advanced, chestDew: settle.chestDew } };
 }
 
 // --- actions -----------------------------------------------------------------
@@ -269,7 +293,7 @@ export function tap(s: GameState): TapResult {
   const { rng, value } = nextRng(s.rng);
   const crit = value < d.critChance;
   const gained = d.tapBase * (crit ? d.critPower : 1) + d.warmthPerTap;
-  const { state, info } = earn({ ...s, rng }, gained);
+  const { state, info } = earn(count({ ...s, rng }, { taps: 1, crits: crit ? 1 : 0 }), gained, 'click');
   return { state, gained, crit, info };
 }
 
@@ -367,7 +391,7 @@ export function merge(s: GameState, a: number, b: number): MergeResult {
   };
   // merge burst: MERGE_BURST_SECONDS of the new plant's income, boosted by relics
   const burst = MERGE_BURST_SECONDS * incomeForLevel(newLevel) * d.plantMult * d.mergeBurstMult;
-  const { state, info } = earn(mid, burst);
+  const { state, info } = earn(count(mid, { merges: 1 }), burst);
   return { state, ok: true, newLevel, plot: b, isNewMax, burst, freeSeed, info };
 }
 
@@ -387,13 +411,39 @@ export function move(s: GameState, a: number, b: number): MoveResult {
   return { state: { ...s, plots }, ok: true };
 }
 
-// --- tick (passive + auto-tap) -----------------------------------------------
-/** Advance passive income + auto-tap by `dtSec` seconds. */
+// --- automatic / bulk merging and tick --------------------------------------
+/** One pass over the initial pairs: no plant participates twice. Any two
+ * unlocked matching plants are reachable by the manual select/select action. */
+export function mergeAll(s: GameState): { state: GameState; merged: number } {
+  let state = s;
+  let merged = 0;
+  const used = new Set<number>();
+  const cells = unlockedPlots(s.unlocked);
+  for (const a of cells) {
+    if (used.has(a) || s.plots[a] <= 0 || s.plots[a] >= MAX_LEVEL) continue;
+    const b = cells.find(b => b !== a && !used.has(b) && s.plots[b] === s.plots[a]);
+    if (b == null) continue;
+    const res = merge(state, a, b);
+    if (res.ok) { state = res.state; merged++; used.add(a); used.add(b); }
+  }
+  return { state, merged };
+}
+export function toggleAutoMerge(s: GameState): GameState {
+  return s.stage >= AUTO_MERGE_STAGE ? { ...s, autoMerge: !s.autoMerge } : s;
+}
+/** Advance plant production and expected auto-tap income by dtSec seconds. */
 export function tick(s: GameState, dtSec: number): { state: GameState; info: EarnInfo } {
-  if (dtSec <= 0) return { state: s, info: EMPTY_INFO };
-  const d = derive(s);
+  if (!Number.isFinite(dtSec) || dtSec <= 0) return { state: s, info: EMPTY_INFO };
+  const startStage = s.stage;
+  const merged = s.autoMerge && s.stage >= AUTO_MERGE_STAGE && !hasEmptyPlot(s) ? mergeAll(s).state : s;
+  const d = derive(merged);
   const amount = (d.passivePerSec + d.autoPerSec) * dtSec;
-  return earn(s, amount);
+  const result = earn(merged, amount, 'passive');
+  // Auto taps use expected crit value; split their contribution from plants.
+  const auto = d.autoPerSec * dtSec;
+  result.state = count(result.state, { passive: -auto, auto, seconds: dtSec });
+  result.info.stageAdvanced = result.state.stage - startStage;
+  return result;
 }
 
 /** Dew earned while away: min(elapsed, cap) × passive/sec × offline rate. */
@@ -408,5 +458,5 @@ export function offlineEarnings(s: GameState, elapsedSec: number): number {
 export function applyOffline(s: GameState, elapsedSec: number): { state: GameState; earned: number } {
   const earnedAmt = offlineEarnings(s, elapsedSec);
   if (earnedAmt < 1) return { state: s, earned: 0 };
-  return { state: earn(s, earnedAmt).state, earned: earnedAmt };
+  return { state: earn(s, earnedAmt, 'offline').state, earned: earnedAmt };
 }

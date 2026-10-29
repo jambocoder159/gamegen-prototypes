@@ -97,7 +97,7 @@ export function Dialog({
             </span>
           </Button>
         </div>
-        <div className="dialog__body">{children}</div>
+        <div className="dialog__body" tabIndex={0}>{children}</div>
         <div className="sr-only" aria-live="polite" aria-atomic="true">
           {live ?? ''}
         </div>

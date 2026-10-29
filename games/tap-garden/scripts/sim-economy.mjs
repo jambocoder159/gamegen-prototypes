@@ -170,6 +170,7 @@ function runOnce(state, runIndex) {
   let tapAcc = 0;
   let sinceDecision = DECISION_SEC; // decide on the first step
   let timeToStage10 = null;
+  let earlyShare = null;
   const stats = { merges: 0, mergeLevelSum: 0, seeds: 0 };
 
   while (t < MAX_RUN_SEC) {
@@ -178,7 +179,9 @@ function runOnce(state, runIndex) {
       s = Logic.tap(s).state;
       tapAcc -= 1;
     }
+    if (s.stage >= Config.AUTO_MERGE_STAGE && !s.autoMerge) s = Logic.toggleAutoMerge(s);
     s = Logic.tick(s, DT).state;
+    if (t >= 60 && !earlyShare) earlyShare = {...s.runStats};
     s = mergeAll(s, stats);
     if (timeToStage10 === null && s.maxStage >= Config.REBIRTH_STAGE) timeToStage10 = t;
 
@@ -201,7 +204,7 @@ function runOnce(state, runIndex) {
     relics: Object.fromEntries(Config.RELICS.map((r, i) => [r.key, s.relics[i]])),
   };
   const res = Rebirth.applyRebirth(s);
-  const result = { runIndex, timeToStage10, rebirthTime: t, maxStage: s.maxStage, coins: res.coins, levels };
+  const result = { runIndex, timeToStage10, rebirthTime: t, maxStage: s.maxStage, coins: res.coins, levels, income: s.runStats, earlyShare, autoMerge: s.autoMerge };
   return { result, next: spendCoins(res.ok ? res.state : s) };
 }
 
@@ -249,9 +252,23 @@ console.log(`|---|${relKeys.map(() => '---|').join('')}`);
 for (const r of results) console.log(`| ${r.runIndex} | ${relKeys.map((k) => r.levels.relics[k]).join(' | ')} |`);
 console.log(`| after ${RUNS} | ${relKeys.map((k) => relicsAfter[k]).join(' | ')} |`);
 
+console.log('\nIncome shares (production only; merge/chest bonuses reported separately):');
+console.log('| Run | click | auto | passive | bonus / all earned | first 60s click | auto-merge |');
+console.log('|---|---|---|---|---|---|---|');
+for (const r of results) {
+  const c = r.income; const total = c.click + c.auto + c.passive;
+  const pct = v => (100 * v / total).toFixed(1) + '%';
+  const e = r.earlyShare; const early = e ? (100 * e.click / (e.click + e.auto + e.passive)).toFixed(1) + '%' : 'run <60s';
+  console.log(`| ${r.runIndex} | ${pct(c.click)} | ${pct(c.auto)} | ${pct(c.passive)} | ${(100*c.bonus/c.dew).toFixed(1)}% | ${early} | ${r.autoMerge ? 'on' : 'off'} |`);
+}
+
 // --- target assertions (PLAN §3.6) ------------------------------------------
 const firstRebirth = results[0].rebirthTime / 60;
+const early = results[0].earlyShare;
+const earlyClick = early.click / (early.click + early.auto + early.passive);
 const checks = [
+  ['new account first-minute click share is 60–70%', earlyClick >= 0.6 && earlyClick <= 0.7, `${(100*earlyClick).toFixed(1)}%`],
+  ['developed runs have ≥70% auto/plant production', results.every(r => (r.income.auto + r.income.passive) / (r.income.click + r.income.auto + r.income.passive) >= 0.7), 'all five runs'],
   ['first rebirth within 10–20 min', firstRebirth >= 10 && firstRebirth <= 20, `${firstRebirth.toFixed(1)} min`],
   [
     'runs 2, 3, 4 each reach stage 10 ≥30% faster than the previous run',

@@ -1,0 +1,93 @@
+{
+  "lang": "zh-CN",
+  "documentTitle": "麻将牌组",
+  "game": {
+    "title": "麻将牌组",
+    "tagline": "配对消牌、每关选卡、清空五座牌堆"
+  },
+  "loading": {
+    "progress": "加载中 {pct}%",
+    "enter": "进入游戏"
+  },
+  "buttons": {
+    "play": "开始游戏",
+    "restart": "重新开始",
+    "playAgain": "再玩一次",
+    "retry": "再试一次",
+    "mute": "关闭音效",
+    "unmute": "开启音效",
+    "language": "切换语言"
+  },
+  "hud": {
+    "stage": "关卡",
+    "score": "分数",
+    "hearts": "爱心：{n}",
+    "combo": "连击 ×{n}",
+    "wild": "万能就绪"
+  },
+  "tiles": {
+    "bamboo": "竹",
+    "dots": "饼",
+    "coin": "铜钱",
+    "koi": "锦鲤",
+    "peach": "蜜桃",
+    "plum": "梅花",
+    "orchid": "兰花",
+    "lantern": "灯笼",
+    "fan": "扇子",
+    "crane": "仙鹤",
+    "pagoda": "宝塔",
+    "moon": "月亮",
+    "sun": "太阳",
+    "tea": "茶",
+    "dragon": "龙",
+    "cat": "猫"
+  },
+  "cards": {
+    "hint": { "name": "提示", "effect": "显示一组可消的牌" },
+    "shuffle": { "name": "洗牌", "effect": "重新洗牌" },
+    "undo": { "name": "撤销", "effect": "放回上一对牌" },
+    "wild": { "name": "万能", "effect": "下次可配任意两张" },
+    "heal": { "name": "治愈", "effect": "恢复一颗爱心" },
+    "combo": { "name": "连击", "effect": "接下来三次得分 ×2" }
+  },
+  "reward": {
+    "title": "过关！",
+    "pick": "选一张卡加入手牌"
+  },
+  "victory": {
+    "title": "全部通关！",
+    "score": "最终分数 {n}",
+    "best": "最佳 {n}"
+  },
+  "defeat": {
+    "title": "爱心用尽",
+    "retry": "再试一次"
+  },
+  "a11y": {
+    "boardLabel": "牌堆",
+    "handLabel": "能力卡",
+    "tile": "{name}牌，{state}",
+    "tileSelected": "{name}牌，{state}，已选中",
+    "tileFree": "可选",
+    "tileCovered": "被压住",
+    "card": "栏位 {key}，持有 {n} 张",
+    "rewardCard": "{name}：{effect}",
+    "help": "点一张自由牌，再点另一张同款自由牌即可消除。配到不同的牌会失去一颗爱心。方向键在自由牌之间移动，Enter 或空格键选中，按 1 到 4 使用手牌，Z 使用撤销，H 使用提示，S 使用洗牌。",
+    "match": "配对成功，加 {n} 分。",
+    "mismatch": "配对错误，剩 {n} 颗爱心。",
+    "stageClear": "过关，奖励 {n} 分，请选一张卡。",
+    "reshuffleCard": "没有可配的牌，洗牌卡已重新洗牌。",
+    "reshuffleHeart": "没有可配的牌，已重新洗牌，剩 {n} 颗爱心。",
+    "noPair": "未使用卡片。",
+    "cardHint": "提示：已标示一组可配的牌。",
+    "cardShuffle": "已重新洗牌。",
+    "cardUndo": "已放回上一对牌。",
+    "cardWild": "万能就绪：下次配对可选任意两张。",
+    "cardCombo": "连击卡：接下来三次配对分数翻倍。",
+    "heal": "已恢复，{n} 颗爱心。",
+    "victory": "你清空了全部五座牌堆。",
+    "defeat": "爱心用尽，游戏结束。",
+    "titleDemo": "标题画面：游戏正在自动演示。"
+  }
+}

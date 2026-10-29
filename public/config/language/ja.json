@@ -1,0 +1,65 @@
+{
+  "lang": "ja",
+  "documentTitle": "棚の仕分け",
+  "game": {
+    "title": "棚の仕分け",
+    "tagline": "各段を同じ商品3つで埋めよう"
+  },
+  "loading": {
+    "progress": "読み込み中 {pct}%",
+    "enter": "ゲームを始める"
+  },
+  "buttons": {
+    "play": "プレイ",
+    "continue": "つづきから",
+    "undo": "もどす",
+    "restart": "やり直し",
+    "levels": "レベル選択",
+    "next": "次のレベル",
+    "replay": "もう一度",
+    "close": "閉じる",
+    "mute": "ミュート",
+    "unmute": "音を出す",
+    "language": "言語を変更"
+  },
+  "hud": {
+    "level": "レベル",
+    "moves": "手数"
+  },
+  "goods": {
+    "milk": "牛乳",
+    "soda": "ソーダ",
+    "cereal": "シリアル",
+    "jam": "ジャム",
+    "tuna": "ツナ缶",
+    "juice": "ジュース",
+    "chips": "ポテチ",
+    "soap": "せっけん"
+  },
+  "result": {
+    "win": "仕分け完了！",
+    "stars": "3つ中 {n} つ星",
+    "score": "手数 {moves} · 基準 {par}"
+  },
+  "levels": {
+    "title": "レベル選択",
+    "level": "レベル {n}",
+    "locked": "ロック中",
+    "best": "ベスト {n} つ星",
+    "unplayed": "未クリア"
+  },
+  "a11y": {
+    "slot": "{shelf} 段目、{slot} 番の枠：{content}",
+    "slotSelected": "{shelf} 段目、{slot} 番の枠：{content}、持ち上げ中",
+    "empty": "空き",
+    "boardLabel": "棚",
+    "help": "商品をタップして持ち上げ、空き枠をタップして置きます。持ち上げた商品をもう一度タップすると戻せます。矢印キーで枠を移動、Enter かスペースで持ち上げ・設置、Z で1手もどす、R でレベルをやり直します。",
+    "selected": "{name} を持ち上げました。",
+    "placed": "{name} を置きました。",
+    "putDown": "{name} を元に戻しました。",
+    "cleared": "{name} の棚が完成しました。",
+    "won": "{moves} 手でクリア、3つ中 {stars} つ星。",
+    "nothing": "その枠は空です。",
+    "titleDemo": "タイトル画面：ゲームが自動で仕分けしています。"
+  }
+}

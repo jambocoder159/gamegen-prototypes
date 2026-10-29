@@ -1,0 +1,47 @@
+{
+  "title": "夜のラーメン屋台",
+  "tagline": "夜市の屋台を切り盛りしよう",
+  "loading": "読み込み中 {pct}%",
+  "enter": "タップで開始",
+  "play": "プレイ",
+  "restart": "もう一度",
+  "serve": "提供",
+  "clear": "クリア",
+  "combo": "コンボ",
+  "coins": "コイン",
+  "lives": "ライフ",
+  "served": "提供数",
+  "bestCombo": "最大コンボ",
+  "bestScore": "ハイスコア",
+  "newBest": "新記録！",
+  "gameOver": "閉店！",
+  "toppings": {
+    "egg": "味玉",
+    "scallion": "ねぎ",
+    "pork": "チャーシュー",
+    "fishcake": "なると",
+    "chili": "とうがらし",
+    "bokchoy": "青梗菜"
+  },
+  "aria": {
+    "sound": "音",
+    "soundOn": "音を消す",
+    "soundOff": "音を出す",
+    "language": "言語を切り替え",
+    "restart": "ゲームをやり直す",
+    "bowl": "どんぶり、タップで空にする",
+    "bowlEmpty": "どんぶりは空です",
+    "bowlHas": "どんぶりの中身：{list}",
+    "selectCustomer": "このお客さんに提供",
+    "order": "注文：{list}",
+    "liveServed": "正解。コイン{coins}獲得。コンボ{combo}。",
+    "liveWrong": "注文が違います。ライフを1つ失いました。",
+    "liveLeft": "お客さんが怒って帰りました。ライフを1つ失いました。",
+    "liveOver": "ゲームオーバー。スコア{score}。",
+    "demo": "タイトルデモ：料理人が自動で屋台を営業中"
+  },
+  "help": {
+    "title": "遊び方",
+    "body": "お客さんの注文の吹き出しを読み、具材をタップしてどんぶりを作り、提供を押します。キー：1-6で具材の切替、EnterまたはSpaceで提供、CまたはBackspaceでクリア、左右キーでお客さん選択、Tabでボタン移動。"
+  }
+}

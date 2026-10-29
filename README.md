@@ -1,3 +1,3 @@
-# GameGen prototypes (encrypted)
+# GameGen prototypes
 
-Password-protected playable prototypes. Ask the author for the passwords.
+Playable prototypes (no password).

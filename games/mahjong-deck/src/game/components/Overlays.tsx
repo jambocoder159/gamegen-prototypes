@@ -29,8 +29,10 @@ export function RewardOverlay({
   reduced,
   cheer,
   onChoose,
+  finale,
 }: {
   rewards: CardKey[];
+  finale: boolean;
   reduced: boolean;
   cheer: number;
   onChoose: (type: CardKey) => void;
@@ -42,6 +44,7 @@ export function RewardOverlay({
         <Dealer cheer={cheer} reduced={reduced} className="panel__dealer" />
         <h2 className="panel__title">{t('reward.title')}</h2>
         <p className="panel__sub">{t('reward.pick')}</p>
+        {finale && <p className="panel__sub">{t('reward.finale')}</p>}
         <ul className="reward__cards">
           {rewards.map((key, i) => {
             const def = CARDS[key];

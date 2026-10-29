@@ -12,6 +12,7 @@ import { BoardView } from './components/BoardView';
 import { Button } from './components/Button';
 import { LanguageControl, SoundControl } from './components/Controls';
 import { Dealer } from './components/Dealer';
+import { loadRun, clearRun } from './save';
 import { Art } from './components/Art';
 
 const STEP_MS = 850;
@@ -35,6 +36,7 @@ export function TitleScreen({
   onPlay: () => void;
 }) {
   const { t } = useI18n();
+  const [saved] = useState(() => !new URLSearchParams(location.search).has('stage') && !!loadRun());
   const seedRef = useRef(1);
   const tilesRef = useRef<Tile[]>(deal(seedRef.current));
   const [tiles, setTiles] = useState<Tile[]>(() => tilesRef.current);
@@ -88,8 +90,9 @@ export function TitleScreen({
         </div>
         <div className="title__actions">
           <Dealer cheer={cheer} reduced={reduced} className="title__dealer" />
-          <Button className="btn btn--primary btn--play" onClick={onPlay}>
-            {t('buttons.play')}
+          {saved && <Button className="btn btn--primary btn--continue" onClick={onPlay}>{t('buttons.continue')}</Button>}
+          <Button className="btn btn--primary btn--play" onClick={() => { if (!new URLSearchParams(location.search).has('stage')) clearRun(); onPlay(); }}>
+            {t(saved ? 'buttons.newGame' : 'buttons.play')}
           </Button>
           <div className="title__icons">
             <LanguageControl />

@@ -4,7 +4,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { LANG_CODES, LANG_NAMES, isLangCode, type Dict, type LangCode } from './dict';
+import { LANG_CODES, LANG_NAMES, isLangCode, browserLanguage, type Dict, type LangCode } from './dict';
 
 const STORAGE_KEY = 'mahjong-deck.lang';
 
@@ -41,7 +41,7 @@ function initialLang(): LangCode {
   } catch {
     /* ignore */
   }
-  return 'en';
+  return browserLanguage(navigator.languages ?? [navigator.language]);
 }
 
 export function I18nProvider({

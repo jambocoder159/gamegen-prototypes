@@ -1,4 +1,4 @@
-/* Mahjong Deck — layout, text, hit areas and simple transforms/opacity only.
+/* Mahjong Deck — layout, text, hit areas, transforms and opaque tile dimming.
    No CSS-drawn art; the ready-made PNG/WEBP assets provide every visual. */
 
 :root {
@@ -142,7 +142,7 @@ img.art {
 .btn--primary {
   background: var(--gold);
   color: var(--ink);
-  border-color: var(--gold-dark);
+  border-color: var(--ink-soft);
 }
 .btn--primary:hover {
   background: #eec255;
@@ -240,7 +240,7 @@ img.art {
 }
 .pill {
   position: relative;
-  width: clamp(88px, 26vw, 136px);
+  width: clamp(100px, 28vw, 136px);
   flex: 0 0 auto;
 }
 .pill__plate {
@@ -252,7 +252,7 @@ img.art {
   /* solid gold chip inside the gold plate so the dark text keeps >=4.5:1 even
      without the (image-only) plate being considered for contrast */
   position: absolute;
-  inset: 15% 9%;
+  inset: 6% 5%;
   background: #ecc15a;
   border-radius: 999px;
   display: flex;
@@ -262,14 +262,14 @@ img.art {
   line-height: 1;
 }
 .pill__label {
-  font-size: 11px;
+  font-size: 18px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 800;
   color: var(--ink);
 }
 .pill__value {
-  font-size: clamp(17px, 5vw, 25px);
+  font-size: clamp(22px, 5vw, 25px);
   font-weight: 900;
   color: var(--ink);
 }
@@ -280,8 +280,8 @@ img.art {
   flex: 0 0 auto;
 }
 .hearts__icon {
-  width: clamp(20px, 6vw, 28px);
-  height: clamp(20px, 6vw, 28px);
+  width: 28px;
+  height: 28px;
 }
 .hearts__icon--off {
   opacity: 0.28;
@@ -315,7 +315,7 @@ img.art {
   border: 2px solid #7b3ea8;
   border-radius: 999px;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 14px;
   padding: 4px 12px;
   pointer-events: none;
   white-space: nowrap;
@@ -363,13 +363,13 @@ img.art {
   object-fit: contain;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
-/* Blocked tiles (covered or side-blocked): clearly dimmed, no affordance.
-   Dim via opacity only — no filters/gradients faking art. */
+/* Darken opaque faces so lower tile artwork never bleeds through. */
 .tile--covered {
   cursor: default;
 }
 .tile--covered .tile__img {
-  opacity: 0.5;
+  opacity: 1;
+  filter: brightness(0.48);
 }
 /* Playable tiles: full brightness plus a subtle lift so they read as pickable. */
 .tile--free .tile__img {
@@ -438,15 +438,14 @@ img.art {
   background: var(--felt-dark);
   color: var(--light);
   border: 2px solid var(--gold);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
-  animation: notice-fade 1600ms ease-in-out forwards;
+  animation: notice-rise 180ms ease-out;
 }
-@keyframes notice-fade {
-  0% { opacity: 0; transform: translateY(4px); }
-  12%, 72% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-2px); }
+@keyframes notice-rise {
+  from { transform: translateY(4px); }
+  to { transform: translateY(0); }
 }
 
 /* --- hand (ability cards) ------------------------------------------------- */
@@ -489,7 +488,7 @@ img.art {
   border-radius: 50%;
   background: var(--felt-dark);
   color: var(--light);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   line-height: 18px;
   text-align: center;
@@ -516,7 +515,7 @@ img.art {
   background: var(--gold);
   color: var(--ink);
   border: 1.5px solid var(--gold-dark);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 18px;
   text-align: center;
@@ -529,13 +528,13 @@ img.art {
   text-align: center;
 }
 .card__name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--ink);
   line-height: 1.1;
 }
 .card__effect {
-  font-size: 9.5px;
+  font-size: 14px;
   color: var(--ink-soft);
   line-height: 1.12;
 }
@@ -561,17 +560,6 @@ img.art {
   min-width: 0;
   min-height: 0;
 }
-.game__dealer {
-  grid-area: dealer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 0;
-}
-.game__dealer .dealer {
-  max-height: clamp(70px, 16vh, 150px);
-  width: auto;
-}
 .game__hand {
   grid-area: hand;
   display: flex;
@@ -589,21 +577,23 @@ img.art {
 
 .game--portrait {
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto auto;
-  grid-template-areas: 'hud' 'board' 'hand' 'controls';
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas: 'hud' 'coach' 'board' 'hand' 'controls';
 }
 
 .game--wide,
 .game--nearSquare {
-  grid-template-columns: 1fr clamp(200px, 30vw, 320px);
-  grid-template-rows: auto auto 1fr auto;
-  grid-template-areas: 'board hud' 'board dealer' 'board hand' 'board controls';
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 30vw, 320px);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: 'coach coach' 'board hud' 'board hand' 'board controls';
   column-gap: clamp(10px, 2vw, 28px);
 }
 .game--wide .game__hud,
 .game--nearSquare .game__hud {
   flex-wrap: wrap;
 }
+.game--wide .hud, .game--nearSquare .hud { width: 100%; }
+.game--wide .pill, .game--nearSquare .pill { width: calc((100% - 10px) / 2); }
 .game--wide .game__hand,
 .game--nearSquare .game__hand {
   align-items: flex-start;
@@ -672,7 +662,7 @@ img.art {
 }
 .title__tagline {
   margin: 0;
-  font-size: clamp(13px, 3.4vw, 18px);
+  font-size: clamp(14px, 3.4vw, 18px);
   color: var(--cream);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   max-width: 90vw;
@@ -731,7 +721,7 @@ img.art {
   margin: 0;
   font-size: clamp(22px, 6vw, 28px);
   font-weight: 800;
-  color: var(--gold-dark);
+  color: var(--ink-soft);
 }
 .panel__sub {
   margin: 0;
@@ -777,7 +767,7 @@ img.art {
   font-size: 14px;
 }
 .card--reward .card__effect {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 /* stars */
@@ -841,6 +831,8 @@ img.art {
   .title__name { grid-column: 2; grid-row: 1; font-size: clamp(24px, 4vw, 36px); }
   .title__tagline { grid-column: 2; grid-row: 2; max-width: 100%; }
   .title__actions .btn--play { grid-column: 2; grid-row: 3; }
+  .title__actions .btn--continue { grid-column: 2; grid-row: 4; }
+  .title__content:has(.btn--continue) .title__icons { grid-row: 5; }
   .title__icons { grid-column: 2; grid-row: 4; }
   .panel--result, .panel--reward {
     display: grid;
@@ -857,4 +849,18 @@ img.art {
   .panel--reward .panel__title, .panel--reward .panel__sub { grid-column: 2; }
   .panel--reward .reward__cards { grid-column: 1 / -1; grid-row: 3; }
   .card--reward .card__art { height: min(20dvh, 96px); }
+}
+
+.coach { grid-area: coach; display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--paper); border: 2px solid var(--edge); border-radius: 12px; }
+.coach p { margin: 0; flex: 1; font-size: 14px; line-height: 1.3; }
+.coach__icon { width: 32px; height: 36px; flex: 0 0 auto; }
+.coach__skip { padding: 6px 10px; min-height: 48px; font-size: 14px; }
+.help-btn { width: 48px; height: 48px; padding: 0; font-size: 24px; }
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .game .hand { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 6px; }
+  .game .card { width: 100%; flex-direction: row; min-height: 48px; }
+  .game .card__art { width: 32px; flex: 0 0 auto; }
+  .game .card__effect { display: none; }
+  .game .card__key { display: none; }
+  .game .hud { gap: 4px; }
 }

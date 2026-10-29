@@ -1,7 +1,7 @@
 // The five stage layouts, each a list of {x, y, z} tile positions on a half-cell
 // grid. Every tile has a 2×2 footprint, so a step of 2 places edge-adjacent
 // neighbours and a step of 1 a half-offset. Layers are centred over the base so
-// every stage reads as a tidy, symmetric pyramid. Tile counts ramp 24 → 72 and
+// every stage reads as a tidy, symmetric pyramid. Tile counts ramp 24 → 64 and
 // depth 3 → 4 layers, matching PLAN §3.
 
 import type { Pos } from './logic';
@@ -62,14 +62,14 @@ const DEFS: Array<{ K: number; layers: Pos[][] }> = [
       rect(4, 2, 3, 2, 3), // 6
     ],
   },
-  // Stage 5 — 72 tiles, 4 layers (32 + 18 + 14 + 8). Base width 16.
+  // Stage 5 — 64 tiles, 4 layers (32 + 16 + 10 + 6). Wider, less dense finale.
   {
     K: 14,
     layers: [
       rect(0, 0, 8, 4, 0), // 32
-      rect(2, 1, 6, 3, 1), // 18
-      rect(1, 2, 7, 2, 2), // 14
-      rect(4, 2, 4, 2, 3), // 8
+      rect(3, 0, 4, 4, 1), // 16
+      rect(2, 2, 5, 2, 2), // 10
+      rect(4, 2, 3, 2, 3), // 6
     ],
   },
 ];

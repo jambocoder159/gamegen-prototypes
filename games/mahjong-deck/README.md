@@ -16,7 +16,7 @@ React 19 + TypeScript + Vite, GameGen "noskin" platform.
   drawn as (`src/game/geometry.ts`), so what you see is what the rules say.
 - Tapping a **blocked** tile costs nothing — it just jiggles and shows a short
   notice saying whether it is covered or blocked on both sides.
-- Matching two **different** playable tiles costs a heart (start 3, max 5). At 0
+- Matching two **different** playable tiles costs a heart (start 3, max 5; entering stage 5 restores you to at least 3). At 0
   hearts the run ends.
 - Clear a stack to get a reward: choose 1 of 3 ability cards. Clear all five
   stacks to win. Stage-clear bonus = `hearts × 200`.
@@ -31,7 +31,7 @@ React 19 + TypeScript + Vite, GameGen "noskin" platform.
 | Shuffle | Reshuffle remaining tiles (stays solvable) |
 | Undo | Put the last removed pair back |
 | Wild | Next match may pair any two free tiles |
-| Heal | +1 heart (max 5) |
+| Heal | Tap to restore 1 lost heart (max 5); kept if hearts are full |
 | Combo | Next 3 matches score ×2 |
 
 ### Keyboard
@@ -57,7 +57,7 @@ npm run pack           # build + write mahjong-deck.zip (dist contents at zip ro
 ```
 
 `test:headless` drives the real UI (clicking tile buttons, reading their data
-attributes) and writes screenshots to `qa/`. The preview port is **4174**. For
+attributes) and writes screenshots to `qa/`. The preview port is **4225** (`PORT=4225 npm run test:headless`). For
 each of the five stacks it independently recomputes, from the real DOM bounding
 boxes, which tiles are visually covered and side-blocked and confirms the game's
 playable/blocked flags, brightness and click behaviour match the picture.
@@ -72,7 +72,7 @@ else starts at stage 1) and never touches saved data or the best score.
 
 - `src/game/logic.ts` — pure, deterministic rules: free-tile test, reverse-
   solvable deal generation, shuffle, match finding (seeded `mulberry32`).
-- `src/game/layouts.ts` — the five stage layouts (tile counts 24/36/48/60/72,
+- `src/game/layouts.ts` — the five stage layouts (tile counts 24/36/48/60/64,
   3–4 layers), as lists of `{x, y, z}` on a half-cell grid.
 - `src/game/cards.ts` — the six ability cards and hand/reward helpers.
 - `src/game/useGame.ts` — React state machine (playing / reward / victory /
@@ -88,10 +88,47 @@ else starts at stage 1) and never touches saved data or the best score.
 
 - Audio is placeholder procedural synthesis awaiting human-ear selection (see
   `AUDIO_NOTES.md`).
-- Deals are seeded per stage (deterministic), so a fresh run plays the same five
-  boards each time; the reward offers are likewise seeded.
-- `axe-core` is not installed and there is no network in this environment, so the
-  automated accessibility audit could not be run here; the WCAG 2.2 AA practices
-  it checks (real buttons with names, ≥3px focus outlines, ≥4.5:1 text contrast
-  on solid plates/chips, aria-live announcements, full keyboard play, `<html
-  lang>`) are implemented and were verified manually.
+- The stage-5 win rate is a reproducible novice-policy simulation, not a human
+  playtest measurement. Players holding extra survival cards can win more often.
+
+## Fixes and persistence
+
+A short, icon-led coach appears on the first run. It advances on selecting a
+bright tile, matching a pair, and using a card. Skip dismisses it; **?** reopens
+it without trapping focus or covering the board. Blocked tiles have opacity 1
+and an opaque darkened face; the bright tiles are playable. HUD labels are at
+least 18px, key numbers at least 22px, hearts 28px, icon controls 48px.
+
+The initial language follows the first supported `navigator.languages` entry:
+`zh-TW/HK/MO/Hant*` → Traditional Chinese, `zh-CN/SG/Hans*` or bare `zh` →
+Simplified Chinese, `ja*` → Japanese, `en*` → English, otherwise English. A saved
+manual choice overrides browser preferences.
+
+Every fresh run draws a random 32-bit seed. Deals are constructed with a legal
+pair-removal solution; the seed also controls later stages, shuffles and rewards.
+A version-1 run save (`mahjong-deck.run`, at most 48,000 characters) is written
+after actions and flushed on `pagehide` / `visibilitychange`. After reload, Enter
+then **Continue** restores tiles, selected tile, hints, hearts, cards, score,
+stage, seed, shuffle counter, ability charges, rewards and undo history. The
+short-lived speed combo resets on resume. **New game** on the title or Restart starts
+a fresh run; victory/defeat clears the save. Fields, positions, IDs, ranges and
+cross-field invariants are checked; malformed, oversized or unknown-version
+saves reset safely. Storage failures leave the game playable. `?stage=N` QA runs
+do not read or write run/best saves.
+
+Stage 5 now has 64 tiles instead of 72, a wider four-layer layout and a minimum
+of three entry hearts. The stage-4 reward explains this recovery. Every card has
+clear effect text in all four languages; Heal explains restoration, the five
+heart cap, tapping to use it, and retaining it at full health. Hand and reward
+buttons expose the same explanation to assistive technology and tooltips.
+
+`test:logic` uses the production TypeScript modules, independently solves 256
+random stage-1 seeds, replays legal solutions for 200 seeds per stage, checks bad
+save fields/browser-language mapping, and runs 1,000 stage-5 novice simulations.
+`test:headless` also verifies coach progression, saved-language precedence,
+reload recovery, corruption reset, random restarts, all-language Heal use and
+full-hand fit at 360×640, actual finale recovery/victory, and axe WCAG 2.2 AA
+checks at 375/1440 for title, play and all reward/result overlays. Axe is loaded
+locally from `/workspace/deploy/node_modules/axe-core/axe.min.js`.
+`PORT=4226 npm run test:title` checks art/text non-overlap in the title viewport
+matrix. Final fix screenshots are in `../_reports/fix_mahjong-deck_*.png`.

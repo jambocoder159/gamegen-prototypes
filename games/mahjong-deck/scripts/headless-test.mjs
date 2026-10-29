@@ -10,16 +10,17 @@
 // fallback. Also runs the node logic test. Screenshots go to qa/. Prints PASS/FAIL.
 
 import { spawn, execSync } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { isDeepStrictEqual } from 'node:util';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = Number(process.env.PORT) || 4174;
+const PORT = Number(process.env.PORT) || 4225;
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -208,6 +209,7 @@ async function main() {
       await runMain(browser);
       await runStages(browser);
       await runFallback(browser);
+      await runFixes(browser);
     } finally {
       await browser.close();
     }
@@ -461,6 +463,8 @@ async function readStageTiles(page) {
         free: e.dataset.free === '1',
         ariaDisabled: e.getAttribute('aria-disabled') === 'true',
         opacity: op,
+        tileOpacity: parseFloat(getComputedStyle(e).opacity),
+        filter: img ? getComputedStyle(img).filter : 'none',
         left: r.left,
         top: r.top,
         right: r.right,
@@ -523,13 +527,13 @@ async function runStages(browser) {
       );
 
       // (a) every free tile is enabled and bright
-      const freeBad = rows.filter((r) => r.freeExpected && (!r.t.free || r.t.ariaDisabled || r.t.opacity < 0.9));
+      const freeBad = rows.filter((r) => r.freeExpected && (!r.t.free || r.t.ariaDisabled || r.t.opacity !== 1 || r.t.filter.includes('brightness(0.48)')));
       check(`stage ${n}: free tiles enabled + bright (count ${freeCount})`, freeBad.length === 0,
         freeBad.slice(0, 3).map((r) => `#${r.t.id} disabled=${r.t.ariaDisabled} op=${r.t.opacity}`).join(' | '));
 
       // (b) every visually-covered tile is dimmed + marked non-free
-      const covBad = rows.filter((r) => r.cov && (r.t.free || r.t.opacity > 0.6));
-      check(`stage ${n}: covered tiles dimmed + non-free (count ${coveredCount})`, covBad.length === 0,
+      const covBad = rows.filter((r) => r.cov && (r.t.free || r.t.opacity !== 1 || r.t.tileOpacity !== 1 || !r.t.filter.includes('brightness(0.48)')));
+      check(`stage ${n}: covered tiles opaque + darker + non-free (count ${coveredCount})`, covBad.length === 0,
         covBad.slice(0, 3).map((r) => `#${r.t.id} free=${r.t.free} op=${r.t.opacity}`).join(' | '));
 
       // (c) tapping a blocked tile: no heart lost, a notice shows, nothing selected
@@ -563,6 +567,26 @@ async function runStages(browser) {
 
       console.log(`  stage ${n} counts: ${tiles.length} tiles, ${freeCount} free, ${coveredCount} covered`);
       if (n === 2) await page.screenshot({ path: join(qa, 'stage2.png') });
+      if (n === 4 || n === 5) {
+        if(n===4) {
+          const mm=mismatchPair(await readTiles(page));
+          for(let i=0;i<2;i++){await clickTile(page,mm[0]);await clickTile(page,mm[1]);await sleep(40);}
+        }
+        const plan=planSolve(await readFullTiles(page));
+        check(`stage ${n}: independent full UI solution exists`,!!plan);
+        if(plan)for(const [a,b] of plan){await clickTile(page,a);await clickTile(page,b);await sleep(20);}
+        if(n===4){
+          await page.waitForSelector('.card--reward');
+          check('stage 4 reward explains finale recovery',await page.$eval('.panel--reward',el=>el.textContent.includes('64')));
+          await page.click('.card--reward');await sleep(100);
+          check('entering finale restores at least 3 hearts and deals 64 tiles',await readHearts(page)===3 && (await readTiles(page)).length===64);
+        } else {
+          await page.waitForSelector('.panel--result');
+          check('stage 5 can be won through real tile controls',await page.$eval('.panel__title',e=>e.textContent.includes('cleared')));
+          for(const width of [375,1440]){await page.setViewport({width,height:width===375?812:900});await auditAxe(page,`victory ${width}`);}
+        }
+      }
+
     } catch (e) {
       check(`stage ${n}: per-stage geometry checks`, false, String(e).slice(0, 140));
     }
@@ -599,3 +623,158 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+async function auditAxe(page, label) {
+  await page.evaluate(readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8'));
+  const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21aa','wcag22aa'] } })).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(',')}`));
+  check(`axe ${label}: zero WCAG violations`, violations.length === 0, violations.join(' | '));
+}
+async function gate(page) {
+  await page.waitForSelector('.btn--enter', { timeout: 20000 });
+  await page.click('.btn--enter');
+  await page.waitForSelector('.title__content');
+}
+async function savedState(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('mahjong-deck.run'))?.state);
+}
+async function runFixes(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  const reports = join(root,'..','_reports');
+  mkdirSync(reports,{recursive:true});
+  try {
+    await page.evaluateOnNewDocument(() => Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR','zh-Hant-HK'] }));
+    await page.setViewport({width:375,height:812});
+    await page.goto(BASE_URL,{waitUntil:'networkidle0'});
+    check('browser preference selects Traditional Chinese', await page.evaluate(() => document.documentElement.lang === 'zh-TW'));
+    await page.evaluate(() => localStorage.setItem('mahjong-deck.lang','en'));
+    await page.reload({waitUntil:'networkidle0'});
+    check('saved language overrides browser preference', await page.evaluate(() => document.documentElement.lang === 'en'));
+    await gate(page);
+    for (const width of [375,1440]) {
+      await page.setViewport({width,height:width===375?812:900});
+      await auditAxe(page,`title ${width}`);
+    }
+    await page.setViewport({width:375,height:812});
+    await page.click('.btn--play');
+    await page.waitForSelector('.coach');
+    check('first-run coach is visible, icon-led and non-blocking',await page.evaluate(() => {
+      const coach=document.querySelector('.coach'),r=coach.getBoundingClientRect(), b=document.querySelector('.game__board').getBoundingClientRect();
+      return !!coach.querySelector('img') && !!coach.querySelector('[aria-live="polite"]') && (r.bottom<=b.top || r.right<=b.left || r.left>=b.right);
+    }));
+    await page.screenshot({path:join(reports,'fix_mahjong-deck_onboarding.png')});
+    const pair = planSolve(await readFullTiles(page))[0];
+    await clickTile(page,pair[0]);
+    await page.waitForFunction(() => document.querySelector('.coach p')?.textContent.includes('same picture'));
+    check('coach advances after selecting a free tile',true);
+    await clickTile(page,pair[1]);
+    await page.waitForFunction(() => document.querySelector('.coach p')?.textContent.includes('card below'));
+    check('coach advances after matching a pair',true);
+    await page.keyboard.press('h');
+    await page.waitForFunction(() => !document.querySelector('.coach'));
+    check('coach finishes after using a card',await page.evaluate(() => localStorage.getItem('mahjong-deck.coach')==='1'));
+    const mm=mismatchPair(await readTiles(page));
+    await clickTile(page,mm[0]);await clickTile(page,mm[1]);
+    await sleep(100);
+    const before=await savedState(page);
+    await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+    await page.reload({waitUntil:'networkidle0'});await gate(page);
+    check('reload offers Continue',!!await page.$('.btn--continue'));
+    for(const [width,height] of [[360,640],[667,375],[844,390],[1440,900]]) {
+      await page.setViewport({width,height});await sleep(80);
+      const fits=await page.evaluate(()=>{
+        const arts=[...document.querySelectorAll('.title__logo,.title__dealer')].map(e=>e.getBoundingClientRect());
+        const texts=[...document.querySelectorAll('.title__name,.title__tagline')].map(e=>e.getBoundingClientRect());
+        return arts.every(a=>texts.every(b=>a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom)) &&
+          [...document.querySelectorAll('.title__content button')].every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight;});
+      });
+      check(`Continue title fits without art/text overlap ${width}x${height}`,fits);
+      if(width===667)await page.screenshot({path:join(reports,'fix_mahjong-deck_title_landscape.png')});
+    }
+    await page.setViewport({width:375,height:812});
+    await page.screenshot({path:join(reports,'fix_mahjong-deck_title_portrait.png')});
+
+    await page.click('.btn--continue');await page.waitForSelector('.game .tile');
+    const after=await savedState(page);
+    check('mid-run reload restores tiles/hearts/cards/score/stage/seed/undo', ['tiles','hearts','hand','score','stageIndex','seed','removedOrder','shuffleCount','hint'].every(k=>isDeepStrictEqual(before[k],after[k])));
+    check('completed coach stays closed after reload',!await page.$('.coach'));
+    await page.click('.help-btn');await page.waitForSelector('.coach');
+    await page.click('.coach__skip');
+    check('help reopens coach and Skip dismisses it',!await page.$('.coach'));
+    const arrangement = (await readTiles(page)).map(t=>t.type).join(',');
+    await page.click('.game__controls > .icon-btn');await sleep(80);
+    const next=await savedState(page);
+    check('restart creates a new random seed and tile arrangement',next.seed!==before.seed && (await readTiles(page)).map(t=>t.type).join(',')!==arrangement);
+    check('restart resets hearts, cards, score and stage',next.hearts===3 && next.score===0 && next.stageIndex===0 && next.hand.length===2);
+    // Every locale at the narrowest width with a full four-type hand, including Heal.
+    for (const lang of ['en','zh-tw','zh-cn','ja']) {
+      const state=await savedState(page);
+      state.hand=[{type:'heal',count:1},{type:'wild',count:1},{type:'shuffle',count:1},{type:'combo',count:1}];state.hearts=2;
+      await page.goto(BASE_URL,{waitUntil:'networkidle0'});
+      await page.waitForSelector('.btn--enter');
+      await page.evaluate(({lang,state})=>{localStorage.setItem('mahjong-deck.lang',lang);localStorage.setItem('mahjong-deck.run',JSON.stringify({version:1,state}));},{lang,state});
+      await page.reload({waitUntil:'networkidle0'});await gate(page);await page.click('.btn--continue');await page.waitForSelector('.hand [data-card="heal"]');
+      await page.setViewport({width:360,height:640});await sleep(100);
+      const metrics=await page.evaluate(()=>({
+        fonts:[...document.querySelectorAll('.pill__label,.pill__value')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=18),
+        numbers:[...document.querySelectorAll('.pill__value')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=20),
+        hearts:[...document.querySelectorAll('.hearts__icon')].every(e=>e.getBoundingClientRect().width>=28),
+        buttons:[...document.querySelectorAll('.game__controls button')].every(e=>e.getBoundingClientRect().width>=48 && e.getBoundingClientRect().height>=48),
+        text:[...document.querySelectorAll('.pill__label,.pill__value,.card__effect,.card__name')].every(e=>e.scrollWidth<=e.clientWidth+1),
+        heal:(()=>{const b=document.querySelector('[data-card="heal"]');return b.title.includes('5') && b.getAttribute('aria-label').includes('5') && b.textContent.includes('5');})()
+      }));
+      check(`${lang}: HUD sizing, full hand fits 360x640, Heal explained in text/tooltip/aria`,Object.values(metrics).every(Boolean),JSON.stringify(metrics));
+      const a=await auditLayout(page);check(`${lang}: full hand stays on screen without overlaps`,!a.clipped&&!a.overlap);
+      for(const [width,height] of [[667,375],[844,390],[466,678],[1440,900]]){
+        await page.setViewport({width,height});await sleep(80);
+        const a=await auditLayout(page);check(`${lang}: full hand fits ${width}x${height}`,!a.clipped&&!a.overlap);
+      }
+      await page.setViewport({width:360,height:640});
+      await page.click('[data-card="heal"]');await sleep(60);
+      check(`${lang}: Heal restores one heart and consumes the card`,await readHearts(page)===3&&!await page.$('.hand [data-card="heal"]'));
+    }
+    {
+      const state=await savedState(page);state.hearts=5;state.hand=[{type:'heal',count:1}];
+      await page.goto(BASE_URL,{waitUntil:'networkidle0'});await page.waitForSelector('.btn--enter');
+      await page.evaluate(state=>localStorage.setItem('mahjong-deck.run',JSON.stringify({version:1,state})),state);
+      await page.reload({waitUntil:'networkidle0'});await gate(page);await page.click('.btn--continue');await page.waitForSelector('.hand [data-card="heal"]');
+      await page.click('.hand [data-card="heal"]');await sleep(60);
+      check('Heal is kept at the five-heart cap',await readHearts(page)===5 && !!await page.$('.hand [data-card="heal"]'));
+    }
+    for(const [width,height,name] of [[375,812,'portrait'],[1440,900,'desktop'],[667,375,'landscape']]){
+      await page.setViewport({width,height});await sleep(100);
+      await page.screenshot({path:join(reports,`fix_mahjong-deck_${name}.png`)});
+      if(width!==667)await auditAxe(page,`play ${width}`);
+    }
+    // A real board clear reaches the card picker. Heal text is asserted in all
+    // languages by a validated reward save, with unchanged legitimate tiles.
+    await page.setViewport({width:375,height:812});
+    const plan=planSolve(await readFullTiles(page));
+    for(const [a,b] of plan){await clickTile(page,a);await clickTile(page,b);await sleep(20);}
+    await page.waitForSelector('.panel--reward');
+    for(const width of [375,1440]){await page.setViewport({width,height:width===375?812:900});await auditAxe(page,`reward ${width}`);}
+    for(const lang of ['en','zh-tw','zh-cn','ja']){
+      const state=await savedState(page);state.rewards=['heal','shuffle','wild'];
+      await page.goto(BASE_URL,{waitUntil:'networkidle0'});
+      await page.waitForSelector('.btn--enter');
+      await page.evaluate(({lang,state})=>{localStorage.setItem('mahjong-deck.lang',lang);localStorage.setItem('mahjong-deck.run',JSON.stringify({version:1,state}));},{lang,state});
+      await page.reload({waitUntil:'networkidle0'});await gate(page);await page.click('.btn--continue');await page.waitForSelector('.card--reward[data-card="heal"]');
+      check(`${lang}: picker explains Heal cap and restoration`,await page.$eval('.card--reward[data-card="heal"]',b=>b.textContent.includes('5')&&b.getAttribute('aria-label').includes('5')));
+    }
+    await page.click('.card--reward[data-card="heal"]');
+    // Force ordinary mismatches through the public tile UI until defeat.
+    for(let i=0;i<5&&!await page.$('.panel--result');i++){
+      const pair=mismatchPair(await readTiles(page));if(!pair)break;
+      await clickTile(page,pair[0]);await clickTile(page,pair[1]);await sleep(60);
+    }
+    check('game over clears saved run',!!await page.$('.panel--result') && await page.evaluate(()=>localStorage.getItem('mahjong-deck.run')===null));
+    for(const width of [375,1440]){await page.setViewport({width,height:width===375?812:900});await auditAxe(page,`defeat ${width}`);}
+    // Invalid / oversized / unknown-version state must never offer Continue.
+    for(const raw of ['{bad',JSON.stringify({version:99,state:{}}),'x'.repeat(50000)]){
+      await page.evaluate(raw=>localStorage.setItem('mahjong-deck.run',raw),raw);
+      await page.reload({waitUntil:'networkidle0'});await gate(page);
+      check('corrupt save safely resets',!await page.$('.btn--continue'));
+    }
+  } finally {await context.close();}
+  for(const name of ['wide','near-square','stage2'])copyFileSync(join(qa,`${name}.png`),join(reports,`fix_mahjong-deck_${name}.png`));
+}

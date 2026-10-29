@@ -1,5 +1,5 @@
 // Node unit test for the stage layouts and the deal generator (no browser).
-// Mirrors the pure logic in src/game/logic.ts + src/game/layouts.ts and checks,
+// Imports the production logic, layouts, save validator and language mapper; checks,
 // for all five stages:
 //   • no two tiles overlap at the same layer / position,
 //   • the deal has an even number of tiles per face (whole pairs),
@@ -8,107 +8,12 @@
 //   • stage 5 fits a 360×640 viewport with tiles ≥ 24px wide (reports the width).
 // Run with `npm run test:logic`. Exits non-zero on any failure.
 
-// ---- pure logic (mirror of src/game/logic.ts) ----------------------------
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-// ---- shared tile geometry (mirror of src/game/geometry.ts) ---------------
-const BT = 72, ASPECT = 182 / 199, HT = BT / ASPECT;
-const LAYER_OFF_X = 0, LAYER_OFF_Y = 0;
-const COVER_MIN_FRAC = 0.12;
-const TILE_AREA = BT * HT;
-function box(p) {
-  const left = p.x * (BT / 2) + p.z * LAYER_OFF_X;
-  const top = p.y * (HT / 2) + p.z * LAYER_OFF_Y;
-  return { left, top, right: left + BT, bottom: top + HT };
-}
-function interArea(a, b) {
-  const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-  const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-  return ox > 0 && oy > 0 ? ox * oy : 0;
-}
-const boxCovers = (t, o) => interArea(box(t), box(o)) >= COVER_MIN_FRAC * TILE_AREA;
-function boxSideTouches(t, o, dir) {
-  const a = box(t), b = box(o);
-  const v = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-  if (v <= 0) return false;
-  const EPS = 0.5;
-  return dir < 0
-    ? b.left < a.left && b.right > a.left - EPS
-    : b.right > a.right && b.left < a.right + EPS;
-}
-// no-same-layer-overlap check still works on footprints (pre-scale, offset-free)
-const overlap = (a, b) => Math.abs(a.x - b.x) < 2 && Math.abs(a.y - b.y) < 2;
-function isFree(tile, tiles) {
-  if (tile.removed) return false;
-  for (const o of tiles) {
-    if (o.removed || o === tile) continue;
-    if (o.z > tile.z && boxCovers(tile, o)) return false;
-  }
-  let left = false;
-  let right = false;
-  for (const o of tiles) {
-    if (o.removed || o === tile || o.z !== tile.z) continue;
-    if (boxSideTouches(tile, o, -1)) left = true;
-    if (boxSideTouches(tile, o, 1)) right = true;
-  }
-  return !left || !right;
-}
-const freeTiles = (tiles) => tiles.filter((t) => isFree(t, tiles));
-function peelOrder(positions, rng) {
-  const tiles = positions.map((p, id) => ({ ...p, id, removed: false }));
-  const pairs = [];
-  let left = tiles.length;
-  while (left > 0) {
-    const free = freeTiles(tiles);
-    if (free.length < 2) return null;
-    free.sort((a, b) => b.z - a.z || rng() - 0.5);
-    free[0].removed = true;
-    free[1].removed = true;
-    pairs.push([free[0].id, free[1].id]);
-    left -= 2;
-  }
-  return pairs;
-}
-function generateDeal(positions, K, seed) {
-  const rng = mulberry32(seed);
-  const pairs = peelOrder(positions, rng);
-  if (!pairs) return null;
-  const tiles = positions.map((p, id) => ({ ...p, id, type: -1, removed: false }));
-  const typeForPair = [];
-  for (let i = 0; i < pairs.length; i++) typeForPair.push(i % K);
-  for (let i = typeForPair.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [typeForPair[i], typeForPair[j]] = [typeForPair[j], typeForPair[i]];
-  }
-  pairs.forEach(([a, b], i) => {
-    tiles[a].type = typeForPair[i];
-    tiles[b].type = typeForPair[i];
-  });
-  return tiles;
-}
-
-// ---- stage layouts (mirror of src/game/layouts.ts) -----------------------
-function rect(x0, y0, cols, rows, z) {
-  const out = [];
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push({ x: x0 + c * 2, y: y0 + r * 2, z });
-  return out;
-}
-const DEFS = [
-  { K: 6, layers: [rect(0, 0, 4, 4, 0), rect(1, 2, 3, 2, 1), rect(2, 3, 2, 1, 2)] },
-  { K: 8, layers: [rect(0, 0, 5, 4, 0), rect(1, 1, 4, 3, 1), rect(1, 3, 4, 1, 2)] },
-  { K: 10, layers: [rect(0, 0, 6, 4, 0), rect(2, 1, 4, 3, 1), rect(2, 2, 4, 2, 2), rect(4, 2, 2, 2, 3)] },
-  { K: 12, layers: [rect(0, 0, 7, 4, 0), rect(3, 0, 4, 4, 1), rect(2, 2, 5, 2, 2), rect(4, 2, 3, 2, 3)] },
-  { K: 14, layers: [rect(0, 0, 8, 4, 0), rect(2, 1, 6, 3, 1), rect(1, 2, 7, 2, 2), rect(4, 2, 4, 2, 3)] },
-];
-const dealSeed = (stageIndex) => Math.imul(0x9e3779b1, stageIndex + 1) >>> 0;
+import { buildSync } from 'esbuild';
+const bundle = buildSync({ stdin: { contents: "export * from './src/game/logic'; export * from './src/game/layouts'; export * from './src/game/geometry'; export * from './src/game/save'; export * from './src/i18n/dict'", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'esm', write: false });
+const { generateDeal, freeTiles, getStages, mulberry32, peelOrder, reshuffleTypes, isFree, tileBox: box, BT, validateRun, browserLanguage, dealSeed: runDealSeed } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const overlap = (a,b) => Math.abs(a.x-b.x)<2 && Math.abs(a.y-b.y)<2;
+const DEFS = getStages().map(s => ({ K: s.K, layers: [s.positions] }));
+const dealSeed = i => Math.imul(0x9e3779b1,i+1) >>> 0;
 
 // ---- independent greedy-with-backtracking solver -------------------------
 // DFS over matched pairs with memoisation of dead states; proves the typed deal
@@ -201,6 +106,75 @@ const availW = 360 - 16;
 const availH = 640 - 56 - 112 - 56 - 28; // hud + hand + controls + gaps
 const w = minTileWidth(s5, availW, availH);
 check(`stage 5 fits 360×640 with tiles ≥ 24px`, w >= 24, `min tile width ≈ ${w.toFixed(1)}px (board area ${availW}×${availH})`);
+
+// Independently solve 256 random stage-one arrangements using production code.
+const variety = new Set();
+let valid = true;
+for (let i = 0; i < 256; i++) {
+  const seed = (Math.imul(i + 1, 0x85ebca77) ^ 0x9e3779b9) >>> 0;
+  const stage = getStages()[0];
+  const tiles = generateDeal(stage.positions, stage.K, seed);
+  if (!tiles || !solvable(tiles)) valid = false;
+  variety.add(tiles?.map(t => t.type).join(','));
+}
+check('stage 1: 256 random seeds independently solvable', valid);
+check('stage 1: random arrangements differ', variety.size > 250, `${variety.size} distinct`);
+// Every stage also replays the construction witness across 200 random seeds.
+for (const stage of getStages()) {
+  let ok = true;
+  for (let i = 0; i < 200; i++) {
+    const seed = Math.imul(i + 7, 0xc2b2ae35) >>> 0;
+    const tiles = generateDeal(stage.positions, stage.K, seed);
+    const order = peelOrder(stage.positions, mulberry32(seed));
+    if (!tiles || !order) { ok = false; break; }
+    for (const [a,b] of order) {
+      if (!isFree(tiles[a], tiles) || !isFree(tiles[b], tiles) || tiles[a].type !== tiles[b].type) ok = false;
+      tiles[a].removed = tiles[b].removed = true;
+    }
+  }
+  check(`stage ${stage.number}: 200 seeds have legal complete solutions`, ok);
+}
+
+// Novice policy: choose uniformly among visible legal pairs, with a 5% chance
+// of a wrong pair when different faces are free. No lookahead, no other cards.
+// Actual auto-shuffle rules: one heart per stuck board; seeded solvable redeal.
+function simulate(stage, count) {
+  let wins = 0, stucks = 0;
+  for (let seed = 1; seed <= count; seed++) {
+    const tiles = generateDeal(stage.positions, stage.K, runDealSeed(stage.index, 0, seed));
+    const rng = mulberry32(seed ^ 0xabc987);
+    let hearts = 3, salt = 1;
+    while (tiles.some(t => !t.removed) && hearts > 0) {
+      const free = freeTiles(tiles), pairs = [];
+      for (let i = 0; i < free.length; i++) for (let j = i+1; j < free.length; j++)
+        if (free[i].type === free[j].type) pairs.push([free[i],free[j]]);
+      if (!pairs.length) {
+        stucks++; hearts--;
+        if (hearts && !reshuffleTypes(tiles, stage.K, runDealSeed(stage.index, salt++, seed))) break;
+        continue;
+      }
+      if (rng() < 0.05 && new Set(free.map(t => t.type)).size > 1) { hearts--; continue; }
+      pairs[Math.floor(rng()*pairs.length)].forEach(t => { t.removed = true; });
+    }
+    if (tiles.every(t => t.removed)) wins++;
+  }
+  return { wins, count, rate: wins/count, stucks };
+}
+const balance = simulate(getStages()[4], 1000);
+check('stage 5: 64 tiles, four layers, 14 faces', getStages()[4].positions.length === 64 && getStages()[4].K === 14);
+check('stage 5: novice simulation wins 40–60%', balance.rate >= .4 && balance.rate <= .6, JSON.stringify(balance));
+for (const [tags, expected] of [[['fr','zh-Hant-HK'],'zh-tw'],[['zh-HK'],'zh-tw'],[['zh-MO'],'zh-tw'],[['zh-SG'],'zh-cn'],[['zh-Hans-CN'],'zh-cn'],[['zh'],'zh-cn'],[['ja-JP'],'ja'],[['en-US','ja'],'en'],[['fr'],'en']])
+  check(`browser language ${tags.join(',')}`, browserLanguage(tags) === expected);
+const sample = { phase: 'playing', stageIndex: 0, seed: 42, shuffleCount: 1,
+  tiles: generateDeal(getStages()[0].positions, 6, 42), selected: null, hearts: 2, score: 100,
+  hand: [{type:'heal',count:1}], combo:1, comboCardLeft:0, wildActive:false, hint:null, rewards:null,
+  removedOrder:[], shakeId:0, blockedTapId:null, blockedTapSeq:0, cheer:0 };
+check('run save roundtrip', !!validateRun({ version:1,state:sample }));
+let rejected = true;
+for (const patch of [{seed:-1},{hearts:6},{score:NaN},{stageIndex:5},{hand:[{type:'oops',count:1}]},{tiles:[]},{selected:999},{removedOrder:[0,1]},{wildActive:1},{rewards:['heal']},{hint:[0,999]}]) {
+  if (validateRun({version:1,state:{...sample,...patch}})) rejected = false;
+}
+check('run validator rejects corrupt fields and invalid versions', rejected && !validateRun({version:99,state:sample}));
 
 console.log(`\n${failures === 0 ? 'ALL LOGIC CHECKS PASSED' : failures + ' LOGIC CHECK(S) FAILED'}`);
 process.exit(failures === 0 ? 0 : 1);

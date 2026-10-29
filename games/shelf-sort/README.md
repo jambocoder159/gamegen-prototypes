@@ -36,7 +36,9 @@ Final fix screenshots are in `../_reports/fix_shelf-sort_*.png`.
 - Undo is unlimited. Restart resets the current level. Levels opens unlocked
   levels; sound and language controls apply immediately.
 - Levels 2–4 use exact solver optima of 5/7/5 moves, with three-star budgets of
-  6/8/6 and two-star budgets of 9/11/9. Other levels retain greedy-solver par.
+  6/7/5 and two-star budgets of 8/10/8. Three stars allow optimum+1 on level 2
+  and require the exact optimum on levels 3–4; two stars allow optimum+3 on
+  levels 2–4. Other levels retain greedy-solver par.
 
 ## Language and storage
 

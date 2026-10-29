@@ -17,7 +17,7 @@ for (const lv of game.getLevels()) test(`level ${lv.number}: solve, win, complet
   assert.deepEqual(state.board, lv.board);
   assert.deepEqual(state.path, []);
 });
-for (const [number, optimum] of [[2, 5], [3, 7], [4, 5]]) test(`level ${number}: proven optimum ${optimum}, star boundaries`, () => {
+for (const [number, optimum, three, two] of [[2, 5, 6, 8], [3, 7, 7, 10], [4, 5, 5, 8]]) test(`level ${number}: proven optimum ${optimum}, star boundaries`, () => {
   const lv = game.getLevel(number - 1);
   assert.equal(optimalSolution(lv.board, optimum - 1), null);
   const solution = optimalSolution(lv.board, optimum);
@@ -26,8 +26,8 @@ for (const [number, optimum] of [[2, 5], [3, 7], [4, 5]]) test(`level ${number}:
   for (const m of solution) assert(game.applyMove(state, m.from, m.to).ok);
   assert(game.isWon(state.board));
   assert.equal(lv.par, optimum);
-  assert.deepEqual(lv.budgets, { three: optimum + 1, two: optimum + 4 });
-  for (const [moves, stars] of [[optimum, 3], [optimum + 1, 3], [optimum + 2, 2], [optimum + 4, 2], [optimum + 5, 1]])
+  assert.deepEqual(lv.budgets, { three, two });
+  for (const [moves, stars] of [[optimum, 3], [three, 3], [three + 1, 2], [two, 2], [two + 1, 1]])
     assert.equal(game.starsFor(moves, lv.par, lv.budgets), stars);
 });
 test('invalid moves leave the entire state unchanged', () => {

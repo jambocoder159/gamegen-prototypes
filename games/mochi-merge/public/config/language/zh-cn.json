@@ -1,0 +1,55 @@
+{
+  "lang": "zh-CN",
+  "documentTitle": "麻糬合成",
+  "game": {
+    "title": "麻糬合成",
+    "tagline": "滑动合成麻糬"
+  },
+  "loading": {
+    "progress": "加载中 {pct}%",
+    "enter": "进入游戏"
+  },
+  "buttons": {
+    "play": "开始游戏",
+    "restart": "重玩",
+    "newGame": "重新开始",
+    "keepGoing": "继续游戏",
+    "mute": "静音",
+    "unmute": "开启音效",
+    "language": "切换语言"
+  },
+  "hud": {
+    "score": "分数",
+    "best": "最高分"
+  },
+  "result": {
+    "gameOver": "游戏结束",
+    "win": "黄金龙麻糬！",
+    "winBody": "你合成了龙麻糬！继续挑战更高分吧！",
+    "newBest": "新纪录！",
+    "finalScore": "分数 {score}",
+    "bestScore": "最高分 {best}"
+  },
+  "tiers": {
+    "1": "白麻糬",
+    "2": "樱花麻糬",
+    "3": "抹茶麻糬",
+    "4": "红豆麻糬",
+    "5": "草莓麻糬",
+    "6": "芒果麻糬",
+    "7": "芋头麻糬",
+    "8": "星星麻糬",
+    "9": "金龙麻糬"
+  },
+  "a11y": {
+    "boardLabel": "4 乘 4 麻糬盘面",
+    "empty": "空格",
+    "moveMerged": "合成为{name}。分数 {score}。",
+    "moveNoMerge": "已移动。分数 {score}。",
+    "gameOver": "游戏结束。最终分数 {score}。",
+    "win": "你合成了金龙麻糬。分数 {score}。",
+    "boardSummary": "盘面，从左上到右下：{cells}。",
+    "help": "使用方向键或 W A S D 滑动麻糬。触屏时在盘面上滑动。",
+    "titleDemo": "标题画面：电脑正在自动演示游戏。"
+  }
+}

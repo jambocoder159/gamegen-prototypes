@@ -1,0 +1,47 @@
+{
+  "title": "夜市面摊",
+  "tagline": "照看你的夜市小摊",
+  "loading": "加载中 {pct}%",
+  "enter": "点击开始",
+  "play": "开始游戏",
+  "restart": "再玩一次",
+  "serve": "上菜",
+  "clear": "清空",
+  "combo": "连击",
+  "coins": "金币",
+  "lives": "生命",
+  "served": "服务人数",
+  "bestCombo": "最佳连击",
+  "bestScore": "最高分",
+  "newBest": "新纪录！",
+  "gameOver": "打烊了！",
+  "toppings": {
+    "egg": "卤蛋",
+    "scallion": "葱花",
+    "pork": "叉烧",
+    "fishcake": "鱼板",
+    "chili": "辣椒",
+    "bokchoy": "青菜"
+  },
+  "aria": {
+    "sound": "音效",
+    "soundOn": "关闭音效",
+    "soundOff": "开启音效",
+    "language": "切换语言",
+    "restart": "重新开始",
+    "bowl": "面碗，点一下可清空",
+    "bowlEmpty": "面碗是空的",
+    "bowlHas": "面碗里有 {list}",
+    "selectCustomer": "服务这位客人",
+    "order": "订单：{list}",
+    "liveServed": "点对了，获得 {coins} 金币，连击 {combo}。",
+    "liveWrong": "点错了，失去一颗爱心。",
+    "liveLeft": "客人生气离开，失去一颗爱心。",
+    "liveOver": "游戏结束，得分 {score}。",
+    "demo": "标题演示：由厨师自动经营面摊"
+  },
+  "help": {
+    "title": "玩法说明",
+    "body": "看懂每位客人的订单气泡，点配料把面碗做好，再按上菜。按键：1-6 切换配料、Enter 或空格键上菜、C 或退格键清空、左右键选择客人、Tab 切换按钮。"
+  }
+}

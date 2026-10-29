@@ -1,0 +1,55 @@
+{
+  "lang": "en",
+  "documentTitle": "Mochi Merge",
+  "game": {
+    "title": "Mochi Merge",
+    "tagline": "Slide and merge the mochi"
+  },
+  "loading": {
+    "progress": "Loading {pct}%",
+    "enter": "Enter game"
+  },
+  "buttons": {
+    "play": "Play",
+    "restart": "Restart",
+    "newGame": "New game",
+    "keepGoing": "Keep going",
+    "mute": "Mute sound",
+    "unmute": "Unmute sound",
+    "language": "Change language"
+  },
+  "hud": {
+    "score": "Score",
+    "best": "Best"
+  },
+  "result": {
+    "gameOver": "Game over",
+    "win": "Golden Dragon!",
+    "winBody": "You reached the Dragon mochi. Keep going for a higher score!",
+    "newBest": "New best!",
+    "finalScore": "Score {score}",
+    "bestScore": "Best {best}"
+  },
+  "tiers": {
+    "1": "Plain mochi",
+    "2": "Sakura mochi",
+    "3": "Matcha mochi",
+    "4": "Bean mochi",
+    "5": "Strawberry mochi",
+    "6": "Mango mochi",
+    "7": "Taro mochi",
+    "8": "Star mochi",
+    "9": "Dragon mochi"
+  },
+  "a11y": {
+    "boardLabel": "4 by 4 mochi board",
+    "empty": "empty",
+    "moveMerged": "Merged into {name}. Score {score}.",
+    "moveNoMerge": "Moved. Score {score}.",
+    "gameOver": "Game over. Final score {score}.",
+    "win": "You made the Dragon mochi. Score {score}.",
+    "boardSummary": "Board, top-left to bottom-right: {cells}.",
+    "help": "Use the arrow keys or W A S D to slide the mochi. On a touchscreen, swipe across the board.",
+    "titleDemo": "Title screen: a demo game is playing by itself."
+  }
+}

@@ -28,6 +28,8 @@ export function Hand({
             <Button
               className="card"
               dataCard={card.type}
+              ariaLabel={`${name}: ${effect}. ${t('a11y.card', { key: i + 1, n: card.count })}`}
+              title={`${name}: ${effect}`}
               onClick={() => !disabled && onPlay(i)}
             >
               <span className="card__key" aria-hidden="true">

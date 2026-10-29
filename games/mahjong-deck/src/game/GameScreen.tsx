@@ -1,6 +1,6 @@
 // The playing screen: HUD (stage/score/hearts), the tile board, the card hand,
-// the controls row (restart, sound, language), the dealer mascot (side column
-// only) and the reward / victory / defeat overlays. Owns keyboard input: arrows
+// the controls row (restart, help, sound, language), the coach and the
+// reward / victory / defeat overlays. Owns keyboard input: arrows
 // move focus between free tiles, Enter/Space select (native), 1–4 play hand
 // cards, Z/H/S play the undo/hint/shuffle cards.
 import { useCallback, useEffect, useRef } from 'react';
@@ -12,7 +12,8 @@ import { useGame } from './useGame';
 import { BoardView } from './components/BoardView';
 import { Hud, ComboPill } from './components/Hud';
 import { Hand } from './components/Hand';
-import { Dealer } from './components/Dealer';
+import { Coach, useCoach } from './components/Coach';
+import { Button } from './components/Button';
 import { IconButton } from './components/Button';
 import { SoundControl, LanguageControl } from './components/Controls';
 import { RewardOverlay, VictoryOverlay, DefeatOverlay } from './components/Overlays';
@@ -24,7 +25,7 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
   const { manager } = useAudio();
   const game = useGame(manager);
   const rootRef = useRef<HTMLDivElement>(null);
-  const showDealer = layout !== 'portrait';
+  const coach = useCoach(game.selected, game.score, game.hand.reduce((n, h) => n + h.count, 0));
 
   const { tiles, playCard, hand, phase } = game;
 
@@ -158,11 +159,7 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
         <BoardNotice notice={game.notice} />
       </div>
 
-      {showDealer && (
-        <div className="game__dealer">
-          <Dealer cheer={game.cheer} reduced={reduced} />
-        </div>
-      )}
+      {interactive && <Coach step={coach.step} onSkip={coach.finish} />}
 
       <div className="game__hand">
         <Hand hand={hand} onPlay={(i) => hand[i] && playCard(hand[i].type)} disabled={!interactive} />
@@ -170,6 +167,7 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
 
       <div className="game__controls">
         <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={game.restart} />
+        <Button className="btn help-btn" ariaLabel={t('coach.help')} onClick={coach.reopen}>?</Button>
         <SoundControl />
         <LanguageControl />
       </div>
@@ -180,6 +178,7 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
       {phase === 'reward' && game.rewards && (
         <RewardOverlay
           rewards={game.rewards}
+          finale={game.stage.number === 4}
           reduced={reduced}
           cheer={game.cheer}
           onChoose={game.chooseReward}

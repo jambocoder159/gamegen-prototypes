@@ -12,24 +12,24 @@
 
 ## 3. 核心循環
 點兩張相同且「自由」的牌 → 消除並計分（連續快速配對連擊加倍）→ 清空牌堆過關 → 從 3 張能力卡挑 1 張加入手牌 → 下一關更大 → 5 關全清通關。
-- 可點（自由）牌規則：「上方沒被蓋住，且左邊或右邊至少一側沒有緊貼的牌，才能點」。蓋住與相鄰的判定，都以牌實際「畫出來的矩形」為準（共用幾何模組 `src/game/geometry.ts`，邏輯與 BoardView 用同一份），且上層牌需壓到下層牌面積 ≥12% 才算蓋住——所見即所得，不會出現看起來沒蓋到卻不能點的牌。被擋住的牌明顯變暗（僅用透明度，不用濾鏡假裝新美術）。
+- 可點（自由）牌規則：「上方沒被蓋住，且左邊或右邊至少一側沒有緊貼的牌，才能點」。蓋住與相鄰的判定，都以牌實際「畫出來的矩形」為準（共用幾何模組 `src/game/geometry.ts`，邏輯與 BoardView 用同一份），且上層牌需壓到下層牌面積 ≥12% 才算蓋住——所見即所得，不會出現看起來沒蓋到卻不能點的牌。被擋住的牌保持不透明（opacity 1），以 brightness(0.48) 變暗，避免下層圖案透出；自由牌保持明亮。
 - 點到被擋住的牌不扣愛心、不選取：牌輕微晃動、播放極輕的 sfx_wrong，並在牌堆旁的 aria-live 區顯示提示（「這張牌被蓋住了」或「左右兩側都被擋住了」）。
 - 失誤：點兩張不同的「可點牌」= 失去 1 顆愛心（3 顆起始，上限 5）。愛心歸零 → 本局結束。
 - 牌堆保證可解 [實作決定]：以「倒推」生成——每次從目前自由牌中挑兩張指定同花色，直到配完；但玩家的配對順序可能卡死，若無任何可配對，強制「重洗」並扣 1 愛心（有洗牌卡可免扣）。
-- 5 關 [實作決定]：牌數 24 / 36 / 48 / 60 / 72，花色種數 6 / 8 / 10 / 12 / 14（16 種花色中取前 N 種，每種數量為偶數），3 層或 4 層金字塔版型各不同（版型集中於 src/game/layouts.ts）。
+- 5 關 [實作決定]：牌數 24 / 36 / 48 / 60 / 64，花色種數 6 / 8 / 10 / 12 / 14（16 種花色中取前 N 種，每種數量為偶數），3 層或 4 層金字塔版型各不同（版型集中於 src/game/layouts.ts）。
 - 計分：每對 100 × 連擊倍率（2.5 秒內再配對 +1，最高 ×5）；過關加分＝愛心數 × 200 ＋ 剩餘時間無（本作無倒數）。最高分存 localStorage。
 - 能力卡（單次消耗品，手牌上限 4 張，同種可疊數量）[實作決定]：
   1. 提示（card_hint）：高亮一組可配對的牌。
   2. 洗牌（card_shuffle）：重新分配剩餘牌的花色（保證至少有可解順序），不扣愛心。
   3. 復原（card_undo）：把最近一次消除的一對放回。
   4. 萬用（card_wild）：下一次配對可與任意一張自由牌配對。
-  5. 治癒（card_heal）：+1 愛心（上限 5）。
+  5. 治癒（card_heal）：點擊恢復 1 顆愛心（上限 5），滿血時不消耗。
   6. 連擊（card_combo）：接下來 3 次配對分數 ×2。
 - 起始手牌：提示 ×1、洗牌 ×1。
 - 標題畫面：後方由程式自動玩第 1 關（真實遊戲邏輯），logo 在上、「進入遊戲」＋語言在下。
 
 ## 4. 版面
-- 直式（預設）：頂部 關卡／分數／愛心 pills；中間牌堆（依可用空間等比縮放、置中）；下方手牌（最多 4 張卡，點擊使用，≥44px 觸控）；最底按鈕列（重開、音效、語言）。發牌員吉祥物在空間足夠時出現在手牌旁。
+- 直式（預設）：頂部 關卡／分數／愛心 pills；中間牌堆（依可用空間等比縮放、置中）；下方手牌（最多 4 張卡，點擊使用，≥44px 觸控）；最底按鈕列（重開、音效、語言）。發牌員吉祥物保留於標題與結果／選卡畫面，遊戲內空間用於教學及大尺寸操作按鈕。
 - 橫式 16:9／近方形：牌堆置中偏左，右側直排 pills、手牌與按鈕；按鈕不落在畫面正中線上。
 - 選卡畫面：三張卡橫排（窄螢幕可換行），點選後確認進下一關。
 
@@ -49,3 +49,45 @@ React 19 + TS；資產位置、四語、固定 relativePath 表、解析順序�
 
 ## 7. 上架缺口（需要 Jambo / 帳號）
 GameGen 後台上傳權限與審核；音效人耳驗收；實機驗證；關卡難度與卡牌平衡人手試玩調整。
+
+## 8. Playtest fixes (October 2026)
+
+- First-run coach: three non-blocking steps (select / match / card), localized in
+  en / zh-tw / zh-cn / ja, skip and reopen with ?. Uses existing tile/card art.
+- Browser-language detection honors supported preferences in order; manually
+  saved language takes priority. Run persistence is separate from best score,
+  versioned and field-validated, with action saves and lifecycle flushes. A title
+  Continue button resumes it. Timed speed combo resets after reload; consumable
+  card charges, hints, selected tile, reward phase and undo history survive.
+- Runs get a random uint32 seed. The same seed gives reproducible stage/reward/
+  shuffle choices; reverse-play construction guarantees a solution. Automated
+  verification uses production code (no mirrored generator/layout definitions),
+  256 independently solved random stage-1 seeds and 200 legal solutions per stage.
+- HUD labels >=18px, values >=22px, hearts 28px, icon controls 48px. Title art and
+  copy occupy separate flex/grid cells, checked for intersecting bounding boxes.
+
+### Stage 5 balance method
+
+[Implementation decision] Stage 5 changes from 72 tiles (32+18+14+8) to 64
+(32+16+10+6), retaining four layers and 14 faces. Entering it replenishes hearts
+to at least 3 (never reduces higher health); the stage-4 reward explains this.
+The reduced overlap makes the exposed faces easier to read, especially on phones.
+
+[Simulation, not a measured human win rate] The test models a novice who sees
+all currently legal matches and chooses uniformly among them, with no lookahead.
+On each matching opportunity, when different free faces exist, a 5% error chance
+costs a heart; otherwise a random legal pair clears. A stuck board costs one heart
+and uses the actual seeded reverse-solvable reshuffle. The cohort enters with 3
+hearts and no unused survival cards (Hint/score cards do not change survival).
+Extra held cards or fewer errors can improve results; this is a stated proxy for
+a reasonable new player, not a population claim.
+
+The comparison uses run seeds 1–1000 and policy PRNG `mulberry32(seed ^ 0xabc987)`.
+Both initial deals and reshuffles use the production `dealSeed` and actual stage
+geometry. With the old 72-tile layout and the same 3 entry hearts, 415/1000 trials won
+(41.5%), with 984 stuck-board events. The final layout wins 595/1000 (59.5%),
+with 669 stuck-board events. Before the recovery rule a player could enter with
+only one or two hearts; the new minimum eliminates that large entry disadvantage.
+`test:logic` asserts the final win rate remains between 40% and 60%, the finale
+has 64 tiles and 14 faces, and the browser test checks recovery from one heart to
+three on entry and wins stage 5 using real tile buttons.

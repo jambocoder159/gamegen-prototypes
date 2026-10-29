@@ -16,7 +16,9 @@
     "retry": "Try again",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
-    "language": "Change language"
+    "language": "Change language",
+    "continue": "Continue",
+    "newGame": "New game"
   },
   "hud": {
     "stage": "Stage",
@@ -44,16 +46,35 @@
     "cat": "Cat"
   },
   "cards": {
-    "hint": { "name": "Hint", "effect": "Show a matching pair" },
-    "shuffle": { "name": "Shuffle", "effect": "Reshuffle the tiles" },
-    "undo": { "name": "Undo", "effect": "Restore the last pair" },
-    "wild": { "name": "Wild", "effect": "Match any two tiles once" },
-    "heal": { "name": "Heal", "effect": "Gain one heart" },
-    "combo": { "name": "Combo", "effect": "Next 3 matches ×2" }
+    "hint": {
+      "name": "Hint",
+      "effect": "Highlight two free matching tiles."
+    },
+    "shuffle": {
+      "name": "Shuffle",
+      "effect": "Re-deal remaining tiles; no heart lost."
+    },
+    "undo": {
+      "name": "Undo",
+      "effect": "Put the last cleared pair back."
+    },
+    "wild": {
+      "name": "Wild",
+      "effect": "Next pair: any two free tiles."
+    },
+    "heal": {
+      "name": "Heal",
+      "effect": "Restore 1 lost heart (max 5). Tap to use; kept at full health."
+    },
+    "combo": {
+      "name": "Combo",
+      "effect": "Double points for the next 3 pairs."
+    }
   },
   "reward": {
     "title": "Stage cleared!",
-    "pick": "Choose a card to add to your hand"
+    "pick": "Choose a card to add to your hand",
+    "finale": "Final stack: 64 tiles. Start with at least 3 hearts."
   },
   "notice": {
     "covered": "This tile is covered",
@@ -94,5 +115,12 @@
     "victory": "You cleared all five stacks.",
     "defeat": "Out of hearts. Game over.",
     "titleDemo": "Title screen: the game is playing itself."
+  },
+  "coach": {
+    "help": "Quick help",
+    "skip": "Skip",
+    "step1": "Tap a bright tile. Dark tiles are blocked: uncover them and free one side.",
+    "step2": "Tap another bright tile with the same picture. A wrong pair costs one heart.",
+    "step3": "Tap a card below to use it once. Hint lights up a pair; Shuffle costs no heart."
   }
 }

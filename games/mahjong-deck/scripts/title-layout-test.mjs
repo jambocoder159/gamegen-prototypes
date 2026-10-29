@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'mahjong-deck';
-const DEFAULT_PORT = 4185;
+const DEFAULT_PORT = 4226;
 const LANG_KEY = 'mahjong-deck.lang';
 const SCREENS = [
   { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },
@@ -187,6 +187,15 @@ async function runViewport(browser, w, h, lang) {
       await settle(page);
       const problems = await page.evaluate(measure, screen);
       check(`${tag} ${screen.id}: fits viewport`, problems.length === 0, problems.slice(0, 6).join(' | '));
+      if (screen.id === 'title') {
+        const separate = await page.evaluate(() => {
+          const art = [...document.querySelectorAll('.title__logo,.title__dealer')].map(e=>e.getBoundingClientRect());
+          const text = [...document.querySelectorAll('.title__name,.title__tagline')].map(e=>e.getBoundingClientRect());
+          return art.every(a=>text.every(b=>a.right<=b.left || a.left>=b.right || a.bottom<=b.top || a.top>=b.bottom));
+        });
+        check(`${tag} title: title/tagline never intersect art`, separate);
+      }
+
       if (lang === 'en') {
         const suffix = screen.id === 'title' ? '' : `_${screen.id}`;
         await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${suffix}.png`) });

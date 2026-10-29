@@ -24,7 +24,7 @@ export function BoardNotice({ notice }: { notice: Notice | null }) {
         : notice.kind === 'blockedSide'
           ? 'notice.side'
           : null;
-    if (!key) return;
+    if (!key) { setShown(null); return; }
     setShown({ seq: notice.seq, text: t(key) });
     const id = window.setTimeout(() => {
       setShown((cur) => (cur && cur.seq === notice.seq ? null : cur));

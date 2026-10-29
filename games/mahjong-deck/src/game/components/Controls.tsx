@@ -46,7 +46,7 @@ export function LanguageControl() {
         onClick={() => setOpen((o) => !o)}
       />
       {open && (
-        <ul className="lang__menu" role="menu">
+        <ul className="lang__menu">
           {codes.map((c) => (
             <li key={c} role="none">
               <Button

@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   generateDeal,
+  dealSeed,
   findMatch,
   hasMove,
   isFree,
@@ -26,6 +27,7 @@ import {
   type HandCard,
 } from './cards';
 import { loadBest, saveBest } from './progress';
+import { loadRun, saveRun, clearRun } from './save';
 import type { AudioManager } from '../platform/audio';
 
 export type Phase = 'playing' | 'reward' | 'victory' | 'defeat';
@@ -53,6 +55,8 @@ const STAGE_CLEAR_BONUS = 200;
  * to the real stage range; anything else starts at stage 1. Never touches saves
  * or the best score — it only picks which stack a fresh run opens on.
  */
+function qaRun(): boolean { return new URLSearchParams(location.search).has('stage'); }
+
 function startStageIndex(): number {
   if (typeof window === 'undefined') return 0;
   try {
@@ -66,14 +70,13 @@ function startStageIndex(): number {
   return 0;
 }
 
-function dealSeed(stageIndex: number, salt: number): number {
-  return (Math.imul(0x9e3779b1, stageIndex + 1) + Math.imul(salt, 0x85ebca77)) >>> 0;
-}
-function rewardSeed(stageIndex: number): number {
-  return (Math.imul(0xc2b2ae35, stageIndex + 1) + 0x165667b1) >>> 0;
+function rewardSeed(stageIndex: number, seed: number): number {
+  return (Math.imul(0xc2b2ae35, stageIndex + 1) + 0x165667b1 + seed) >>> 0;
 }
 
-interface State {
+export interface State {
+  seed: number;
+  shuffleCount: number;
   phase: Phase;
   stageIndex: number;
   tiles: Tile[];
@@ -93,12 +96,12 @@ interface State {
   cheer: number; // bumps to make the dealer cheer
 }
 
-function makeStageTiles(stageIndex: number, salt: number): Tile[] {
+function makeStageTiles(stageIndex: number, salt: number, seed: number): Tile[] {
   const stage = getStages()[stageIndex];
   // generateDeal only fails on a malformed layout; our layouts are verified, but
   // retry with a new salt just in case a particular PRNG tie-break strands.
   for (let s = salt; s < salt + 16; s++) {
-    const tiles = generateDeal(stage.positions, stage.K, dealSeed(stageIndex, s));
+    const tiles = generateDeal(stage.positions, stage.K, dealSeed(stageIndex, s, seed));
     if (tiles) return tiles;
   }
   // Last resort: an un-typed stack (should never be reached).
@@ -106,10 +109,13 @@ function makeStageTiles(stageIndex: number, salt: number): Tile[] {
 }
 
 function freshState(stageIndex: number): State {
+  const seed = crypto.getRandomValues(new Uint32Array(1))[0];
   return {
+    seed,
+    shuffleCount: 1,
     phase: 'playing',
     stageIndex,
-    tiles: makeStageTiles(stageIndex, 0),
+    tiles: makeStageTiles(stageIndex, 0, seed),
     selected: null,
     hearts: START_HEARTS,
     score: 0,
@@ -155,13 +161,30 @@ export interface UseGame {
 
 export function useGame(audio: AudioManager): UseGame {
   const stages = useMemo(() => getStages(), []);
-  const [state, setState] = useState<State>(() => freshState(startStageIndex()));
+  const [state, setState] = useState<State>(() => {
+    if (qaRun()) return freshState(startStageIndex());
+    const saved = loadRun();
+    return saved ? { ...saved, combo: 1 } : freshState(0);
+  });
   const [best, setBest] = useState<number>(loadBest);
   const [notice, setNotice] = useState<Notice | null>(null);
 
   const lastMatchRef = useRef<number>(-Infinity);
   const comboTimerRef = useRef<number>(0);
-  const shuffleSaltRef = useRef<number>(1);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  useEffect(() => {
+    if (!qaRun()) saveRun(state);
+  }, [state]);
+  useEffect(() => {
+    const flush = () => { if (!qaRun()) saveRun(stateRef.current); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+    };
+  }, []);
   const noticeSeq = useRef(0);
 
   const announce = useCallback((kind: NoticeKind, n?: number) => {
@@ -177,6 +200,7 @@ export function useGame(audio: AudioManager): UseGame {
   );
 
   const commitBest = useCallback((score: number) => {
+    if (qaRun()) return;
     setBest((b) => {
       const next = saveBest(Math.max(b, score));
       return next;
@@ -203,7 +227,7 @@ export function useGame(audio: AudioManager): UseGame {
           announce('victory');
           return { ...s, score, phase: 'victory', selected: null, hint: null, cheer: s.cheer + 1 };
         }
-        const rng = mulberry32(rewardSeed(s.stageIndex));
+        const rng = mulberry32(rewardSeed(s.stageIndex, s.seed));
         announce('stageClear', bonus);
         return {
           ...s,
@@ -219,10 +243,10 @@ export function useGame(audio: AudioManager): UseGame {
       if (!hasMove(s.tiles, s.wildActive)) {
         if (hasCard(s.hand, 'shuffle')) {
           const tiles = s.tiles.map((t) => ({ ...t }));
-          reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, shuffleSaltRef.current++));
+          reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, s.shuffleCount, s.seed));
           audio.playSfx('sfxCard');
           announce('reshuffleCard');
-          return { ...s, tiles, hand: removeHandCard(s.hand, 'shuffle'), selected: null, hint: null };
+          return { ...s, tiles, shuffleCount: s.shuffleCount + 1, hand: removeHandCard(s.hand, 'shuffle'), selected: null, hint: null };
         }
         const hearts = s.hearts - 1;
         if (hearts <= 0) {
@@ -232,10 +256,10 @@ export function useGame(audio: AudioManager): UseGame {
           return { ...s, hearts: 0, phase: 'defeat', selected: null, hint: null };
         }
         const tiles = s.tiles.map((t) => ({ ...t }));
-        reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, shuffleSaltRef.current++));
+        reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, s.shuffleCount, s.seed));
         audio.playSfx('sfxWrong');
         announce('reshuffleHeart', hearts);
-        return { ...s, tiles, hearts, selected: null, hint: null };
+        return { ...s, tiles, shuffleCount: s.shuffleCount + 1, hearts, selected: null, hint: null };
       }
       return s;
     },
@@ -330,10 +354,10 @@ export function useGame(audio: AudioManager): UseGame {
           }
           case 'shuffle': {
             const tiles = s.tiles.map((t) => ({ ...t }));
-            reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, shuffleSaltRef.current++));
+            reshuffleTypes(tiles, stages[s.stageIndex].K, dealSeed(s.stageIndex, s.shuffleCount, s.seed));
             audio.playSfx('sfxCard');
             announce('cardShuffle');
-            return { ...s, tiles, hint: null, selected: null, hand: removeHandCard(s.hand, 'shuffle') };
+            return { ...s, tiles, shuffleCount: s.shuffleCount + 1, hint: null, selected: null, hand: removeHandCard(s.hand, 'shuffle') };
           }
           case 'undo': {
             // Put the most recently removed pair back on the board.
@@ -386,17 +410,19 @@ export function useGame(audio: AudioManager): UseGame {
   const chooseReward = useCallback(
     (type: CardKey) => {
       setState((s) => {
-        if (s.phase !== 'reward') return s;
+        if (s.phase !== 'reward' || !s.rewards?.includes(type)) return s;
         audio.playSfx('sfxCard');
         const hand = addCard(s.hand, type);
         const stageIndex = s.stageIndex + 1;
         lastMatchRef.current = -Infinity;
-        shuffleSaltRef.current = 1;
+
         return {
           ...s,
           phase: 'playing',
           stageIndex,
-          tiles: makeStageTiles(stageIndex, 0),
+          hearts: stageIndex === 4 ? Math.max(3, s.hearts) : s.hearts,
+          shuffleCount: 1,
+          tiles: makeStageTiles(stageIndex, 0, s.seed),
           selected: null,
           hand,
           combo: 1,
@@ -414,7 +440,7 @@ export function useGame(audio: AudioManager): UseGame {
   const restart = useCallback(() => {
     audio.playSfx('sfxClick');
     lastMatchRef.current = -Infinity;
-    shuffleSaltRef.current = 1;
+    if (!qaRun()) clearRun();
     window.clearTimeout(comboTimerRef.current);
     setState(freshState(startStageIndex()));
     setNotice(null);

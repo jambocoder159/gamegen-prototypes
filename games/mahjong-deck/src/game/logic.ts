@@ -191,3 +191,8 @@ export function hasMove(tiles: Tile[], wild = false): boolean {
   if (wild) return freeTiles(tiles).length >= 2;
   return findMatch(tiles) !== null;
 }
+
+/** Reproducible stage/redeal seed derived from the saved random run seed. */
+export function dealSeed(stageIndex: number, salt: number, seed: number): number {
+  return (Math.imul(0x9e3779b1, stageIndex + 1) + Math.imul(salt, 0x85ebca77) + seed) >>> 0;
+}

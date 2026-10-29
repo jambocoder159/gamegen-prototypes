@@ -1,0 +1,77 @@
+{
+  "lang": "zh-TW",
+  "documentTitle": "芽芽花園",
+  "game": {
+    "title": "芽芽花園",
+    "tagline": "點點花盆、滴出露珠，一路合成金色世界樹"
+  },
+  "loading": {
+    "progress": "載入中 {pct}%",
+    "enter": "進入遊戲"
+  },
+  "buttons": {
+    "play": "開始遊戲",
+    "tapPot": "點擊魔法花盆收集露珠",
+    "buySeed": "買種子",
+    "upgrade": "點擊力",
+    "reset": "重置",
+    "mute": "靜音",
+    "unmute": "開啟音效",
+    "language": "切換語言"
+  },
+  "hud": {
+    "dew": "露珠",
+    "rate": "每秒",
+    "perSec": "{n}/秒"
+  },
+  "plant": {
+    "1": "幼苗",
+    "2": "三葉草",
+    "3": "雛菊",
+    "4": "鬱金香",
+    "5": "向日葵",
+    "6": "紅菇",
+    "7": "仙人掌花",
+    "8": "盆景",
+    "9": "金色世界樹"
+  },
+  "dex": {
+    "title": "植物圖鑑",
+    "found": "{name}：已養出",
+    "missing": "{name}：尚未養出"
+  },
+  "offline": {
+    "title": "歡迎回來！",
+    "body": "你離開時，花園仍不斷滴出露珠。",
+    "collect": "領取"
+  },
+  "celebrate": {
+    "title": "金色世界樹！",
+    "body": "你養出了傳說中的金色世界樹。花園會繼續成長，盡情享受吧！",
+    "continue": "繼續種植"
+  },
+  "reset": {
+    "title": "重置進度？",
+    "body": "這會清除你的花園、露珠與升級，且無法復原。",
+    "confirm": "重置",
+    "cancel": "取消"
+  },
+  "a11y": {
+    "boardLabel": "花園，共 16 格",
+    "help": "點擊花盆收集露珠。買下種子後，點選一棵植物再點另一棵相同的植物即可合成下一階；點選植物後再點空地可以移動。按鍵：方向鍵在地塊間移動，Enter 或空白鍵選取與操作，T 點花盆，B 買種子，U 升級點擊力。",
+    "plot": "第 {n} 格：{name}，第 {level} 階",
+    "plotSelected": "第 {n} 格：{name}，第 {level} 階，已選取",
+    "plotEmpty": "第 {n} 格：空地",
+    "selected": "已選取 {name}，第 {level} 階。",
+    "deselected": "已取消選取。",
+    "moved": "植物已移動。",
+    "merged": "合成為 {name}，第 {level} 階。",
+    "newMax": "發現新植物：{name}，第 {level} 階！",
+    "bought": "種子已種下。",
+    "upgraded": "點擊力已升級至第 {level} 階。",
+    "full": "花園已滿，或露珠不足。",
+    "nothing": "沒有任何變化。",
+    "dewTotal": "{n} 露珠",
+    "titleDemo": "標題畫面：花園正在自動展示。"
+  }
+}

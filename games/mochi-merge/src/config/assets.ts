@@ -13,7 +13,6 @@ export type ImageKey =
   | 'pillPink' | 'pillMint'
   | 'iconRestart' | 'iconSoundOn' | 'iconSoundOff' | 'iconLanguage'
   | 'logo'
-  | 'idle1' | 'idle2' | 'idle3' | 'idle4'
   | 'bgBase' | 'bgPortrait';
 
 export type AudioKey =
@@ -39,10 +38,6 @@ export const IMAGES: Record<ImageKey, string> = {
   iconSoundOff: 'textures/icon_sound_off.png',
   iconLanguage: 'textures/icon_language.png',
   logo: 'textures/logo_base.png',
-  idle1: 'textures/seq_mochi_idle_1.png',
-  idle2: 'textures/seq_mochi_idle_2.png',
-  idle3: 'textures/seq_mochi_idle_3.png',
-  idle4: 'textures/seq_mochi_idle_4.png',
   bgBase: 'textures/bg_base.webp',
   bgPortrait: 'textures/bg_portrait.webp',
 };
@@ -61,5 +56,5 @@ export const AUDIO: Record<AudioKey, string> = {
 
 /** Tile tier (1..9) → image key. */
 export function tileImageKey(tier: number): ImageKey {
-  return `tile${tier}` as ImageKey;
+  return `tile${Math.min(tier, 9)}` as ImageKey;
 }

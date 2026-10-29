@@ -41,7 +41,11 @@ function bases(): string[] {
   const list: string[] = [];
   const style = styleRoot();
   if (style) list.push(style);
-  if (config.commonPath) list.push(withTrailingSlash(config.commonPath));
+  // The platform's local /common/ default belongs to this game, including
+  // when its ZIP is mounted below a path. Explicit remote roots remain intact.
+  if (config.commonPath) list.push(withTrailingSlash(
+    config.isLocal && config.commonPath === '/common/' ? BASE + 'common/' : config.commonPath,
+  ));
   list.push(withTrailingSlash(BASE + 'common/'));
   list.push(withTrailingSlash(BASE));
   return [...new Set(list)];

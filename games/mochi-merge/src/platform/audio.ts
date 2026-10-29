@@ -1,5 +1,5 @@
 // WebAudio playback over preloaded buffers. The AudioContext is created up front
-// (suspended) so decodeAudioData can run during the preload gate; it is resumed
+// (suspended) so decodeAudioData can run during preloading; it is resumed
 // by the first user gesture. All playback reuses the decoded buffers.
 
 import type { AudioKey } from '../config/assets';
@@ -46,7 +46,7 @@ export class AudioManager {
     );
   }
 
-  /** Resume on the enter gesture. */
+  /** Resume on the Play / Continue gesture. */
   async resume(): Promise<void> {
     if (this.ctx && this.ctx.state === 'suspended') {
       try {

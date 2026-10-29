@@ -12,13 +12,15 @@ interface ButtonProps {
   ariaPressed?: boolean;
   title?: string;
   children: ReactNode;
+  autoFocus?: boolean;
 }
 
-export function Button({ onClick, className, ariaLabel, ariaPressed, title, children }: ButtonProps) {
+export function Button({ onClick, className, ariaLabel, ariaPressed, title, children, autoFocus }: ButtonProps) {
   const { manager } = useAudio();
   return (
     <button
       type="button"
+      autoFocus={autoFocus}
       className={className}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}

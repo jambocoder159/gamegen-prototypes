@@ -29,6 +29,7 @@ export interface GameState {
   keepGoing: boolean; // player dismissed the win banner to keep playing
   seed: number; // RNG state (mutated via next())
   nextId: number;
+  moves: number; // completed board-changing moves, persisted with the run
 }
 
 export interface MoveResult {
@@ -41,7 +42,7 @@ export interface MoveResult {
 
 // --- seedable RNG (mulberry32) ---------------------------------------------
 function nextRand(state: GameState): number {
-  let t = (state.seed += 0x6d2b79f5) >>> 0;
+  let t = (state.seed = (state.seed + 0x6d2b79f5) >>> 0);
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -182,6 +183,7 @@ export function newGame(seed: number): GameState {
     keepGoing: false,
     seed: seed >>> 0,
     nextId: 1,
+    moves: 0,
   };
   spawn(state);
   spawn(state);
@@ -210,6 +212,7 @@ export function move(prev: GameState, dir: Dir): MoveResult {
   const { ghosts, changed, mergedAny, topTier } = slide(state, state.grid, dir);
   let reachedWin = false;
   if (changed) {
+    state.moves += 1;
     state.ghosts = ghosts;
     if (!state.won && topTier >= WIN_TIER) {
       state.won = true;
@@ -258,6 +261,7 @@ export function cloneState(s: GameState): GameState {
     keepGoing: s.keepGoing,
     seed: s.seed,
     nextId: s.nextId,
+    moves: s.moves,
   };
 }
 
@@ -270,4 +274,9 @@ export function renderTiles(state: GameState): Tile[] {
       if (t) out.push(t);
     }
   return out;
+}
+
+/** Merges only increase tiers, so this is also the highest tier reached in the run. */
+export function highestTier(state: GameState): number {
+  return Math.max(1, ...state.grid.flat().map(tile => tile?.tier ?? 0));
 }

@@ -6,8 +6,7 @@
     "tagline": "Slide and merge the mochi"
   },
   "loading": {
-    "progress": "Loading {pct}%",
-    "enter": "Enter game"
+    "progress": "Loading {pct}%"
   },
   "buttons": {
     "play": "Play",
@@ -16,11 +15,14 @@
     "keepGoing": "Keep going",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
-    "language": "Change language"
+    "language": "Change language",
+    "continue": "Continue"
   },
   "hud": {
     "score": "Score",
-    "best": "Best"
+    "best": "Best",
+    "goal": "Goal: Golden Dragon",
+    "progress": "Tier {highest} / {needed}"
   },
   "result": {
     "gameOver": "Game over",
@@ -28,7 +30,8 @@
     "winBody": "You reached the Dragon mochi. Keep going for a higher score!",
     "newBest": "New best!",
     "finalScore": "Score {score}",
-    "bestScore": "Best {best}"
+    "bestScore": "Best {best}",
+    "highest": "Highest tier: {name} · {number}"
   },
   "tiers": {
     "1": "Plain mochi",
@@ -51,5 +54,12 @@
     "boardSummary": "Board, top-left to bottom-right: {cells}.",
     "help": "Use the arrow keys or W A S D to slide the mochi. On a touchscreen, swipe across the board.",
     "titleDemo": "Title screen: a demo game is playing by itself."
+  },
+  "coach": {
+    "help": "How to play",
+    "slide": "Swipe or use arrows / WASD to slide the mochi.",
+    "merge": "Merge two matching numbers into the next tier.",
+    "skip": "Skip tips",
+    "step": "Tip {step} of 2"
   }
 }

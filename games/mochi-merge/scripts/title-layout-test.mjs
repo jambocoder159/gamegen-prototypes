@@ -1,6 +1,6 @@
 // Title / loading layout QA. Builds, serves with `vite preview` on its own port,
 // and for a matrix of desktop, landscape-phone and portrait viewports checks that
-// the enter gate and the title screen fit the viewport: every button (primary
+// the title screen fits the viewport: every button (primary
 // first) fully on screen, no document scroll in either axis, no title art larger
 // than the viewport, key art on screen and not covering the primary button, no
 // text overflow in the longest languages. Screenshots go to ../_reports/.
@@ -14,22 +14,15 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'mochi-merge';
-const DEFAULT_PORT = 4181;
+const DEFAULT_PORT = 4221;
 const LANG_KEY = 'mochi.lang';
 const SCREENS = [
-  {
-    id: 'gate',
-    root: '.loading',
-    primary: '.btn--enter',
-    art: [],
-    text: ['.loading__title', '.btn--enter'],
-  },
   {
     id: 'title',
     root: '.title',
     primary: '.btn--play',
     art: ['.title__logo'],
-    text: ['.title__name', '.title__tagline', '.btn--play'],
+    text: ['.title__name', '.title__tagline', '.btn--play', '.btn--new'],
   },
 ];
 // ------------------------------------------------------------------------------
@@ -48,6 +41,7 @@ const VIEWPORTS = [
   [844, 390],
   [667, 375],
   [390, 844],
+  [375, 812],
   [360, 640],
 ];
 // Tightest viewports are re-checked in every language for text fit.
@@ -102,14 +96,14 @@ function measure(screen) {
   else {
     primaryRect = primary.getBoundingClientRect();
     if (!inside(primaryRect)) problems.push(`primary ${screen.primary} outside viewport ${fmt(primaryRect)}`);
-    if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
+    if (primaryRect.height < 48 || primaryRect.width < 48) problems.push(`primary smaller than 48px ${fmt(primaryRect)}`);
   }
 
   for (const b of rootEl.querySelectorAll('button')) {
     if (!visible(b)) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
-    if (r.width < 44 || r.height < 44) problems.push(`button ${desc(b)} smaller than 44px ${fmt(r)}`);
+    if (r.width < 48 || r.height < 48) problems.push(`button ${desc(b)} smaller than 48px ${fmt(r)}`);
   }
 
   for (const el of rootEl.querySelectorAll('img, .art, [class*="art--fallback"]')) {
@@ -123,6 +117,11 @@ function measure(screen) {
       if (!visible(el)) continue;
       const r = el.getBoundingClientRect();
       if (!inside(r)) problems.push(`key art ${sel} outside viewport ${fmt(r)}`);
+      for (const textSelector of screen.text.filter(sel => sel !== screen.primary)) {
+        const text = document.querySelector(textSelector)?.getBoundingClientRect();
+        if (text && r.left < text.right && r.right > text.left && r.top < text.bottom && r.bottom > text.top)
+          problems.push(`key art ${sel} overlaps title text ${textSelector}`);
+      }
       if (primaryRect) {
         const overlap =
           r.left < primaryRect.right - 1 &&
@@ -163,6 +162,7 @@ async function runViewport(browser, w, h, lang) {
       (key, value) => {
         try {
           localStorage.setItem(key, value);
+          if (!location.hash) localStorage.removeItem('mochi.run');
         } catch {
           /* ignore */
         }
@@ -187,10 +187,25 @@ async function runViewport(browser, w, h, lang) {
       check(`${tag} ${screen.id}: fits viewport`, problems.length === 0, problems.slice(0, 6).join(' | '));
       if (lang === 'en') {
         const suffix = screen.id === 'title' ? '' : `_${screen.id}`;
-        await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${suffix}.png`) });
+        await page.screenshot({ path: join(reports, `fix_${GAME}_title_${w}x${h}${suffix}.png`) });
       }
       if (i < SCREENS.length - 1) await page.click(`${screen.root} ${screen.primary}`);
     }
+    // Also reserve enough room when a saved run adds Continue / New game.
+    // Use the public save format, then let the title read and validate it.
+    await page.evaluate(() => {
+      const grid=Array.from({length:4},()=>Array(4).fill(null));
+      grid[0][0]={id:1,tier:1,row:0,col:0};grid[0][1]={id:2,tier:1,row:0,col:1};
+      localStorage.setItem('mochi.run',JSON.stringify({version:1,best:0,newBest:false,state:{grid,score:0,over:false,won:false,keepGoing:false,seed:1,nextId:3,moves:0}}));
+    });
+    // Do not rerun the initial-language setup, which intentionally clears saves.
+    await page.evaluate(() => { location.hash='continue'; });
+    await page.reload({ waitUntil: 'networkidle0' });
+    await page.waitForSelector('.btn--new');
+    await settle(page);
+    const problems = await page.evaluate(measure, SCREENS[0]);
+    check(`${tag} Continue title: fits viewport`, problems.length===0, problems.slice(0,6).join(' | '));
+    if(lang==='en')await page.screenshot({path:join(reports,`fix_${GAME}_continue_${w}x${h}.png`)});
   } finally {
     await page.close();
   }

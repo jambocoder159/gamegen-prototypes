@@ -1,0 +1,49 @@
+{
+  "title": "夜市麵攤",
+  "tagline": "顧好你的夜市小攤",
+  "loading": "載入中 {pct}%",
+  "enter": "點擊開始",
+  "play": "開始遊戲",
+  "restart": "再玩一次",
+  "serve": "上餐",
+  "clear": "清空",
+  "combo": "連擊",
+  "coins": "金幣",
+  "lives": "生命",
+  "served": "服務人數",
+  "bestCombo": "最佳連擊",
+  "bestScore": "最高分",
+  "newBest": "新紀錄！",
+  "gameOver": "打烊了！",
+  "toppings": {
+    "egg": "滷蛋",
+    "scallion": "蔥花",
+    "pork": "叉燒",
+    "fishcake": "魚板",
+    "chili": "辣椒",
+    "bokchoy": "青江菜"
+  },
+  "aria": {
+    "sound": "音效",
+    "soundOn": "關閉音效",
+    "soundOff": "開啟音效",
+    "language": "切換語言",
+    "restart": "重新開始",
+    "bowl": "麵碗，點一下可清空",
+    "bowlEmpty": "麵碗是空的",
+    "bowlHas": "麵碗裡有 {list}",
+    "selectCustomer": "服務這位客人",
+    "order": "訂單：{list}",
+    "toppingAdd": "{name}，加入碗中",
+    "toppingRemove": "{name}，從碗中移除",
+    "liveServed": "點對了，獲得 {coins} 金幣，連擊 {combo}。",
+    "liveWrong": "點錯了，失去一顆愛心。",
+    "liveLeft": "客人生氣離開，失去一顆愛心。",
+    "liveOver": "遊戲結束，得分 {score}。",
+    "demo": "標題示範：由廚師自動經營麵攤"
+  },
+  "help": {
+    "title": "玩法說明",
+    "body": "看懂每位客人的訂單泡泡，點配料把麵碗做好，再按上餐。按鍵：1-6 切換配料、Enter 或空白鍵上餐、C 或退格鍵清空、左右鍵選擇客人、Tab 切換按鈕。"
+  }
+}

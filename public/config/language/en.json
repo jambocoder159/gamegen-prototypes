@@ -1,0 +1,49 @@
+{
+  "title": "Noodle Night",
+  "tagline": "Serve the night market",
+  "loading": "Loading {pct}%",
+  "enter": "Tap to start",
+  "play": "Play",
+  "restart": "Play again",
+  "serve": "Serve",
+  "clear": "Clear",
+  "combo": "Combo",
+  "coins": "Coins",
+  "lives": "Lives",
+  "served": "Served",
+  "bestCombo": "Best combo",
+  "bestScore": "Best",
+  "newBest": "New best!",
+  "gameOver": "Closing time!",
+  "toppings": {
+    "egg": "Egg",
+    "scallion": "Scallion",
+    "pork": "Pork",
+    "fishcake": "Fishcake",
+    "chili": "Chili",
+    "bokchoy": "Bok choy"
+  },
+  "aria": {
+    "sound": "Sound",
+    "soundOn": "Mute sound",
+    "soundOff": "Unmute sound",
+    "language": "Change language",
+    "restart": "Restart game",
+    "bowl": "Bowl, tap to empty it",
+    "bowlEmpty": "Bowl is empty",
+    "bowlHas": "Bowl contains {list}",
+    "selectCustomer": "Serve this customer",
+    "order": "Order: {list}",
+    "toppingAdd": "{name}, add to bowl",
+    "toppingRemove": "{name}, remove from bowl",
+    "liveServed": "Correct order. Plus {coins} coins. Combo {combo}.",
+    "liveWrong": "Wrong order. Lost a life.",
+    "liveLeft": "A customer left upset. Lost a life.",
+    "liveOver": "Game over. Score {score}.",
+    "demo": "Title demo: the cook is running the stall"
+  },
+  "help": {
+    "title": "How to play",
+    "body": "Read each customer's order bubble, tap toppings to build the bowl, then Serve. Keys: 1-6 toggle toppings, Enter or Space to serve, C or Backspace to clear, Left/Right to pick a customer, Tab to move between buttons."
+  }
+}

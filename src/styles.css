@@ -118,19 +118,20 @@ body,
 }
 .lr-glyph-pause {
   display: flex;
-  gap: 18%;
+  gap: 5px;
+  height: 42%;
 }
 .lr-glyph-pause i {
   display: block;
-  width: 9px;
-  height: 40%;
-  background: var(--ink);
+  width: 7px;
+  height: 100%;
+  background: #1b1f4b;
   border-radius: 2px;
 }
 .lr-glyph-play {
   width: 0;
   height: 0;
-  border-left: 18px solid var(--ink);
+  border-left: 18px solid #1b1f4b;
   border-top: 11px solid transparent;
   border-bottom: 11px solid transparent;
   margin-left: 4px;
@@ -369,6 +370,16 @@ button:focus-visible {
   height: 100%;
   background: var(--flame);
   transition: width 0.08s linear;
+}
+
+/* Portrait: the corner button plates (up to 60px tall) occupy the top row, so
+   drop the info pills and fuel bar to a second row below them. This avoids the
+   top row crowding/overlap at narrow widths (360–390px). */
+.lr-mode-portrait .lr-pills {
+  top: calc(env(safe-area-inset-top, 0px) + 76px);
+}
+.lr-mode-portrait .lr-meter-wrap {
+  top: calc(env(safe-area-inset-top, 0px) + 124px);
 }
 
 /* Wide: fuel bar stands on the left side (rotated). */

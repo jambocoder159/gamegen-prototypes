@@ -196,6 +196,41 @@ async function main() {
     check('no reload during resize sweep', !reloadDetected);
     check('controls stay within viewport on all sizes', clipped.length === 0, clipped.slice(0, 2).join(' | '));
 
+    // Top HUD must never overlap: every interactive control (button) and info
+    // pill (.lr-hud .lr-pill) in the portrait layout must have a disjoint box.
+    const hudSizes = [
+      [360, 640],
+      [375, 812],
+      [390, 844],
+      [466, 678],
+      [626, 890],
+    ];
+    let hudOverlap = [];
+    for (const [w, h] of hudSizes) {
+      await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
+      await sleep(180);
+      const over = await page.evaluate(() => {
+        const name = (el) =>
+          el.getAttribute('aria-label') || el.className || el.tagName.toLowerCase();
+        const boxes = [...document.querySelectorAll('button, .lr-hud .lr-pill')]
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter((b) => b.r.width > 0 && b.r.height > 0);
+        const hits = [];
+        for (let i = 0; i < boxes.length; i++) {
+          for (let j = i + 1; j < boxes.length; j++) {
+            const a = boxes[i].r;
+            const b = boxes[j].r;
+            const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+            if (ox > 1 && oy > 1) hits.push(`${name(boxes[i].el)} ∩ ${name(boxes[j].el)}`);
+          }
+        }
+        return hits;
+      });
+      hudOverlap = hudOverlap.concat(over.map((o) => `${w}x${h}: ${o}`));
+    }
+    check('no HUD element overlap in portrait sizes', hudOverlap.length === 0, hudOverlap.slice(0, 3).join(' | '));
+
     // Distance (score/progress) increased while playing.
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
     await sleep(150);

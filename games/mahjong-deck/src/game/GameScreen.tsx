@@ -16,7 +16,8 @@ import { Dealer } from './components/Dealer';
 import { IconButton } from './components/Button';
 import { SoundControl, LanguageControl } from './components/Controls';
 import { RewardOverlay, VictoryOverlay, DefeatOverlay } from './components/Overlays';
-import { Help, Announcer } from './components/A11y';
+import { Help, Announcer, BoardNotice } from './components/A11y';
+import { tileBox } from './geometry';
 
 export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boolean }) {
   const { t } = useI18n();
@@ -33,10 +34,10 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
       const root = rootRef.current;
       if (!root) return;
       const free = tiles.filter((tl) => !tl.removed);
-      const centre = (tl: { x: number; y: number; z: number }) => ({
-        cx: tl.x + 1 - tl.z * 0.2,
-        cy: tl.y + 1 - tl.z * 0.24,
-      });
+      const centre = (tl: { x: number; y: number; z: number }) => {
+        const b = tileBox(tl);
+        return { cx: (b.left + b.right) / 2, cy: (b.top + b.bottom) / 2 };
+      };
       const active = document.activeElement as HTMLElement | null;
       const curId = active?.dataset?.tid != null ? Number(active.dataset.tid) : null;
       const cur = curId != null ? tiles.find((tl) => tl.id === curId) : null;
@@ -149,9 +150,12 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
           interactive={interactive}
           reduced={reduced}
           shakeId={game.shakeId}
+          blockedTapId={game.blockedTapId}
+          blockedTapSeq={game.blockedTapSeq}
           onTap={game.tapTile}
           ariaLabel={t('a11y.boardLabel')}
         />
+        <BoardNotice notice={game.notice} />
       </div>
 
       {showDealer && (

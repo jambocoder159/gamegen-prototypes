@@ -55,6 +55,10 @@
     "title": "Stage cleared!",
     "pick": "Choose a card to add to your hand"
   },
+  "notice": {
+    "covered": "This tile is covered",
+    "side": "Both sides are blocked"
+  },
   "victory": {
     "title": "All stacks cleared!",
     "score": "Final score {n}",
@@ -71,9 +75,10 @@
     "tileSelected": "{name} tile, {state}, selected",
     "tileFree": "free",
     "tileCovered": "covered",
+    "tileBlocked": "blocked on both sides",
     "card": "slot {key}, {n} held",
     "rewardCard": "{name}: {effect}",
-    "help": "Tap a free tile then a second free tile of the same type to clear the pair. Matching a wrong tile loses a heart. Arrow keys move focus between free tiles, Enter or Space selects, keys 1 to 4 play your hand cards, Z plays Undo, H plays Hint, S plays Shuffle.",
+    "help": "A tile is playable when nothing covers it from above and at least one side, left or right, has no tile touching it. Tap a playable tile then a second playable tile of the same type to clear the pair. Tapping a blocked tile costs nothing. Matching two different tiles loses a heart. Arrow keys move focus between playable tiles, Enter or Space selects, keys 1 to 4 play your hand cards, Z plays Undo, H plays Hint, S plays Shuffle.",
     "match": "Matched, plus {n} points.",
     "mismatch": "Wrong pair, {n} hearts left.",
     "stageClear": "Stage cleared, bonus {n} points. Choose a card.",

@@ -3,16 +3,20 @@
 // same way.
 //
 // Model: a stage is a stack of tiles at half-cell positions {x, y, z}. Each tile
-// has a 2×2 half-cell footprint, so neighbours spaced 2 apart share an edge and
-// a tile one layer up at an overlapping footprint covers it. A tile is "free"
-// (playable) when nothing covers it from above AND at least one of its left/right
-// edges is clear. Two free tiles of the same type can be matched and removed.
+// is a BT×HT sprite spanning a 2×2 half-cell footprint. The cover and side rules
+// are computed from the tiles' actual DRAWN rectangles (src/game/geometry.ts) —
+// the very same rectangles BoardView renders — so the rules always match the
+// picture. A tile is "free" (playable) when no higher tile is drawn visibly over
+// it AND at least one of its left/right edges has no same-layer tile against it.
+// Two free tiles of the same type can be matched and removed.
 //
 // Deals are generated reverse-solvable: we repeatedly peel two currently-free
 // tiles off the FULL layout and give them the same type. Because peeling two free
 // tiles is itself a legal match, the peel order is a guaranteed solution, so the
 // finished board is always clearable. Free-tile detection depends only on
 // geometry, so the peel order is independent of the types we assign.
+
+import { boxCovers, boxSideTouches } from './geometry';
 
 export interface Pos {
   x: number; // half-cell units, footprint spans [x, x+2)
@@ -39,23 +43,20 @@ export function mulberry32(seed: number): PRNG {
   };
 }
 
-/** Footprints overlap when they are within 2 half-cells on both axes. */
-export function footprintsOverlap(a: Pos, b: Pos): boolean {
-  return Math.abs(a.x - b.x) < 2 && Math.abs(a.y - b.y) < 2;
-}
-
-function covered(tile: Pos, tiles: Tile[]): boolean {
+/** True when a higher tile is drawn visibly over `tile` (shared geometry). */
+function covered(tile: Tile, tiles: Tile[]): boolean {
   for (const o of tiles) {
-    if (o.removed) continue;
-    if (o.z > tile.z && footprintsOverlap(tile, o)) return true;
+    if (o.removed || o === tile) continue;
+    if (o.z > tile.z && boxCovers(tile, o)) return true;
   }
   return false;
 }
 
-function sideBlocked(tile: Pos, tiles: Tile[], dx: number): boolean {
+/** True when a same-layer tile is drawn against `tile` on side `dir` (-1/+1). */
+function sideBlocked(tile: Tile, tiles: Tile[], dir: -1 | 1): boolean {
   for (const o of tiles) {
-    if (o.removed) continue;
-    if (o.z === tile.z && o.x === tile.x + dx && Math.abs(o.y - tile.y) < 2) return true;
+    if (o.removed || o === tile) continue;
+    if (o.z === tile.z && boxSideTouches(tile, o, dir)) return true;
   }
   return false;
 }
@@ -64,9 +65,19 @@ function sideBlocked(tile: Pos, tiles: Tile[], dx: number): boolean {
 export function isFree(tile: Tile, tiles: Tile[]): boolean {
   if (tile.removed) return false;
   if (covered(tile, tiles)) return false;
-  const left = sideBlocked(tile, tiles, -2);
-  const right = sideBlocked(tile, tiles, 2);
-  return !left || !right;
+  return !sideBlocked(tile, tiles, -1) || !sideBlocked(tile, tiles, 1);
+}
+
+/**
+ * Why a tile can't be played, for the UI's blocked-tap notice: 'covered' when a
+ * higher tile sits on it, 'side' when both horizontal edges are blocked, or null
+ * when it is actually free. Uses the same geometry as isFree().
+ */
+export function blockReason(tile: Tile, tiles: Tile[]): 'covered' | 'side' | null {
+  if (tile.removed) return null;
+  if (covered(tile, tiles)) return 'covered';
+  if (sideBlocked(tile, tiles, -1) && sideBlocked(tile, tiles, 1)) return 'side';
+  return null;
 }
 
 /** All currently-free, non-removed tiles. */

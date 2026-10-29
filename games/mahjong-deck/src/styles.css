@@ -361,14 +361,30 @@ img.art {
   object-fit: contain;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
+/* Blocked tiles (covered or side-blocked): clearly dimmed, no affordance.
+   Dim via opacity only — no filters/gradients faking art. */
 .tile--covered {
   cursor: default;
 }
 .tile--covered .tile__img {
-  opacity: 0.55;
+  opacity: 0.5;
 }
+/* Playable tiles: full brightness plus a subtle lift so they read as pickable. */
 .tile--free .tile__img {
   opacity: 1;
+}
+.tile--free .tile__face {
+  transform: translateY(-3%);
+}
+/* A tapped-but-blocked tile gives a tiny jiggle (never under reduced motion). */
+.tile--shake {
+  animation: tile-shake 340ms ease-in-out;
+}
+@keyframes tile-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
 }
 .tile--selected {
   transform: translateY(-7%);
@@ -401,6 +417,34 @@ img.art {
 @keyframes tile-pop {
   0% { transform: scale(1); opacity: 1; }
   100% { transform: scale(0.1); opacity: 0; }
+}
+
+/* Transient notice over the board when a blocked tile is tapped. */
+.board-notice {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 20000;
+  max-width: 92%;
+}
+.board-notice__chip {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--felt-dark);
+  color: var(--light);
+  border: 2px solid var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: notice-fade 1600ms ease-in-out forwards;
+}
+@keyframes notice-fade {
+  0% { opacity: 0; transform: translateY(4px); }
+  12%, 72% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
 }
 
 /* --- hand (ability cards) ------------------------------------------------- */
@@ -742,7 +786,13 @@ img.art {
   }
   .tile--gone,
   .tile--hint .tile__face,
+  .tile--shake,
   .board--shake {
     animation: none !important;
+  }
+  /* keep the blocked notice visible but static (no slide/fade loop) */
+  .board-notice__chip {
+    animation: none;
+    opacity: 1;
   }
 }

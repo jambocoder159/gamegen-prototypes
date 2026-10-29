@@ -10,10 +10,14 @@ React 19 + TypeScript + Vite, GameGen "noskin" platform.
 - Tap a **free** tile, then a second free tile of the **same** face → the pair
   clears and scores `100 × combo`. A combo rises by one for each match made
   within 2.5 s of the last (max ×5); the combo pill shows when active.
-- A tile is **free** when nothing covers it from above and at least one of its
-  left/right edges is clear. Covered tiles are dimmed and not clickable.
-- Matching two **different** tiles costs a heart (start 3, max 5). At 0 hearts
-  the run ends.
+- A tile is **playable** when nothing covers it from above **and** at least one
+  side (left or right) has no tile touching it. Blocked tiles are clearly dimmed;
+  the cover and side rules are computed from the exact rectangles the tiles are
+  drawn as (`src/game/geometry.ts`), so what you see is what the rules say.
+- Tapping a **blocked** tile costs nothing — it just jiggles and shows a short
+  notice saying whether it is covered or blocked on both sides.
+- Matching two **different** playable tiles costs a heart (start 3, max 5). At 0
+  hearts the run ends.
 - Clear a stack to get a reward: choose 1 of 3 ability cards. Clear all five
   stacks to win. Stage-clear bonus = `hearts × 200`.
 - If no matching pair is reachable, the board auto-reshuffles — free if you hold
@@ -53,7 +57,16 @@ npm run pack           # build + write mahjong-deck.zip (dist contents at zip ro
 ```
 
 `test:headless` drives the real UI (clicking tile buttons, reading their data
-attributes) and writes screenshots to `qa/`. The preview port is **4174**.
+attributes) and writes screenshots to `qa/`. The preview port is **4174**. For
+each of the five stacks it independently recomputes, from the real DOM bounding
+boxes, which tiles are visually covered and side-blocked and confirms the game's
+playable/blocked flags, brightness and click behaviour match the picture.
+
+### `?stage=N` (QA only)
+
+Appending `?stage=N` (N = 1–5) to the URL starts a fresh run on that stack, for
+testing deeper stages without playing through. It is validated to 1–5 (anything
+else starts at stage 1) and never touches saved data or the best score.
 
 ## Structure
 
@@ -64,8 +77,10 @@ attributes) and writes screenshots to `qa/`. The preview port is **4174**.
 - `src/game/cards.ts` — the six ability cards and hand/reward helpers.
 - `src/game/useGame.ts` — React state machine (playing / reward / victory /
   defeat), scoring, combo timing, card effects, stuck detection.
+- `src/game/geometry.ts` — the single shared tile geometry (drawn rectangles +
+  cover/side predicates) used by both the logic and BoardView, so rules == picture.
 - `src/game/components/BoardView.tsx` — absolutely-positioned tile buttons scaled
-  by a CSS transform to fit the available space, with per-layer 3D offsets.
+  by a CSS transform to fit the available space; depth from z-index + drop-shadow.
 - `src/platform/*`, `src/services/*`, `src/i18n/*` — reusable GameGen platform
   infrastructure (preload gate, audio, layout, asset resolver, i18n).
 

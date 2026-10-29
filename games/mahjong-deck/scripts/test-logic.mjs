@@ -19,19 +19,45 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+// ---- shared tile geometry (mirror of src/game/geometry.ts) ---------------
+const BT = 72, ASPECT = 182 / 199, HT = BT / ASPECT;
+const LAYER_OFF_X = 0, LAYER_OFF_Y = 0;
+const COVER_MIN_FRAC = 0.12;
+const TILE_AREA = BT * HT;
+function box(p) {
+  const left = p.x * (BT / 2) + p.z * LAYER_OFF_X;
+  const top = p.y * (HT / 2) + p.z * LAYER_OFF_Y;
+  return { left, top, right: left + BT, bottom: top + HT };
+}
+function interArea(a, b) {
+  const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+  const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+  return ox > 0 && oy > 0 ? ox * oy : 0;
+}
+const boxCovers = (t, o) => interArea(box(t), box(o)) >= COVER_MIN_FRAC * TILE_AREA;
+function boxSideTouches(t, o, dir) {
+  const a = box(t), b = box(o);
+  const v = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+  if (v <= 0) return false;
+  const EPS = 0.5;
+  return dir < 0
+    ? b.left < a.left && b.right > a.left - EPS
+    : b.right > a.right && b.left < a.right + EPS;
+}
+// no-same-layer-overlap check still works on footprints (pre-scale, offset-free)
 const overlap = (a, b) => Math.abs(a.x - b.x) < 2 && Math.abs(a.y - b.y) < 2;
 function isFree(tile, tiles) {
   if (tile.removed) return false;
   for (const o of tiles) {
-    if (o.removed) continue;
-    if (o.z > tile.z && overlap(tile, o)) return false;
+    if (o.removed || o === tile) continue;
+    if (o.z > tile.z && boxCovers(tile, o)) return false;
   }
   let left = false;
   let right = false;
   for (const o of tiles) {
-    if (o.removed || o.z !== tile.z) continue;
-    if (o.x === tile.x - 2 && Math.abs(o.y - tile.y) < 2) left = true;
-    if (o.x === tile.x + 2 && Math.abs(o.y - tile.y) < 2) right = true;
+    if (o.removed || o === tile || o.z !== tile.z) continue;
+    if (boxSideTouches(tile, o, -1)) left = true;
+    if (boxSideTouches(tile, o, 1)) right = true;
   }
   return !left || !right;
 }
@@ -122,21 +148,15 @@ function solvable(tiles0) {
   return dfs();
 }
 
-// ---- board-scale math (mirror of BoardView) ------------------------------
+// ---- board-scale math (mirror of BoardView, using the shared geometry) ----
 function minTileWidth(positions, availW, availH) {
-  const BT = 72;
-  const ASPECT = 182 / 199;
-  const HT = BT / ASPECT;
-  const OFF_X = -0.1 * BT;
-  const OFF_Y = -0.12 * HT;
   let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
   for (const p of positions) {
-    const left = p.x * (BT / 2) + p.z * OFF_X;
-    const top = p.y * (HT / 2) + p.z * OFF_Y;
-    minL = Math.min(minL, left);
-    minT = Math.min(minT, top);
-    maxR = Math.max(maxR, left + BT);
-    maxB = Math.max(maxB, top + HT);
+    const b = box(p);
+    minL = Math.min(minL, b.left);
+    minT = Math.min(minT, b.top);
+    maxR = Math.max(maxR, b.right);
+    maxB = Math.max(maxB, b.bottom);
   }
   const scale = Math.min(availW / (maxR - minL), availH / (maxB - minT));
   return scale * BT;

@@ -70,14 +70,21 @@ export class AudioManager {
     return this.muted;
   }
 
-  playSfx(key: AudioKey): void {
+  /** Play a one-shot sfx. `gain` (0..1) attenuates it, e.g. a soft blocked-tap. */
+  playSfx(key: AudioKey, gain = 1): void {
     if (!this.ctx || !this.master || this.muted) return;
     const buf = this.buffers.get(key);
     if (!buf) return;
     if (this.ctx.state === 'suspended') return;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(this.master);
+    if (gain >= 1) {
+      src.connect(this.master);
+    } else {
+      const g = this.ctx.createGain();
+      g.gain.value = Math.max(0, gain);
+      src.connect(g).connect(this.master);
+    }
     src.start();
   }
 

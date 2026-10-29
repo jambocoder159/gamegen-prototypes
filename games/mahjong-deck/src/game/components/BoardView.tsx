@@ -1,22 +1,18 @@
-// The tile stack. Every tile is a real <button> absolutely positioned at its
-// half-cell coordinate, with a per-layer up-left offset so the stack reads as 3D
-// (higher z drawn above). The whole board is laid out at an intrinsic pixel size
-// and scaled with a CSS transform to fit the available space, staying centred.
-// Covered tiles are dimmed and non-interactive; free tiles are clickable and
-// keyboard-focusable. Shared by the play screen and the title demo.
+// The tile stack. Every tile is a real <button> absolutely positioned by the
+// shared geometry module (so the rules match the picture exactly); z-index and a
+// drop-shadow give the stack its depth. The whole board is laid out at an
+// intrinsic pixel size and scaled with a CSS transform to fit the available
+// space, staying centred. Blocked tiles are dimmed; free tiles are bright,
+// clickable and keyboard-focusable. Tapping a blocked tile reports why (via
+// onTap) but costs nothing. Shared by the play screen and the title demo.
 
 import { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n';
 import { useElementSize } from '../../platform/useElementSize';
 import { TILE_KEYS, tileImageKey } from '../../config/assets';
-import { isFree, type Tile } from '../logic';
+import { isFree, blockReason, type Tile } from '../logic';
+import { BT, HT, tileBox } from '../geometry';
 import { Art } from './Art';
-
-const BT = 72; // base tile width (px, pre-scale); actual size comes from the transform
-const TILE_ASPECT = 182 / 199; // sprite w/h
-const HT = BT / TILE_ASPECT; // base tile height
-const OFF_X = -0.1 * BT; // per-layer x offset (up-left stack)
-const OFF_Y = -0.12 * HT; // per-layer y offset
 
 interface Placed {
   tile: Tile;
@@ -33,6 +29,8 @@ export function BoardView({
   onTap,
   ariaLabel,
   shakeId,
+  blockedTapId,
+  blockedTapSeq,
   reduced,
 }: {
   tiles: Tile[];
@@ -42,6 +40,8 @@ export function BoardView({
   onTap?: (id: number) => void;
   ariaLabel?: string;
   shakeId?: number;
+  blockedTapId?: number | null;
+  blockedTapSeq?: number;
   reduced?: boolean;
 }) {
   const { t } = useI18n();
@@ -55,14 +55,22 @@ export function BoardView({
     return () => window.clearTimeout(id);
   }, [shakeId, reduced]);
 
+  // A single blocked tile jiggles when it's tapped while covered/side-blocked.
+  const [shakeTile, setShakeTile] = useState<number | null>(null);
+  useEffect(() => {
+    if (!blockedTapSeq || blockedTapId == null || reduced) return;
+    setShakeTile(blockedTapId);
+    const id = window.setTimeout(() => setShakeTile(null), 360);
+    return () => window.clearTimeout(id);
+  }, [blockedTapSeq, blockedTapId, reduced]);
+
   // Place every tile (removed ones kept for the scale-out animation).
   let minLeft = Infinity;
   let minTop = Infinity;
   let maxRight = -Infinity;
   let maxBottom = -Infinity;
   const placed: Placed[] = tiles.map((tile) => {
-    const left = tile.x * (BT / 2) + tile.z * OFF_X;
-    const top = tile.y * (HT / 2) + tile.z * OFF_Y;
+    const { left, top } = tileBox(tile);
     minLeft = Math.min(minLeft, left);
     minTop = Math.min(minTop, top);
     maxRight = Math.max(maxRight, left + BT);
@@ -115,10 +123,15 @@ export function BoardView({
               );
             }
             const free = isFree(tile, tiles);
+            const reason = free ? null : blockReason(tile, tiles);
             const isSelected = selected === tile.id;
             const isHint = hintSet?.has(tile.id) ?? false;
             const name = t(`tiles.${TILE_KEYS[tile.type]}`);
-            const stateText = free ? t('a11y.tileFree') : t('a11y.tileCovered');
+            const stateText = free
+              ? t('a11y.tileFree')
+              : reason === 'side'
+                ? t('a11y.tileBlocked')
+                : t('a11y.tileCovered');
             const label = isSelected
               ? t('a11y.tileSelected', { name, state: stateText })
               : t('a11y.tile', { name, state: stateText });
@@ -126,6 +139,7 @@ export function BoardView({
               'tile' +
               (free ? ' tile--free' : ' tile--covered') +
               (isSelected ? ' tile--selected' : '') +
+              (shakeTile === tile.id ? ' tile--shake' : '') +
               (isHint ? (reduced ? ' tile--hint-static' : ' tile--hint') : '');
             return (
               <button
@@ -150,7 +164,9 @@ export function BoardView({
                   zIndex: z * 100 + tile.y + tile.x + (isSelected ? 10000 : 0),
                 }}
                 onClick={() => {
-                  if (free && interactive) onTap?.(tile.id);
+                  // Free → play it. Blocked → still report the tap so the game can
+                  // explain why (and jiggle), but it never costs anything.
+                  if (interactive) onTap?.(tile.id);
                 }}
               >
                 <span className="tile__face">
@@ -164,5 +180,3 @@ export function BoardView({
     </div>
   );
 }
-
-export { BT, TILE_ASPECT };

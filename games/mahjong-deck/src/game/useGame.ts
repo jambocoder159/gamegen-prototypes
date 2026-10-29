@@ -10,6 +10,7 @@ import {
   hasMove,
   isFree,
   isWon,
+  blockReason,
   mulberry32,
   reshuffleTypes,
   type Tile,
@@ -31,6 +32,7 @@ export type Phase = 'playing' | 'reward' | 'victory' | 'defeat';
 export type NoticeKind =
   | 'match' | 'mismatch' | 'select' | 'stageClear'
   | 'reshuffleCard' | 'reshuffleHeart' | 'noPair'
+  | 'blockedCovered' | 'blockedSide'
   | 'cardHint' | 'cardShuffle' | 'cardUndo' | 'cardWild' | 'cardHeal' | 'cardCombo'
   | 'victory' | 'defeat' | 'heal';
 
@@ -45,6 +47,24 @@ export const MAX_HEARTS = 5;
 export const COMBO_WINDOW_MS = 2500;
 export const MAX_COMBO = 5;
 const STAGE_CLEAR_BONUS = 200;
+
+/**
+ * Optional `?stage=N` (N = 1..5) starting stage, for QA/testing only. Validated
+ * to the real stage range; anything else starts at stage 1. Never touches saves
+ * or the best score — it only picks which stack a fresh run opens on.
+ */
+function startStageIndex(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const raw = new URLSearchParams(window.location.search).get('stage');
+    if (raw == null) return 0;
+    const n = Number(raw);
+    if (Number.isInteger(n) && n >= 1 && n <= STAGE_COUNT) return n - 1;
+  } catch {
+    /* ignore malformed URL */
+  }
+  return 0;
+}
 
 function dealSeed(stageIndex: number, salt: number): number {
   return (Math.imul(0x9e3779b1, stageIndex + 1) + Math.imul(salt, 0x85ebca77)) >>> 0;
@@ -67,7 +87,9 @@ interface State {
   hint: [number, number] | null;
   rewards: CardKey[] | null;
   removedOrder: number[]; // tile ids in the order they were removed (for undo)
-  shakeId: number; // bumps to trigger a mismatch shake
+  shakeId: number; // bumps to trigger a mismatch (board) shake
+  blockedTapId: number | null; // the last blocked tile tapped (jiggles it)
+  blockedTapSeq: number; // bumps each blocked tap so the same tile re-jiggles
   cheer: number; // bumps to make the dealer cheer
 }
 
@@ -99,6 +121,8 @@ function freshState(stageIndex: number): State {
     rewards: null,
     removedOrder: [],
     shakeId: 0,
+    blockedTapId: null,
+    blockedTapSeq: 0,
     cheer: 0,
   };
 }
@@ -119,6 +143,8 @@ export interface UseGame {
   hint: [number, number] | null;
   rewards: CardKey[] | null;
   shakeId: number;
+  blockedTapId: number | null;
+  blockedTapSeq: number;
   cheer: number;
   notice: Notice | null;
   tapTile: (id: number) => void;
@@ -129,7 +155,7 @@ export interface UseGame {
 
 export function useGame(audio: AudioManager): UseGame {
   const stages = useMemo(() => getStages(), []);
-  const [state, setState] = useState<State>(() => freshState(0));
+  const [state, setState] = useState<State>(() => freshState(startStageIndex()));
   const [best, setBest] = useState<number>(loadBest);
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -221,7 +247,16 @@ export function useGame(audio: AudioManager): UseGame {
       setState((s) => {
         if (s.phase !== 'playing') return s;
         const tile = s.tiles.find((t) => t.id === id);
-        if (!tile || !isFree(tile, s.tiles)) return s;
+        if (!tile) return s;
+
+        // Tapping a blocked tile costs nothing: say why, jiggle it, soft sfx.
+        if (!isFree(tile, s.tiles)) {
+          const reason = blockReason(tile, s.tiles);
+          if (!reason) return s;
+          audio.playSfx('sfxWrong', 0.35);
+          announce(reason === 'covered' ? 'blockedCovered' : 'blockedSide');
+          return { ...s, blockedTapId: id, blockedTapSeq: s.blockedTapSeq + 1 };
+        }
 
         if (s.selected === null) {
           audio.playSfx('sfxSelect');
@@ -381,7 +416,7 @@ export function useGame(audio: AudioManager): UseGame {
     lastMatchRef.current = -Infinity;
     shuffleSaltRef.current = 1;
     window.clearTimeout(comboTimerRef.current);
-    setState(freshState(0));
+    setState(freshState(startStageIndex()));
     setNotice(null);
   }, [audio]);
 
@@ -401,6 +436,8 @@ export function useGame(audio: AudioManager): UseGame {
     hint: state.hint,
     rewards: state.rewards,
     shakeId: state.shakeId,
+    blockedTapId: state.blockedTapId,
+    blockedTapSeq: state.blockedTapSeq,
     cheer: state.cheer,
     notice,
     tapTile,

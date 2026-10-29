@@ -206,6 +206,7 @@ async function main() {
     });
     try {
       await runMain(browser);
+      await runStages(browser);
       await runFallback(browser);
     } finally {
       await browser.close();
@@ -420,6 +421,137 @@ async function runMain(browser) {
   check('no console errors/warnings', consoleIssues.length === 0, consoleIssues.slice(0, 4).join(' | '));
   check('no failed requests', failedRequests.length === 0, failedRequests.slice(0, 4).join(' | '));
   await page.close();
+}
+
+// For every stage (reached via the documented ?stage=N param), independently
+// recompute from the REAL DOM bounding boxes which tiles are visually covered
+// (intersection ≥ 12% of a tile) and which are side-blocked (same-layer grid
+// neighbours on both sides), and confirm: (core) the game's data-free matches
+// this picture exactly; (a) every free tile is enabled and bright; (b) every
+// visually-covered tile is dimmed and not selectable; (c) tapping a blocked tile
+// costs no heart and shows the notice; (d) a free tile can be selected.
+async function readStageTiles(page) {
+  return page.evaluate(() => {
+    const els = [...document.querySelectorAll('.game .board__stack button[data-tid]')];
+    return els.map((e) => {
+      const r = e.getBoundingClientRect();
+      const img = e.querySelector('.tile__img');
+      const op = img ? parseFloat(getComputedStyle(img).opacity) : 1;
+      return {
+        id: Number(e.dataset.tid),
+        x: Number(e.dataset.x),
+        y: Number(e.dataset.y),
+        z: Number(e.dataset.z),
+        free: e.dataset.free === '1',
+        ariaDisabled: e.getAttribute('aria-disabled') === 'true',
+        opacity: op,
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+        w: r.width,
+        h: r.height,
+      };
+    });
+  });
+}
+
+function stageGeometryReport(tiles) {
+  const interArea = (a, b) => {
+    const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+    const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return ox > 0 && oy > 0 ? ox * oy : 0;
+  };
+  const coveredDom = (t) =>
+    tiles.some((o) => o.id !== t.id && o.z > t.z && interArea(t, o) >= 0.12 * (t.w * t.h));
+  const sideGrid = (t, dir) =>
+    tiles.some((o) => o.id !== t.id && o.z === t.z && o.x === t.x + 2 * dir && Math.abs(o.y - t.y) < 2);
+  const rows = tiles.map((t) => {
+    const cov = coveredDom(t);
+    const blockedBothSides = sideGrid(t, -1) && sideGrid(t, 1);
+    return { t, cov, freeExpected: !cov && !blockedBothSides };
+  });
+  return rows;
+}
+
+async function runStages(browser) {
+  for (let n = 1; n <= 5; n++) {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    try {
+      await page.goto(`${BASE_URL}?stage=${n}`, { waitUntil: 'networkidle0' });
+      await page.waitForSelector('.btn--enter', { timeout: 20000 });
+      await page.click('.btn--enter');
+      await page.waitForSelector('.title__content', { timeout: 10000 });
+      await page.click('.btn--play');
+      await page.waitForSelector('.game .board__stack .tile', { timeout: 10000 });
+      await sleep(250);
+
+      // confirm we actually started on stage n
+      const stageNum = await page.$$eval('.pill__value', (els) => (els[0]?.textContent || '').trim());
+      check(`stage ${n}: ?stage=${n} opens the right stack`, stageNum.startsWith(String(n)), `HUD shows "${stageNum}"`);
+
+      const tiles = await readStageTiles(page);
+      const rows = stageGeometryReport(tiles);
+      const freeCount = rows.filter((r) => r.freeExpected).length;
+      const coveredCount = rows.filter((r) => r.cov).length;
+
+      // core: the drawn picture matches the game's free flags exactly
+      const mismatches = rows.filter((r) => r.freeExpected !== r.t.free);
+      check(
+        `stage ${n}: DOM geometry matches data-free for all ${tiles.length} tiles`,
+        mismatches.length === 0,
+        mismatches.length
+          ? mismatches.slice(0, 4).map((r) => `#${r.t.id}(${r.t.x},${r.t.y},z${r.t.z}) exp=${r.freeExpected} got=${r.t.free}`).join(' | ')
+          : `${freeCount} free, ${coveredCount} covered`,
+      );
+
+      // (a) every free tile is enabled and bright
+      const freeBad = rows.filter((r) => r.freeExpected && (!r.t.free || r.t.ariaDisabled || r.t.opacity < 0.9));
+      check(`stage ${n}: free tiles enabled + bright (count ${freeCount})`, freeBad.length === 0,
+        freeBad.slice(0, 3).map((r) => `#${r.t.id} disabled=${r.t.ariaDisabled} op=${r.t.opacity}`).join(' | '));
+
+      // (b) every visually-covered tile is dimmed + marked non-free
+      const covBad = rows.filter((r) => r.cov && (r.t.free || r.t.opacity > 0.6));
+      check(`stage ${n}: covered tiles dimmed + non-free (count ${coveredCount})`, covBad.length === 0,
+        covBad.slice(0, 3).map((r) => `#${r.t.id} free=${r.t.free} op=${r.t.opacity}`).join(' | '));
+
+      // (c) tapping a blocked tile: no heart lost, a notice shows, nothing selected
+      const blocked = rows.find((r) => !r.t.free);
+      if (blocked) {
+        const heartsBefore = await readHearts(page);
+        await clickTile(page, blocked.t.id);
+        await sleep(120);
+        const heartsAfter = await readHearts(page);
+        const noticeShown = await page.$eval('.board-notice', (el) => el.textContent.trim().length > 0).catch(() => false);
+        const selected = await page.$$eval('.tile--selected', (els) => els.length);
+        check(`stage ${n}: blocked tap costs no heart + shows notice`,
+          heartsAfter === heartsBefore && noticeShown && selected === 0,
+          `hearts ${heartsBefore}→${heartsAfter}, notice=${noticeShown}, selected=${selected}`);
+      } else {
+        check(`stage ${n}: blocked tap costs no heart + shows notice`, false, 'no blocked tile found');
+      }
+
+      // (d) a free tile can be selected
+      const freeTile = rows.find((r) => r.freeExpected && r.t.free);
+      if (freeTile) {
+        await clickTile(page, freeTile.t.id);
+        await sleep(100);
+        const isSel = await page.$(`.tile--selected[data-tid="${freeTile.t.id}"]`);
+        check(`stage ${n}: a free tile selects`, !!isSel, `tile #${freeTile.t.id}`);
+        await clickTile(page, freeTile.t.id); // deselect, leave board clean
+        await sleep(60);
+      } else {
+        check(`stage ${n}: a free tile selects`, false, 'no free tile found');
+      }
+
+      console.log(`  stage ${n} counts: ${tiles.length} tiles, ${freeCount} free, ${coveredCount} covered`);
+      if (n === 2) await page.screenshot({ path: join(qa, 'stage2.png') });
+    } catch (e) {
+      check(`stage ${n}: per-stage geometry checks`, false, String(e).slice(0, 140));
+    }
+    await page.close();
+  }
 }
 
 async function runFallback(browser) {

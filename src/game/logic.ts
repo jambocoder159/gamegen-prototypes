@@ -5,11 +5,16 @@
 // viewport aspect, so wide screens see further ahead.
 
 import { makeRng, type Rng } from './rng.ts';
+import { DRAW } from './render.ts';
 
 export const FIXED_DT = 1 / 120;
 
+// Half the lantern sprite's drawn height, in world units. The soft ceiling
+// clamps this edge (the sprite top, not the collision centre) below the HUD.
+const LANTERN_HALF_H = DRAW.lantern.h / 2;
+
 export const CONFIG = {
-  ceilingY: 78, // soft clamp near the top (keeps the lantern clear of the HUD)
+  ceilingY: 78, // default HUD-bottom (sprite-top limit); overridden per layout via setView
   groundY: 594, // collision ground line (hill line)
   gravity: 520,
   thrust: 950,
@@ -108,6 +113,8 @@ export class GameSim {
   scrollX = 0;
   speed: number = CONFIG.speedStart;
   over = false;
+  // World y of the HUD's bottom edge; the lantern's sprite top stays below it.
+  ceilingY: number = CONFIG.ceilingY;
 
   lantern: Lantern = { y: 300, vy: 0, fuel: CONFIG.fuelMax, invuln: 0, knockX: 0, tilt: 0 };
 
@@ -165,9 +172,10 @@ export class GameSim {
     this.generateAhead();
   }
 
-  setView(viewW: number, lanternXFrac: number): void {
+  setView(viewW: number, lanternXFrac: number, ceilingY: number = this.ceilingY): void {
     this.viewW = Math.max(240, viewW);
     this.lanternXFrac = lanternXFrac;
+    this.ceilingY = ceilingY;
   }
 
   lanternScreenX(): number {
@@ -185,7 +193,7 @@ export class GameSim {
       c.centerMid +
       c.centerAmp1 * Math.sin((x / c.centerWave1) * Math.PI * 2 + this.p1) +
       c.centerAmp2 * Math.sin((x / c.centerWave2) * Math.PI * 2 + this.p2);
-    const lo = c.ceilingY + 70;
+    const lo = this.ceilingY + 70;
     const hi = c.groundY - 90;
     return Math.max(lo, Math.min(hi, y));
   }
@@ -232,7 +240,7 @@ export class GameSim {
         const isCrow = this.rng() < c.crowShare;
         const r = isCrow ? c.crowR : c.stormR;
         const offset = half + c.hazardMargin + r;
-        const lo = c.ceilingY + r;
+        const lo = this.ceilingY + r;
         const hi = c.groundY - r;
 
         if (isCrow) {
@@ -301,8 +309,8 @@ export class GameSim {
     if (l.vy > c.vyMax) l.vy = c.vyMax;
     l.y += l.vy * dt;
 
-    // Ceiling soft clamp (no death).
-    const ceil = c.ceilingY + c.lanternR;
+    // Ceiling soft clamp (no death): keep the lantern's sprite top below the HUD.
+    const ceil = this.ceilingY + LANTERN_HALF_H;
     if (l.y < ceil) {
       l.y = ceil;
       if (l.vy < 0) l.vy *= 0.25;

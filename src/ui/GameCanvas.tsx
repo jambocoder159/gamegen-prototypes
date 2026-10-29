@@ -9,7 +9,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { GameSim, CorridorBot, FIXED_DT, type GameEvent } from '../game/logic';
 import { GameRenderer } from '../game/renderer';
-import { WORLD_H } from '../config/layout';
+import { WORLD_H, hudCeilingWorldY } from '../config/layout';
 import type { Viewport } from '../platform/viewport';
 import { audio } from '../platform/audio';
 import type { AudioKey } from '../config/assets';
@@ -75,7 +75,12 @@ export function GameCanvas({
   useEffect(() => {
     sizeRef.current = { w: viewport.w, h: viewport.h };
     const sim = simRef.current;
-    if (sim) sim.setView((WORLD_H * viewport.w) / viewport.h, xFracFor(viewport));
+    if (sim)
+      sim.setView(
+        (WORLD_H * viewport.w) / viewport.h,
+        xFracFor(viewport),
+        hudCeilingWorldY(viewport.mode, viewport.w, viewport.h),
+      );
   }, [viewport]);
 
   useEffect(() => {
@@ -83,7 +88,12 @@ export function GameCanvas({
     if (!root) return;
 
     const sim = new GameSim(seed);
-    sim.setView((WORLD_H * vpRef.current.w) / vpRef.current.h, xFracFor(vpRef.current));
+    const vp0 = vpRef.current;
+    sim.setView(
+      (WORLD_H * vp0.w) / vp0.h,
+      xFracFor(vp0),
+      hudCeilingWorldY(vp0.mode, vp0.w, vp0.h),
+    );
     sim.reset(seed);
     simRef.current = sim;
 

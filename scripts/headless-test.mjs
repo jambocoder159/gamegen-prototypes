@@ -144,6 +144,63 @@ async function main() {
     });
     check('game screen started', true);
 
+    // Lantern must never ride up behind the HUD. Hold thrust for 4 s (lantern
+    // rises and pins to the soft ceiling) at the portrait and wide design sizes
+    // and assert its bounding box never intersects any HUD element box.
+    const restartBtn = '.lr-corner-tl .lr-iconbtn:not(.lr-glyphbtn)';
+    const sampleLanternVsHud = () =>
+      page.evaluate(() => {
+        const L = document.querySelector('.lr-lantern');
+        if (!L) return null;
+        const lr = L.getBoundingClientRect();
+        if (lr.width === 0 || lr.height === 0) return null;
+        const hud = [...document.querySelectorAll('button, .lr-hud .lr-pill, .lr-meter-wrap')]
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter((b) => b.r.width > 0 && b.r.height > 0);
+        for (const b of hud) {
+          const r = b.r;
+          const ox = Math.min(lr.right, r.right) - Math.max(lr.left, r.left);
+          const oy = Math.min(lr.bottom, r.bottom) - Math.max(lr.top, r.top);
+          if (ox > 1 && oy > 1) {
+            return `lantern ∩ ${b.el.getAttribute('aria-label') || b.el.className}`;
+          }
+        }
+        return null;
+      });
+
+    let lanternHudHit = [];
+    for (const [w, h] of [
+      [390, 844],
+      [1280, 720],
+    ]) {
+      await page.click(restartBtn); // fresh game => full fuel, lantern mid-screen
+      await page.waitForSelector('.lr-game .lr-playfield', { timeout: 10000 });
+      await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
+      await sleep(180);
+      await page.focus('body');
+      await page.keyboard.down('Space');
+      for (let i = 0; i < 40; i++) {
+        await sleep(100); // 40 * 100ms = 4s of held thrust
+        const hit = await sampleLanternVsHud();
+        if (hit) {
+          lanternHudHit.push(`${w}x${h}: ${hit}`);
+          break;
+        }
+      }
+      await page.keyboard.up('Space');
+    }
+    check(
+      'lantern stays clear of the HUD while thrusting (390x844, 1280x720)',
+      lanternHudHit.length === 0,
+      lanternHudHit.slice(0, 3).join(' | '),
+    );
+
+    // Reset to the portrait design size with a fresh game for the checks below.
+    await page.click(restartBtn);
+    await page.waitForSelector('.lr-game .lr-playfield', { timeout: 10000 });
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await sleep(180);
+
     // Thrust (hold Space) to stay airborne and accumulate distance.
     await page.focus('body');
     await page.keyboard.down('Space');

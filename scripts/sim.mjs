@@ -5,10 +5,11 @@
 //
 // Usage: node scripts/sim.mjs [games]
 import { GameSim, CorridorBot, FIXED_DT, CONFIG } from '../src/game/logic.ts';
+import { hudCeilingWorldY } from '../src/config/layout.ts';
 
-function runGame(seed, delay, viewW, lanternXFrac, maxTime, forceCap = false) {
+function runGame(seed, delay, viewW, lanternXFrac, maxTime, forceCap = false, ceilingY) {
   const sim = new GameSim(seed);
-  sim.setView(viewW, lanternXFrac);
+  sim.setView(viewW, lanternXFrac, ceilingY);
   sim.reset(seed);
   if (forceCap) {
     // Pretend the whole difficulty ramp has already elapsed.
@@ -45,10 +46,14 @@ function stats(arr) {
 const games = Number(process.argv[2] || 60);
 
 const views = [
-  { name: 'portrait 390x844', viewW: (640 * 390) / 844, xf: 0.28 },
-  { name: 'wide 1280x720', viewW: (640 * 1280) / 720, xf: 0.3 },
-  { name: 'square 626x890', viewW: (640 * 626) / 890, xf: 0.3 },
-];
+  { name: 'portrait 390x844', w: 390, h: 844, mode: 'portrait', xf: 0.28 },
+  { name: 'wide 1280x720', w: 1280, h: 720, mode: 'wide', xf: 0.3 },
+  { name: 'square 626x890', w: 626, h: 890, mode: 'nearsquare', xf: 0.3 },
+].map((v) => ({
+  ...v,
+  viewW: (640 * v.w) / v.h,
+  ceilingY: hudCeilingWorldY(v.mode, v.w, v.h),
+}));
 
 for (const v of views) {
   const slow = [];
@@ -56,11 +61,11 @@ for (const v of views) {
   const perfect = [];
   const causes = {};
   for (let i = 0; i < games; i++) {
-    const r = runGame(1000 + i, 0.15, v.viewW, v.xf, 240);
+    const r = runGame(1000 + i, 0.15, v.viewW, v.xf, 240, false, v.ceilingY);
     slow.push(r.time);
     slowHits.push(r.hits);
     causes[r.cause] = (causes[r.cause] || 0) + 1;
-    perfect.push(runGame(1000 + i, 0, v.viewW, v.xf, 240).time);
+    perfect.push(runGame(1000 + i, 0, v.viewW, v.xf, 240, false, v.ceilingY).time);
   }
   const ss = stats(slow);
   const ps = stats(perfect);
@@ -78,8 +83,9 @@ for (const v of views) {
 // Perfect play at the difficulty cap from the start.
 let capSurvive = 0;
 const capGames = Math.min(games, 30);
+const capCeiling = hudCeilingWorldY('portrait', 390, 844);
 for (let i = 0; i < capGames; i++) {
-  const r = runGame(5000 + i, 0, (640 * 390) / 844, 0.28, 200, true);
+  const r = runGame(5000 + i, 0, (640 * 390) / 844, 0.28, 200, true, capCeiling);
   if (r.time >= 180) capSurvive++;
 }
 console.log(`\n== perfect @ cap (portrait) survived 180s: ${capSurvive}/${capGames} ==`);

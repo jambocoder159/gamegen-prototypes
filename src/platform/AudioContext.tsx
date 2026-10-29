@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import type { ReactNode } from 'react';
 import type { AudioManager } from './audio';
 
-const MUTE_KEY = 'mochi.muted';
+const MUTE_KEY = 'shelf-sort.muted';
 
 interface AudioCtx {
   manager: AudioManager;

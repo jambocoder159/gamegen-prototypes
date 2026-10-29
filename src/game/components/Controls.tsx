@@ -1,4 +1,5 @@
-// On-screen controls: restart, sound toggle, and a language menu.
+// Reusable on-screen controls: the sound toggle and the language menu. (The play
+// screen composes its own controls row; the title screen uses these two.)
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../../i18n';
 import { useAudio } from '../../platform/AudioContext';
@@ -62,18 +63,6 @@ export function LanguageControl() {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-/** The three in-game controls as a row/column group. */
-export function Controls({ onRestart, className }: { onRestart: () => void; className?: string }) {
-  const { t } = useI18n();
-  return (
-    <div className={className ? `controls ${className}` : 'controls'}>
-      <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={onRestart} />
-      <SoundControl />
-      <LanguageControl />
     </div>
   );
 }

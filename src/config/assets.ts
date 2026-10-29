@@ -1,65 +1,90 @@
 // Single source of truth for every runtime asset.
 //
 // relativePath is ALWAYS a fixed path like "textures/bg_base.webp" or
-// "audio/sfx_move.mp3" — never a full URL and never a leading "/". The resolver
+// "audio/sfx_pick.mp3" — never a full URL and never a leading "/". The resolver
 // (src/services/assets.ts) prepends a base (?style → commonPath → /common/ →
 // local) to each of these. poster.png is NOT here on purpose: it is a platform
 // cover shipped at the dist root, never preloaded.
 
+export type GoodsKey =
+  | 'milk' | 'soda' | 'cereal' | 'jam' | 'tuna' | 'juice' | 'chips' | 'soap';
+
+/** Goods type id (0..7) → asset/i18n key. The first K are used on each level. */
+export const GOODS_KEYS: GoodsKey[] = [
+  'milk', 'soda', 'cereal', 'jam', 'tuna', 'juice', 'chips', 'soap',
+];
+
 export type ImageKey =
-  | 'tile1' | 'tile2' | 'tile3' | 'tile4' | 'tile5'
-  | 'tile6' | 'tile7' | 'tile8' | 'tile9'
-  | 'board' | 'cell'
-  | 'pillPink' | 'pillMint'
-  | 'iconRestart' | 'iconSoundOn' | 'iconSoundOff' | 'iconLanguage'
+  | 'goodsMilk' | 'goodsSoda' | 'goodsCereal' | 'goodsJam'
+  | 'goodsTuna' | 'goodsJuice' | 'goodsChips' | 'goodsSoap'
+  | 'shelf'
+  | 'pillTeal' | 'pillOrange'
+  | 'iconRestart' | 'iconUndo' | 'iconSoundOn' | 'iconSoundOff'
+  | 'iconLanguage' | 'iconStar'
   | 'logo'
-  | 'idle1' | 'idle2' | 'idle3' | 'idle4'
+  | 'clerk1' | 'clerk2' | 'clerk3' | 'clerk4'
   | 'bgBase' | 'bgPortrait';
 
 export type AudioKey =
   | 'bgm'
-  | 'sfxMove' | 'sfxMerge' | 'sfxWin' | 'sfxOver' | 'sfxClick' | 'sfxHover';
+  | 'sfxPick' | 'sfxPlace' | 'sfxClear' | 'sfxWin' | 'sfxNope'
+  | 'sfxClick' | 'sfxHover';
 
 export const IMAGES: Record<ImageKey, string> = {
-  tile1: 'textures/icon_mochi_plain.png',
-  tile2: 'textures/icon_mochi_sakura.png',
-  tile3: 'textures/icon_mochi_matcha.png',
-  tile4: 'textures/icon_mochi_bean.png',
-  tile5: 'textures/icon_mochi_strawberry.png',
-  tile6: 'textures/icon_mochi_mango.png',
-  tile7: 'textures/icon_mochi_taro.png',
-  tile8: 'textures/icon_mochi_star.png',
-  tile9: 'textures/icon_mochi_dragon.png',
-  board: 'textures/panel_board.png',
-  cell: 'textures/panel_cell.png',
-  pillPink: 'textures/panel_pill_pink.png',
-  pillMint: 'textures/panel_pill_mint.png',
+  goodsMilk: 'textures/icon_goods_milk.png',
+  goodsSoda: 'textures/icon_goods_soda.png',
+  goodsCereal: 'textures/icon_goods_cereal.png',
+  goodsJam: 'textures/icon_goods_jam.png',
+  goodsTuna: 'textures/icon_goods_tuna.png',
+  goodsJuice: 'textures/icon_goods_juice.png',
+  goodsChips: 'textures/icon_goods_chips.png',
+  goodsSoap: 'textures/icon_goods_soap.png',
+  shelf: 'textures/panel_shelf.png',
+  pillTeal: 'textures/panel_pill_teal.png',
+  pillOrange: 'textures/panel_pill_orange.png',
   iconRestart: 'textures/icon_restart.png',
+  iconUndo: 'textures/icon_undo.png',
   iconSoundOn: 'textures/icon_sound_on.png',
   iconSoundOff: 'textures/icon_sound_off.png',
   iconLanguage: 'textures/icon_language.png',
+  iconStar: 'textures/icon_star.png',
   logo: 'textures/logo_base.png',
-  idle1: 'textures/seq_mochi_idle_1.png',
-  idle2: 'textures/seq_mochi_idle_2.png',
-  idle3: 'textures/seq_mochi_idle_3.png',
-  idle4: 'textures/seq_mochi_idle_4.png',
+  clerk1: 'textures/seq_clerk_cheer_1.png',
+  clerk2: 'textures/seq_clerk_cheer_2.png',
+  clerk3: 'textures/seq_clerk_cheer_3.png',
+  clerk4: 'textures/seq_clerk_cheer_4.png',
   bgBase: 'textures/bg_base.webp',
   bgPortrait: 'textures/bg_portrait.webp',
 };
 
-// sfx_spawn is intentionally absent: spawns are silent (see PLAN / brief), and
-// the file public/common/audio/sfx_spawn.mp3 is deleted (zero-residue rule).
 export const AUDIO: Record<AudioKey, string> = {
   bgm: 'audio/bgm_base.mp3',
-  sfxMove: 'audio/sfx_move.mp3',
-  sfxMerge: 'audio/sfx_merge.mp3',
+  sfxPick: 'audio/sfx_pick.mp3',
+  sfxPlace: 'audio/sfx_place.mp3',
+  sfxClear: 'audio/sfx_clear.mp3',
   sfxWin: 'audio/sfx_win.mp3',
-  sfxOver: 'audio/sfx_over.mp3',
+  sfxNope: 'audio/sfx_nope.mp3',
   sfxClick: 'audio/sfx_click.mp3',
   sfxHover: 'audio/sfx_hover.mp3',
 };
 
-/** Tile tier (1..9) → image key. */
-export function tileImageKey(tier: number): ImageKey {
-  return `tile${tier}` as ImageKey;
+const GOODS_IMAGE: Record<GoodsKey, ImageKey> = {
+  milk: 'goodsMilk',
+  soda: 'goodsSoda',
+  cereal: 'goodsCereal',
+  jam: 'goodsJam',
+  tuna: 'goodsTuna',
+  juice: 'goodsJuice',
+  chips: 'goodsChips',
+  soap: 'goodsSoap',
+};
+
+/** Goods type id (0..7) → its image key. */
+export function goodsImageKey(type: number): ImageKey {
+  return GOODS_IMAGE[GOODS_KEYS[type]];
+}
+
+/** Clerk cheer frame (0..3) → image key. */
+export function clerkFrameKey(frame: number): ImageKey {
+  return (`clerk${(frame % 4) + 1}`) as ImageKey;
 }

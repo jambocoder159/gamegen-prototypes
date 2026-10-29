@@ -1,88 +1,149 @@
-// The playing screen: HUD, board, controls, overlays and a11y, arranged by the
-// current layout. Owns keyboard input (arrows / WASD).
-import { useEffect } from 'react';
+// The playing screen: pills, the shelf board, the controls row (undo, restart,
+// levels, sound, language), the clerk mascot and the win / level-picker overlays.
+// Owns keyboard input: arrows move focus between slots, Enter/Space (native on
+// the slot buttons) lift/place, Z undoes, R restarts.
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAudio } from '../platform/AudioContext';
 import type { Layout } from '../platform/layout';
+import { SLOTS_PER_SHELF } from './logic';
 import { useGame } from './useGame';
-import type { Dir } from './logic';
-import { Board } from './components/Board';
+import { BoardView } from './components/BoardView';
 import { Hud } from './components/Hud';
-import { Controls } from './components/Controls';
-import { WinBanner, ResultPanel } from './components/Overlays';
-import { BoardSummary, Announcer } from './components/A11y';
+import { Clerk } from './components/Clerk';
+import { Button, IconButton } from './components/Button';
+import { SoundControl, LanguageControl } from './components/Controls';
+import { WinOverlay, LevelPicker } from './components/Overlays';
+import { Help, Announcer } from './components/A11y';
 
-const KEY_DIRS: Record<string, Dir> = {
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
-  w: 'up',
-  a: 'left',
-  s: 'down',
-  d: 'right',
-  W: 'up',
-  A: 'left',
-  S: 'down',
-  D: 'right',
-};
+const MAX_COLS: Record<Layout, number> = { portrait: 2, nearSquare: 3, wide: 3 };
 
-export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boolean }) {
+export function GameScreen({
+  layout,
+  reduced,
+  startLevel,
+}: {
+  layout: Layout;
+  reduced: boolean;
+  startLevel: number;
+}) {
   const { t } = useI18n();
   const { manager } = useAudio();
-  const game = useGame(manager);
-  const { doMove, showWin } = game;
+  const game = useGame(manager, startLevel);
+  const { tapSlot, undo, restart, win } = game;
+  const [picker, setPicker] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const total = game.level.S * SLOTS_PER_SHELF;
+
+  const moveFocus = useCallback(
+    (delta: number) => {
+      const root = rootRef.current;
+      if (!root) return;
+      const active = document.activeElement as HTMLElement | null;
+      const cur = active?.dataset?.slot != null ? Number(active.dataset.slot) : -1;
+      let next = cur < 0 ? 0 : cur + delta;
+      next = Math.max(0, Math.min(total - 1, next));
+      const btn = root.querySelector<HTMLButtonElement>(`[data-slot="${next}"]`);
+      btn?.focus();
+    },
+    [total],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const dir = KEY_DIRS[e.key];
-      if (!dir) return;
-      e.preventDefault();
-      if (showWin) return; // win banner is modal
-      doMove(dir);
+      if (win || picker) {
+        if (e.key === 'Escape' && picker) setPicker(false);
+        return;
+      }
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          moveFocus(-1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          moveFocus(1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          moveFocus(-SLOTS_PER_SHELF);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          moveFocus(SLOTS_PER_SHELF);
+          break;
+        case 'z':
+        case 'Z':
+          e.preventDefault();
+          undo();
+          break;
+        case 'r':
+        case 'R':
+          e.preventDefault();
+          restart();
+          break;
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [doMove, showWin]);
+  }, [moveFocus, undo, restart, win, picker]);
 
   return (
-    <div className={`game game--${layout}`}>
+    <div className={`game game--${layout}`} ref={rootRef}>
       <div className="game__hud">
-        <Hud score={game.state.score} best={game.best} newBest={game.newBest} />
+        <Clerk cheer={game.cheer} reduced={reduced} className="hud__clerk" />
+        <Hud level={game.level.number} moves={game.moves} />
       </div>
 
       <div className="game__board">
-        <Board
-          state={game.state}
+        <BoardView
+          board={game.state.board}
+          S={game.level.S}
+          selected={game.selected}
+          interactive={!win && !picker}
           reduced={reduced}
-          interactive={!showWin && !game.state.over}
-          onMove={doMove}
+          clearFx={game.clearFx}
+          maxCols={MAX_COLS[layout]}
+          onTap={tapSlot}
           ariaLabel={t('a11y.boardLabel')}
         />
       </div>
 
       <div className="game__controls">
-        <Controls onRestart={game.restart} />
+        <IconButton imgKey="iconUndo" label={t('buttons.undo')} onClick={undo} />
+        <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={restart} />
+        <Button className="btn btn--levels" onClick={() => setPicker(true)}>
+          {t('buttons.levels')}
+        </Button>
+        <SoundControl />
+        <LanguageControl />
       </div>
 
-      <p className="sr-only">{t('a11y.help')}</p>
-      <BoardSummary state={game.state} />
+      <Help />
       <Announcer event={game.event} />
 
-      {showWin && (
-        <WinBanner
-          onKeepGoing={() => game.dismissWin(true)}
-          onNewGame={() => game.dismissWin(false)}
+      {win && (
+        <WinOverlay
+          win={win}
+          levelNumber={game.level.number}
+          reduced={reduced}
+          onNext={game.nextLevel}
+          onReplay={restart}
+          onLevels={() => setPicker(true)}
         />
       )}
-      {game.state.over && (
-        <ResultPanel
-          score={game.state.score}
-          best={game.best}
-          newBest={game.newBest}
-          reduced={reduced}
-          onRestart={game.restart}
+      {picker && (
+        <LevelPicker
+          levels={game.levels}
+          progress={game.progress}
+          current={game.level.number}
+          onPick={(n) => {
+            game.gotoLevel(n);
+            setPicker(false);
+          }}
+          onClose={() => setPicker(false)}
         />
       )}
     </div>

@@ -1,34 +1,42 @@
-// Screen-reader support: a hidden board summary (updated every render) and a
-// polite aria-live region that announces the result of each move. All text is
-// localised.
+// Screen-reader support: the in-game help text and a polite aria-live region that
+// announces the result of each action. All strings are localised.
 import { useI18n } from '../../i18n';
-import { GRID, type GameState } from '../logic';
-import type { MoveEvent } from '../useGame';
+import type { GameEvent } from '../useGame';
 
-export function BoardSummary({ state }: { state: GameState }) {
-  const { t, tier } = useI18n();
-  const names: string[] = [];
-  for (let r = 0; r < GRID; r++)
-    for (let c = 0; c < GRID; c++) {
-      const cell = state.grid[r][c];
-      names.push(cell ? tier(cell.tier) : t('a11y.empty'));
-    }
-  return <div className="sr-only">{t('a11y.boardSummary', { cells: names.join(', ') })}</div>;
+export function Help() {
+  const { t } = useI18n();
+  return <p className="sr-only">{t('a11y.help')}</p>;
 }
 
-export function Announcer({ event }: { event: MoveEvent | null }) {
-  const { t, tier } = useI18n();
+export function Announcer({ event }: { event: GameEvent | null }) {
+  const { t } = useI18n();
   let message = '';
   if (event) {
-    if (event.over) message = t('a11y.gameOver', { score: event.score });
-    else if (event.reachedWin) message = t('a11y.win', { score: event.score });
-    else if (event.merged)
-      message = t('a11y.moveMerged', { name: tier(event.mergedTier), score: event.score });
-    else message = t('a11y.moveNoMerge', { score: event.score });
+    const name = event.name ? t(`goods.${event.name}`) : '';
+    switch (event.kind) {
+      case 'selected':
+        message = t('a11y.selected', { name });
+        break;
+      case 'placed':
+        message = t('a11y.placed', { name });
+        break;
+      case 'putDown':
+        message = t('a11y.putDown', { name });
+        break;
+      case 'cleared':
+        message = t('a11y.cleared', { name });
+        break;
+      case 'won':
+        message = t('a11y.won', { moves: event.moves ?? 0, stars: event.stars ?? 0 });
+        break;
+      case 'nothing':
+        message = t('a11y.nothing');
+        break;
+    }
   }
   return (
     <div className="sr-only" aria-live="polite" aria-atomic="true">
-      {message}
+      {message ? `${message} ` : ''}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 {
   "lang": "en",
-  "documentTitle": "Mochi Merge",
+  "documentTitle": "Shelf Sort",
   "game": {
-    "title": "Mochi Merge",
-    "tagline": "Slide and merge the mochi"
+    "title": "Shelf Sort",
+    "tagline": "Fill every shelf with three matching goods"
   },
   "loading": {
     "progress": "Loading {pct}%",
@@ -11,45 +11,55 @@
   },
   "buttons": {
     "play": "Play",
+    "continue": "Continue",
+    "undo": "Undo",
     "restart": "Restart",
-    "newGame": "New game",
-    "keepGoing": "Keep going",
+    "levels": "Levels",
+    "next": "Next level",
+    "replay": "Replay",
+    "close": "Close",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
     "language": "Change language"
   },
   "hud": {
-    "score": "Score",
-    "best": "Best"
+    "level": "Level",
+    "moves": "Moves"
+  },
+  "goods": {
+    "milk": "Milk",
+    "soda": "Soda",
+    "cereal": "Cereal",
+    "jam": "Jam",
+    "tuna": "Tuna",
+    "juice": "Juice",
+    "chips": "Chips",
+    "soap": "Soap"
   },
   "result": {
-    "gameOver": "Game over",
-    "win": "Golden Dragon!",
-    "winBody": "You reached the Dragon mochi. Keep going for a higher score!",
-    "newBest": "New best!",
-    "finalScore": "Score {score}",
-    "bestScore": "Best {best}"
+    "win": "Shelves sorted!",
+    "stars": "{n} of 3 stars",
+    "score": "Moves {moves} · Par {par}"
   },
-  "tiers": {
-    "1": "Plain mochi",
-    "2": "Sakura mochi",
-    "3": "Matcha mochi",
-    "4": "Bean mochi",
-    "5": "Strawberry mochi",
-    "6": "Mango mochi",
-    "7": "Taro mochi",
-    "8": "Star mochi",
-    "9": "Dragon mochi"
+  "levels": {
+    "title": "Levels",
+    "level": "Level {n}",
+    "locked": "Locked",
+    "best": "Best {n} stars",
+    "unplayed": "Not cleared yet"
   },
   "a11y": {
-    "boardLabel": "4 by 4 mochi board",
+    "slot": "Shelf {shelf}, slot {slot}: {content}",
+    "slotSelected": "Shelf {shelf}, slot {slot}: {content}, lifted",
     "empty": "empty",
-    "moveMerged": "Merged into {name}. Score {score}.",
-    "moveNoMerge": "Moved. Score {score}.",
-    "gameOver": "Game over. Final score {score}.",
-    "win": "You made the Dragon mochi. Score {score}.",
-    "boardSummary": "Board, top-left to bottom-right: {cells}.",
-    "help": "Use the arrow keys or W A S D to slide the mochi. On a touchscreen, swipe across the board.",
-    "titleDemo": "Title screen: a demo game is playing by itself."
+    "boardLabel": "Shelves",
+    "help": "Tap a goods item to lift it, then tap an empty slot to place it; tap the lifted item again to put it down. Arrow keys move between slots, Enter or Space lifts and places, Z undoes a move, R restarts the level.",
+    "selected": "Lifted {name}.",
+    "placed": "Placed {name}.",
+    "putDown": "Put {name} back down.",
+    "cleared": "Shelf of {name} sorted.",
+    "won": "Level complete in {moves} moves, {stars} of 3 stars.",
+    "nothing": "That slot is empty.",
+    "titleDemo": "Title screen: the game is sorting itself."
   }
 }

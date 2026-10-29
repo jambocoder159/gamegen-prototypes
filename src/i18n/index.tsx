@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 import { LANG_CODES, LANG_NAMES, isLangCode, type Dict, type LangCode } from './dict';
 
-const STORAGE_KEY = 'mochi.lang';
+const STORAGE_KEY = 'shelf-sort.lang';
 
 function lookup(dict: Dict | null | undefined, path: string): string | undefined {
   if (!dict) return undefined;
@@ -28,7 +28,6 @@ export interface I18n {
   setLang: (code: LangCode) => void;
   cycleLang: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
-  tier: (tierNum: number) => string;
   langName: (code: LangCode) => string;
   codes: LangCode[];
 }
@@ -85,8 +84,6 @@ export function I18nProvider({
     [dicts, lang],
   );
 
-  const tier = useCallback((tierNum: number) => t(`tiers.${tierNum}`), [t]);
-
   // keep <html lang> + title in sync with the active dictionary
   useEffect(() => {
     const htmlLang = lookup(dicts[lang], 'lang') ?? lang;
@@ -101,11 +98,10 @@ export function I18nProvider({
       setLang,
       cycleLang,
       t,
-      tier,
       langName: (code: LangCode) => LANG_NAMES[code],
       codes: LANG_CODES,
     }),
-    [lang, setLang, cycleLang, t, tier],
+    [lang, setLang, cycleLang, t],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

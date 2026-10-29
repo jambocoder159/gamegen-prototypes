@@ -1,0 +1,46 @@
+export const IMAGES = {
+  "enemy_skeleton": "textures/enemy_skeleton.png",
+  "enemy_bat": "textures/enemy_bat.png",
+  "hero_idle2": "textures/hero_idle2.png",
+  "enemy_golem": "textures/enemy_golem.png",
+  "boss_demon": "textures/boss_demon.png",
+  "bg_c": "textures/bg_c.webp",
+  "gem_sword": "textures/gem_sword.png",
+  "gem_coin": "textures/gem_coin.png",
+  "enemy_ghost": "textures/enemy_ghost.png",
+  "hero_idle1": "textures/hero_idle1.png",
+  "boss_dragon": "textures/boss_dragon.png",
+  "hero_windup": "textures/hero_windup.png",
+  "ui_sheet": "textures/ui_sheet.png",
+  "gem_heart": "textures/gem_heart.png",
+  "bg_a": "textures/bg_a.webp",
+  "gem_fire": "textures/gem_fire.png",
+  "gem_mana": "textures/gem_mana.png",
+  "gem_star": "textures/gem_star.png",
+  "hero_slash": "textures/hero_slash.png",
+  "enemy_goblin": "textures/enemy_goblin.png",
+  "enemy_slime": "textures/enemy_slime.png",
+  "bg_b": "textures/bg_b.webp"
+} as const;
+export type ImageKey=keyof typeof IMAGES;
+export const AUDIO = {
+  "sfx_coin": "audio/sfx_coin.mp3",
+  "sfx_hit": "audio/sfx_hit.mp3",
+  "sfx_haste": "audio/sfx_haste.mp3",
+  "sfx_click": "audio/sfx_click.mp3",
+  "bgm": "audio/bgm_base.mp3",
+  "sfx_swap": "audio/sfx_swap.mp3",
+  "sfx_boss": "audio/sfx_boss.mp3",
+  "sfx_heal": "audio/sfx_heal.mp3",
+  "sfx_combo": "audio/sfx_combo.mp3",
+  "sfx_match": "audio/sfx_match.mp3",
+  "sfx_floor": "audio/sfx_floor.mp3",
+  "sfx_kill": "audio/sfx_kill.mp3",
+  "sfx_crit": "audio/sfx_crit.mp3",
+  "sfx_invalid": "audio/sfx_invalid.mp3",
+  "sfx_defeat": "audio/sfx_defeat.mp3",
+  "sfx_skill": "audio/sfx_skill.mp3",
+  "sfx_hurt": "audio/sfx_hurt.mp3",
+  "sfx_hover": "audio/sfx_hover.mp3"
+} as const;
+export type AudioKey=keyof typeof AUDIO;

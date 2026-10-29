@@ -2,7 +2,7 @@
   "name": "gamegen-prototypes",
   "private": true,
   "version": "1.0.0",
-  "description": "GameGen prototype catalog: six playable HTML5 games",
+  "description": "GameGen prototype catalog: seven playable HTML5 games",
   "scripts": {
     "test:catalog": "node scripts/test-catalog.mjs"
   },

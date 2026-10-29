@@ -11,7 +11,7 @@ export function Hud({ state }: { state: GameState }) {
 
   return (
     <div className="hud">
-      <div className="hud-hearts" aria-label={`${t('lives')}: ${state.hearts}`}>
+      <div className="hud-hearts" role="img" aria-label={`${t('lives')}: ${state.hearts}`}>
         {Array.from({ length: CONFIG.maxHearts }, (_, i) => {
           const alive = i < state.hearts;
           return (

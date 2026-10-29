@@ -30,7 +30,6 @@ export function ToppingButton({
       disabled={!interactive}
       silent={!interactive}
       aria-pressed={inBowl}
-      aria-label={inBowl ? t('aria.toppingRemove', { name }) : t('aria.toppingAdd', { name })}
       tabIndex={interactive ? 0 : -1}
     >
       {plate ? (

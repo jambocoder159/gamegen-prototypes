@@ -34,8 +34,6 @@
     "bowlHas": "Bowl contains {list}",
     "selectCustomer": "Serve this customer",
     "order": "Order: {list}",
-    "toppingAdd": "{name}, add to bowl",
-    "toppingRemove": "{name}, remove from bowl",
     "liveServed": "Correct order. Plus {coins} coins. Combo {combo}.",
     "liveWrong": "Wrong order. Lost a life.",
     "liveLeft": "A customer left upset. Lost a life.",

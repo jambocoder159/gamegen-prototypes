@@ -34,8 +34,6 @@
     "bowlHas": "どんぶりの中身：{list}",
     "selectCustomer": "このお客さんに提供",
     "order": "注文：{list}",
-    "toppingAdd": "{name}をどんぶりに追加",
-    "toppingRemove": "{name}をどんぶりから外す",
     "liveServed": "正解。コイン{coins}獲得。コンボ{combo}。",
     "liveWrong": "注文が違います。ライフを1つ失いました。",
     "liveLeft": "お客さんが怒って帰りました。ライフを1つ失いました。",

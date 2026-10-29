@@ -34,8 +34,6 @@
     "bowlHas": "麵碗裡有 {list}",
     "selectCustomer": "服務這位客人",
     "order": "訂單：{list}",
-    "toppingAdd": "{name}，加入碗中",
-    "toppingRemove": "{name}，從碗中移除",
     "liveServed": "點對了，獲得 {coins} 金幣，連擊 {combo}。",
     "liveWrong": "點錯了，失去一顆愛心。",
     "liveLeft": "客人生氣離開，失去一顆愛心。",

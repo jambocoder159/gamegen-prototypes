@@ -21,9 +21,11 @@ export function LanguageControl() {
   const { t, lang, setLang, codes, langName } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    dialogRef.current?.showModal();
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
@@ -46,9 +48,11 @@ export function LanguageControl() {
         onClick={() => setOpen((o) => !o)}
       />
       {open && (
-        <ul className="lang__menu" role="menu">
+        <dialog ref={dialogRef} className="lang__dialog" aria-label={t('buttons.language')}
+          onClose={() => setOpen(false)} onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}>
+        <ul className="lang__menu">
           {codes.map((c) => (
-            <li key={c} role="none">
+            <li key={c}>
               <Button
                 className={`lang__item${c === lang ? ' lang__item--active' : ''}`}
                 ariaPressed={c === lang}
@@ -62,6 +66,8 @@ export function LanguageControl() {
             </li>
           ))}
         </ul>
+        <Button className="btn" onClick={() => setOpen(false)}>{t('buttons.close')}</Button>
+        </dialog>
       )}
     </div>
   );

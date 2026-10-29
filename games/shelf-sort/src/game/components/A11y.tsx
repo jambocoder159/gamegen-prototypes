@@ -32,11 +32,14 @@ export function Announcer({ event }: { event: GameEvent | null }) {
       case 'nothing':
         message = t('a11y.nothing');
         break;
+      case 'occupied':
+        message = t('a11y.occupied');
+        break;
     }
   }
   return (
     <div className="sr-only" aria-live="polite" aria-atomic="true">
-      {message ? `${message} ` : ''}
+      <span key={event?.seq}>{message}</span>
     </div>
   );
 }

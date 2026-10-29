@@ -15,24 +15,25 @@ import { LoadingScreen } from './game/LoadingScreen';
 import { TitleScreen } from './game/TitleScreen';
 import { GameScreen } from './game/GameScreen';
 import { Art } from './game/components/Art';
+import type { SavedRun } from './game/run';
 
 type Phase = 'loading' | 'ready';
 
 function GameRoot() {
   const vp = useViewport();
   const reduced = useReducedMotion();
-  const [play, setPlay] = useState<{ on: boolean; level: number }>({ on: false, level: 1 });
+  const [play, setPlay] = useState<{ on: boolean; level: number; resume?: SavedRun }>({ on: false, level: 1 });
   const bgKey: ImageKey = vp.layout === 'portrait' ? 'bgPortrait' : 'bgBase';
   return (
     <div className={`app app--${vp.layout}`}>
       <Art imgKey={bgKey} alt="" className="app__bg" />
       {play.on ? (
-        <GameScreen layout={vp.layout} reduced={reduced} startLevel={play.level} />
+        <GameScreen layout={vp.layout} reduced={reduced} startLevel={play.level} resume={play.resume} />
       ) : (
         <TitleScreen
           layout={vp.layout}
           reduced={reduced}
-          onPlay={(level) => setPlay({ on: true, level })}
+          onPlay={(level, resume) => setPlay({ on: true, level, resume })}
         />
       )}
     </div>

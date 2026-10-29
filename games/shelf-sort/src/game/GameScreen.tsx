@@ -15,6 +15,8 @@ import { Button, IconButton } from './components/Button';
 import { SoundControl, LanguageControl } from './components/Controls';
 import { WinOverlay, LevelPicker } from './components/Overlays';
 import { Help, Announcer } from './components/A11y';
+import { Coach } from './components/Coach';
+import type { SavedRun } from './run';
 
 const MAX_COLS: Record<Layout, number> = { portrait: 2, nearSquare: 3, wide: 3 };
 
@@ -22,16 +24,19 @@ export function GameScreen({
   layout,
   reduced,
   startLevel,
+  resume,
 }: {
   layout: Layout;
   reduced: boolean;
   startLevel: number;
+  resume?: SavedRun;
 }) {
   const { t } = useI18n();
   const { manager } = useAudio();
-  const game = useGame(manager, startLevel);
+  const game = useGame(manager, startLevel, resume);
   const { tapSlot, undo, restart, win } = game;
   const [picker, setPicker] = useState(false);
+  const [coachStep, setCoachStep] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const total = game.level.S * SLOTS_PER_SHELF;
@@ -52,7 +57,7 @@ export function GameScreen({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement).closest('dialog')) return;
       if (win || picker) {
         if (e.key === 'Escape' && picker) setPicker(false);
         return;
@@ -105,6 +110,9 @@ export function GameScreen({
           interactive={!win && !picker}
           reduced={reduced}
           clearFx={game.clearFx}
+          invalidFx={game.invalidFx}
+          hintSlot={coachStep === 0 ? game.state.board.findIndex(v => v !== null) :
+            coachStep === 1 ? game.state.board.findIndex(v => v === null) : undefined}
           maxCols={MAX_COLS[layout]}
           onTap={tapSlot}
           ariaLabel={t('a11y.boardLabel')}
@@ -121,6 +129,7 @@ export function GameScreen({
         <LanguageControl />
       </div>
 
+      <Coach event={game.event} picked={game.selected !== null} moved={game.moves > 0} onTarget={setCoachStep} />
       <Help />
       <Announcer event={game.event} />
 

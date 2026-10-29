@@ -126,14 +126,14 @@ img.art {
 .btn {
   font: inherit;
   font-weight: 800;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--ink);
   background: var(--cream);
   border: 2px solid var(--edge);
   border-radius: 999px;
   padding: 11px 22px;
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 48px;
+  min-width: 48px;
   cursor: pointer;
 }
 .btn:hover {
@@ -141,9 +141,8 @@ img.art {
 }
 .btn--primary {
   background: var(--orange);
-  color: #fff;
+  color: var(--ink);
   border-color: var(--orange-dark);
-  text-shadow: 0 1px 0 var(--orange-dark), 0 0 2px rgba(0, 0, 0, 0.3);
 }
 .btn--primary:hover {
   background: #f0995a;
@@ -178,10 +177,16 @@ img.art {
 .lang {
   position: relative;
 }
+.lang__dialog {
+  width: min(280px, calc(100vw - 32px));
+  border: 2px solid var(--edge);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.lang__dialog::backdrop { background: rgba(18, 75, 71, 0.5); }
 .lang__menu {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -249,12 +254,14 @@ img.art {
 }
 .pill {
   position: relative;
-  width: clamp(92px, 30vw, 148px);
+  width: clamp(110px, 30vw, 148px);
+  height: 60px;
   flex: 0 0 auto;
 }
-.pill__plate {
+.pill__plate.art {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
   display: block;
 }
 .pill__content {
@@ -264,10 +271,10 @@ img.art {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  line-height: 1.0;
+  line-height: 1.15;
 }
 .pill__label {
-  font-size: 11px;
+  font-size: 18px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 800;
@@ -275,7 +282,7 @@ img.art {
   text-shadow: var(--stroke);
 }
 .pill__value {
-  font-size: clamp(18px, 5.2vw, 26px);
+  font-size: clamp(22px, 6vw, 28px);
   font-weight: 900;
   color: #fff;
   text-shadow: var(--stroke);
@@ -344,7 +351,6 @@ img.art {
 .goods--lifted {
   transform: translateY(-12%) scale(1.06);
   transition: transform 120ms ease;
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.28));
 }
 .slot--selected::before {
   content: '';
@@ -433,15 +439,15 @@ img.art {
 
 .game--portrait {
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas: 'hud' 'board' 'controls';
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-areas: 'hud' 'board' 'coach' 'controls';
 }
 
 .game--wide,
 .game--nearSquare {
   grid-template-columns: 1fr clamp(150px, 24vw, 240px);
   grid-template-rows: auto 1fr auto;
-  grid-template-areas: 'board hud' 'board clerk' 'board controls';
+  grid-template-areas: 'board hud' 'board coach' 'board controls';
   column-gap: clamp(10px, 2vw, 28px);
 }
 .game--wide .game__hud,
@@ -511,10 +517,16 @@ img.art {
   margin: 0;
   font-size: clamp(30px, 8vw, 56px);
   font-weight: 800;
-  color: var(--teal);
+  color: var(--teal-dark);
+  background: var(--paper);
+  border-radius: 12px;
+  padding: 2px 12px;
 }
 .title__tagline {
   margin: 0;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 4px 10px;
   font-size: clamp(14px, 3.6vw, 18px);
   color: var(--ink);
 }
@@ -574,7 +586,7 @@ img.art {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: var(--orange-dark);
+  color: var(--ink);
 }
 .panel__stars {
   margin: 0;
@@ -649,15 +661,50 @@ img.art {
   box-shadow: 0 0 0 2px var(--teal) inset;
 }
 .levelcell--locked {
-  opacity: 0.45;
+  background: #eee4d0;
+  border-style: dashed;
   cursor: default;
 }
+
+/* On-screen coaching occupies its own grid region beside/below the board. */
+.game__coach {
+  grid-area: coach;
+  align-self: center;
+  display: grid;
+  grid-template-columns: 48px 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--paper);
+  border-radius: 14px;
+}
+.game__coach--closed { justify-self: end; padding: 0; grid-template-columns: 48px; }
+.help-btn { font: 900 26px var(--font); color: var(--teal-dark); background: var(--paper); }
+.coach__icon { width: 28px; height: 36px; }
+.coach__copy { margin: 0; font-size: 16px; line-height: 1.3; }
+.coach__skip { padding: 8px; font-size: 16px; }
+.coach__keys { grid-column: 1 / -1; margin: 0; font-size: 14px; line-height: 1.3; }
+.game--wide .game__coach:not(.game__coach--closed),
+.game--nearSquare .game__coach:not(.game__coach--closed) { grid-template-columns: 28px minmax(0, 1fr); }
+.game--wide .help-btn, .game--nearSquare .help-btn { grid-column: 1; }
+.game--wide .coach__skip, .game--nearSquare .coach__skip { grid-column: 2; grid-row: 1; justify-self: end; }
+.slot--hint { outline: 3px dashed var(--focus); outline-offset: -5px; }
+.slot--invalid { outline: 3px solid #8b251e; outline-offset: -5px; animation: reject 240ms ease-out; }
+.slot__reject {
+  position: absolute; right: 8%; top: 4%; z-index: 4;
+  font: 900 28px/1 var(--font); color: #8b251e; background: var(--paper);
+  border-radius: 6px; padding: 0 4px;
+  animation: reject 240ms ease-out;
+}
+@keyframes reject { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
 
 /* --- reduced motion safety net ------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .goods--lifted {
     transition: none;
   }
+  .slot--invalid,
+  .slot__reject,
   .pop-out,
   .sparkle,
   .panel__clerk--cheer {
@@ -667,6 +714,16 @@ img.art {
 
 /* Keep foreground art and every control inside short landscape viewports. */
 @media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .game--wide, .game--nearSquare { grid-template-columns: 1fr 200px; gap: 6px 10px; }
+  .game .hud__clerk { display: none; }
+  .hud { flex-wrap: nowrap; gap: 6px; }
+  .pill { width: 96px; height: 56px; }
+  .coach__keys { display: none; }
+  .game__coach { gap: 4px; padding: 4px; }
+  .title__actions:has(.btn--new) { display: grid; grid-template-columns: 1fr 1fr; }
+  .title__actions:has(.btn--new) .btn { padding: 10px 16px; }
+  .title__icons { grid-column: 1 / -1; justify-content: center; }
+
   .title__content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

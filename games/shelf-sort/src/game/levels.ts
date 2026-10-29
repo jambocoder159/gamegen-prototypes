@@ -2,8 +2,8 @@
 // level-seeded PRNG: all goods are laid into the shelves (reserving one fully
 // empty shelf as the solver's workspace), boards that are already complete or
 // that the solver cannot finish are rejected, and the first seed that passes is
-// kept. The solver's solution length becomes the level's par (used for the star
-// rating and the title demo / bot). Generation runs once and is memoised.
+// kept. Greedy solutions drive the demo; exact par and explicit star budgets
+// are used for levels 2–4. Generation runs once and is memoised.
 
 import { SLOTS_PER_SHELF, shelfComplete, type Board } from './logic';
 import { solve } from './solver';
@@ -16,7 +16,8 @@ export interface Level {
   S: number; // shelf count
   K: number; // goods-type count
   board: Board; // start board (length S*3)
-  par: number; // solver solution length
+  par: number; // exact for levels 2–4, greedy solution length otherwise
+  budgets?: { three: number; two: number };
 }
 
 // K and S per level (PLAN §3): K ramps 3→8, S=K+2 for levels 1–6, S=K+1 for 7–12.
@@ -79,7 +80,10 @@ function generate(index: number): Level {
     if (complete) continue;
     const sol = solve(board);
     if (!sol || sol.length === 0) continue;
-    return { index, number: index + 1, S, K, board, par: sol.length };
+    // Exact optima verified by test:logic's exhaustive IDA* search.
+    const optimum = [undefined, 5, 7, 5][index];
+    return { index, number: index + 1, S, K, board, par: optimum ?? sol.length,
+      ...(optimum === undefined ? {} : { budgets: { three: optimum + 1, two: optimum + 4 } }) };
   }
   throw new Error(`could not generate level ${index + 1}`);
 }

@@ -9,7 +9,7 @@
 // go to qa/. Prints PASS/FAIL.
 
 import { spawn, execSync } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -17,8 +17,11 @@ import puppeteer from 'puppeteer-core';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
+const reports = join(root, '..', '_reports');
+mkdirSync(reports, { recursive: true });
+const axeSource = readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8');
 
-const PORT = Number(process.env.PORT) || 4173;
+const PORT = Number(process.env.PORT) || 4224;
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -124,7 +127,7 @@ async function playToWin(page, cap = 300) {
 // pairwise-overlap + inside-viewport audit of slots, pills and control buttons
 async function auditLayout(page) {
   return page.evaluate(() => {
-    const sel = '.slot, .pill, .game__controls .btn, .game__controls .icon-btn';
+    const sel = '.slot, .pill, .game__controls .btn, .game__controls .icon-btn, .game__coach';
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const rects = [...document.querySelectorAll(sel)]
@@ -179,6 +182,7 @@ async function main() {
       await runMain(browser);
       await runManyShelves(browser);
       await runFallback(browser);
+      await runFixes(browser);
     } finally {
       await browser.close();
     }
@@ -438,3 +442,179 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+async function axeAudit(page, name) {
+  await page.evaluate(axeSource);
+  const violations = await page.evaluate(async () => (await axe.run(document, {
+    runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
+  })).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`));
+  check(`axe ${name}: zero violations`, violations.length === 0, violations.join(' | '));
+}
+async function enter(page) {
+  await page.waitForSelector('.btn--enter');
+  await page.click('.btn--enter');
+  await page.waitForSelector('.btn--play');
+}
+async function start(page) {
+  await enter(page);
+  await page.click('.btn--play');
+  await page.waitForSelector('.game .slot');
+  await sleep(150);
+}
+async function runFixes(browser) {
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  await page.setViewport({width:375,height:812});
+  await page.evaluateOnNewDocument(() => {
+    window.__GAINS__ = [];
+    const original = AudioContext.prototype.createGain;
+    AudioContext.prototype.createGain = function() {
+      const node = original.call(this);
+      const connect = node.connect.bind(node);
+      node.connect = function(...args) { window.__GAINS__.push(node.gain.value); return connect(...args); };
+      return node;
+    };
+  });
+  await page.goto(BASE_URL, {waitUntil:'networkidle0'});
+  await start(page);
+  check('first visit shows non-blocking step 1 and highlighted item', !!await page.$('.coach__copy') && !!await page.$('.slot--hint'));
+  await page.screenshot({path:join(reports, 'fix_shelf-sort_onboarding.png')});
+  const initial = await readCells(page);
+  const source = initial.findIndex(v => v !== null);
+  const other = initial.findIndex((v,i) => v !== null && i !== source);
+  const empty = initial.findIndex(v => v === null);
+  await page.click(`[data-slot="${empty}"]`);
+  check('empty slot feedback: visual mark, aria message, quiet sfx and no move',
+    !!await page.$('.slot--invalid .slot__reject') && await page.evaluate(() => window.__GAINS__.some(v => Math.abs(v-0.35)<0.01)) &&
+    await page.$eval('.sr-only[aria-live]', el => el.textContent.includes('empty')) &&
+    JSON.stringify(await readCells(page)) === JSON.stringify(initial) && await page.$eval('.hud .pill:last-child .pill__value',e => e.textContent) === '0');
+  await page.click(`[data-slot="${source}"]`);
+  await page.waitForFunction(() => document.querySelector('.coach__copy')?.textContent.startsWith('2/3'));
+  check('coach advances after lifting',await page.$eval('.coach__copy',el => el.textContent.startsWith('2/3')));
+  const before = await page.$eval('.board__grid',e => [...e.querySelectorAll('.slot')].map(s => s.getAttribute('aria-label')).join('|'));
+  await page.focus(`[data-slot="${other}"]`);
+  await page.keyboard.press('Enter');
+  const firstReject = await page.$eval(`[data-slot="${other}"]`,e => e.dataset.invalid);
+  await page.keyboard.press('Enter');
+  check('occupied slot rejects repeated keyboard activation without changing board, selection or moves',
+    await page.$eval('.board__grid',e => [...e.querySelectorAll('.slot')].map(s => s.getAttribute('aria-label')).join('|')) === before &&
+    await page.$eval(`[data-slot="${other}"]`,e => e.dataset.invalid) !== firstReject &&
+    await page.$eval('.sr-only[aria-live]',e => e.textContent.includes('occupied')) &&
+    await page.$eval('.hud .pill:last-child .pill__value',e => e.textContent) === '0');
+  await page.screenshot({path:join(reports,'fix_shelf-sort_invalid.png')});
+  // Place in an empty shelf to avoid clearing on this move.
+  const workspace = initial.findIndex((v,i) => i%3===0 && initial.slice(i,i+3).every(c=>c===null));
+  await page.click(`[data-slot="${workspace}"]`);
+  await page.waitForFunction(() => document.querySelector('.coach__copy')?.textContent.startsWith('3/3'));
+  await page.waitForFunction(() => !document.querySelector('.slot--invalid'));
+  check('coach advances after placing without covering slots',await page.$eval('.coach__copy',e => e.textContent.startsWith('3/3')) && !(await auditLayout(page)).overlap);
+  await page.click('.coach__skip');
+  check('coach can be skipped', !await page.$('.coach__copy'));
+  await page.click('.help-btn');
+  check('help button reopens the coach',!!await page.$('.coach__copy'));
+  await page.click('.coach__skip');
+  await page.focus('.help-btn');
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Tab');
+  await page.keyboard.up('Shift');
+  check('coach does not trap keyboard focus',await page.$eval(':focus',e=>!!e.closest('.game__controls')));
+  const resumeSelected = (await readCells(page)).findIndex(v=>v!==null);
+  await page.click(`[data-slot="${resumeSelected}"]`);
+  const signature = JSON.stringify(await readCells(page));
+  await page.evaluate(() => { dispatchEvent(new Event('pagehide')); document.dispatchEvent(new Event('visibilitychange')); });
+  const saved = await page.evaluate(() => localStorage.getItem('shelf-sort.run'));
+  await page.reload({waitUntil:'networkidle0'});
+  await enter(page);
+  check('reload offers Continue and New game', !!await page.$('.btn--new') && await page.$eval('.btn--play',e=>e.textContent)==='Continue');
+  await page.click('.btn--play');
+  await page.waitForSelector('.game .slot');
+  check('reload restores exact board, selection and move count; coach stays dismissed',await page.$eval(`[data-slot="${resumeSelected}"]`,e=>e.getAttribute('aria-pressed'))==='true' && JSON.stringify(await readCells(page))===signature &&
+    await page.$eval('.hud .pill:last-child .pill__value',e=>e.textContent)==='1' && !await page.$('.coach__copy'));
+  await page.keyboard.press('z');
+  check('undo history survives reload', JSON.stringify(await readCells(page))===JSON.stringify(initial));
+  await page.keyboard.press('r');
+  check('restart clears saved run', await page.evaluate(()=>localStorage.getItem('shelf-sort.run'))===null);
+  // New game explicitly discards a recoverable run.
+  await page.click(`[data-slot="${source}"]`);
+  await page.click(`[data-slot="${workspace}"]`);
+  await page.reload({waitUntil:'networkidle0'});
+  await enter(page);
+  await page.click('.btn--new');
+  await page.waitForSelector('.game .slot');
+  check('New game discards the saved run', await page.evaluate(()=>localStorage.getItem('shelf-sort.run'))===null && JSON.stringify(await readCells(page))===JSON.stringify(initial));
+  await page.evaluate(() => localStorage.setItem('shelf-sort.run','{bad json'));
+  await page.reload({waitUntil:'networkidle0'});
+  await start(page);
+  check('corrupt saved run safely starts fresh', JSON.stringify(await readCells(page))===JSON.stringify(initial));
+  check('saved run schema is versioned and bounded', JSON.parse(saved).version===1 && saved.length<200000);
+  await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);
+  await page.click(`[data-slot="${source}"]`);
+  await page.click(`[data-slot="${other}"]`);
+  check('reduced motion keeps static invalid feedback without animation',await page.$eval('.slot__reject',e=>getComputedStyle(e).animationName)==='none');
+  await page.keyboard.press('r');
+  await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'no-preference'}]);
+  await page.close();
+  await context.close();
+
+  // Isolated profiles test browser defaults and saved-choice precedence.
+  for (const [languages, savedLang, expected] of [
+    [['zh-HK','en'],null,'zh-TW'], [['zh-Hant-TW'],null,'zh-TW'], [['zh-SG'],null,'zh-CN'],
+    [['zh'],null,'zh-CN'], [['ja-JP'],null,'ja'], [['fr-FR','ja'],null,'ja'],
+    [['en-US','ja'],null,'en'], [['de-DE'],null,'en'], [['ja-JP'],'zh-tw','zh-TW'],
+  ]) {
+    const ctx=await browser.createBrowserContext(), p=await ctx.newPage();
+    await p.evaluateOnNewDocument((languages,savedLang)=>{
+      Object.defineProperty(navigator,'languages',{get:()=>languages});
+      if(savedLang)localStorage.setItem('shelf-sort.lang',savedLang);
+    }, languages,savedLang);
+    await p.goto(BASE_URL,{waitUntil:'networkidle0'});
+    await p.waitForSelector('.btn--enter');
+    check(`browser language ${languages.join('/')} saved=${savedLang}`,await p.evaluate(()=>document.documentElement.lang)===expected);
+    await ctx.close();
+  }
+
+  // Accessibility and layout, including coach, language menu and both dialogs.
+  for (const width of [375,1440]) {
+    const ctx=await browser.createBrowserContext(), p=await ctx.newPage();
+    await p.setViewport({width,height:width===375?812:900});
+    await p.goto(BASE_URL,{waitUntil:'networkidle0'});
+    await p.waitForSelector('.btn--enter');
+    await axeAudit(p,`gate ${width}`);
+    await enter(p);
+    await axeAudit(p,`title ${width}`);
+    await p.click('.btn--play');
+    await p.waitForSelector('.game .slot');
+    await axeAudit(p,`play and coach ${width}`);
+    await p.click('.game__controls .lang .icon-btn');
+    await axeAudit(p,`language menu ${width}`);
+    await p.keyboard.press('Escape');
+    await p.click('.game__controls .btn--levels');
+    await axeAudit(p,`level picker ${width}`);
+    await p.click('.panel--levels .panel__actions .btn');
+    for (const lang of [0,1,2,3]) {
+      await p.setViewport({width:360,height:640});
+      await p.click('.game__controls .lang .icon-btn');
+      await p.$$eval('.lang__item',(els,i)=>els[i].click(),lang);
+      await sleep(100);
+      const ok=await p.evaluate(()=> [...document.querySelectorAll('.pill__label')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=18) &&
+        [...document.querySelectorAll('.pill__value')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=20) &&
+        [...document.querySelectorAll('.game .icon-btn')].every(e=>{const r=e.getBoundingClientRect();return r.width>=48&&r.height>=48;}) &&
+        [...document.querySelectorAll('.pill__label,.pill__value,.btn,.coach__copy,.coach__keys')].every(e=>e.scrollWidth<=e.clientWidth+1));
+      const layout=await auditLayout(p);
+      check(`HUD sizes, icons and all text fit at 360x640 language ${lang} (${width} profile)`,ok&&!layout.clipped&&!layout.overlap);
+    }
+    await p.click('.game__controls .lang .icon-btn');
+    await p.$$eval('.lang__item',els=>els[0].click());
+    await p.setViewport({width,height:width===375?812:900});
+    await sleep(200);
+    await p.screenshot({path:join(reports,`fix_shelf-sort_hud_${width}.png`)});
+    await p.setViewport({width:844,height:390});
+    await sleep(150);
+    await p.screenshot({path:join(reports,`fix_shelf-sort_landscape_${width}.png`)});
+    await p.setViewport({width,height:width===375?812:900});
+    check(`coach auto-completes when a shelf clears ${width}`,await playToWin(p) && !await p.$('.coach__copy'));
+    await axeAudit(p,`win ${width}`);
+    check(`win clears in-progress run ${width}`,await p.evaluate(()=>localStorage.getItem('shelf-sort.run'))===null);
+    await ctx.close();
+  }
+}

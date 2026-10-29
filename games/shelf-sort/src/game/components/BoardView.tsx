@@ -35,6 +35,8 @@ function SlotButton({
   value,
   selected,
   interactive,
+  invalid,
+  hint,
   onTap,
 }: {
   shelf: number;
@@ -43,6 +45,8 @@ function SlotButton({
   value: number | null;
   selected: boolean;
   interactive: boolean;
+  invalid?: number;
+  hint?: boolean;
   onTap?: (i: number) => void;
 }) {
   const { t } = useI18n();
@@ -56,15 +60,17 @@ function SlotButton({
   return (
     <button
       type="button"
-      className={`slot${selected ? ' slot--selected' : ''}`}
+      className={`slot${selected ? ' slot--selected' : ''}${invalid ? ' slot--invalid' : ''}${hint ? ' slot--hint' : ''}`}
       style={{ left: `${left}%`, width: `${width}%` }}
       data-slot={index}
+      data-invalid={invalid}
       aria-label={label}
       aria-pressed={selected}
       disabled={!interactive}
       tabIndex={interactive ? 0 : -1}
       onClick={() => onTap?.(index)}
     >
+      {invalid && <span key={invalid} className="slot__reject" aria-hidden>×</span>}
       {value !== null && (
         <span className="slot__goods">
           <Goods type={value} lifted={selected} />
@@ -81,6 +87,8 @@ function ShelfView({
   interactive,
   reduced,
   clearFx,
+  invalidFx,
+  hintSlot,
   onTap,
 }: {
   shelf: number;
@@ -89,6 +97,8 @@ function ShelfView({
   interactive: boolean;
   reduced: boolean;
   clearFx: ClearFx | null;
+  invalidFx?: { seq: number; slot: number } | null;
+  hintSlot?: number;
   onTap?: (i: number) => void;
 }) {
   const base = shelf * SLOTS_PER_SHELF;
@@ -107,6 +117,8 @@ function ShelfView({
           value={v}
           selected={selected === base + pos}
           interactive={interactive}
+          invalid={invalidFx?.slot === base + pos ? invalidFx.seq : undefined}
+          hint={hintSlot === base + pos}
           onTap={onTap}
         />
       ))}
@@ -143,6 +155,8 @@ export function BoardView({
   interactive,
   reduced,
   clearFx,
+  invalidFx,
+  hintSlot,
   maxCols,
   onTap,
   ariaLabel,
@@ -153,6 +167,8 @@ export function BoardView({
   interactive: boolean;
   reduced: boolean;
   clearFx: ClearFx | null;
+  invalidFx?: { seq: number; slot: number } | null;
+  hintSlot?: number;
   maxCols: number;
   onTap?: (i: number) => void;
   ariaLabel?: string;
@@ -188,6 +204,8 @@ export function BoardView({
                 interactive={interactive}
                 reduced={reduced}
                 clearFx={clearFx}
+                invalidFx={invalidFx}
+                hintSlot={hintSlot}
                 onTap={onTap}
               />
             </div>

@@ -14,6 +14,8 @@ export const FIXED_DT = 1 / 120;
 const LANTERN_HALF_H = DRAW.lantern.h / 2;
 
 export const CONFIG = {
+  countdownSeconds: 3,
+  sparkMaxY: 410,
   ceilingY: 78, // default HUD-bottom (sprite-top limit); overridden per layout via setView
   groundY: 594, // collision ground line (hill line)
   gravity: 520,
@@ -21,7 +23,7 @@ export const CONFIG = {
   vyMin: -250, // fastest rise (up is negative)
   vyMax: 340, // fastest fall
   fuelMax: 100,
-  fuelDrain: 15, // per second while thrusting
+  fuelDrain: 6, // per second while thrusting
   sparkFuel: 9,
   sparkScore: 10,
   flameFuel: 35,
@@ -41,9 +43,9 @@ export const CONFIG = {
   corridorHalfStart: 128,
   corridorHalfEnd: 94,
   corridorRampTime: 150,
-  centerMid: 310,
-  centerAmp1: 96,
-  centerAmp2: 34,
+  centerMid: 295,
+  centerAmp1: 65,
+  centerAmp2: 24,
   centerWave1: 1150, // wavelength in world units
   centerWave2: 460,
   sparkSpacing: 100, // world units between trail sparks
@@ -109,6 +111,7 @@ export class GameSim {
   viewW = 720;
   lanternXFrac = 0.3;
 
+  readyRemaining: number = CONFIG.countdownSeconds;
   time = 0;
   scrollX = 0;
   speed: number = CONFIG.speedStart;
@@ -143,6 +146,7 @@ export class GameSim {
   reset(seed = this.seed): void {
     this.seed = seed >>> 0;
     this.rng = makeRng(this.seed);
+    this.readyRemaining = CONFIG.countdownSeconds;
     this.time = 0;
     this.scrollX = 0;
     this.speed = CONFIG.speedStart;
@@ -175,7 +179,10 @@ export class GameSim {
   setView(viewW: number, lanternXFrac: number, ceilingY: number = this.ceilingY): void {
     this.viewW = Math.max(240, viewW);
     this.lanternXFrac = lanternXFrac;
-    this.ceilingY = ceilingY;
+    this.ceilingY = Math.min(ceilingY, 310);
+    const lo = this.ceilingY + LANTERN_HALF_H;
+    if (this.lantern.y < lo) this.lantern.y = lo;
+    for (const item of [...this.sparks, ...this.flames]) item.y = this.centerYAt(item.x);
   }
 
   lanternScreenX(): number {
@@ -194,7 +201,7 @@ export class GameSim {
       c.centerAmp1 * Math.sin((x / c.centerWave1) * Math.PI * 2 + this.p1) +
       c.centerAmp2 * Math.sin((x / c.centerWave2) * Math.PI * 2 + this.p2);
     const lo = this.ceilingY + 70;
-    const hi = c.groundY - 90;
+    const hi = c.sparkMaxY;
     return Math.max(lo, Math.min(hi, y));
   }
 
@@ -292,6 +299,10 @@ export class GameSim {
   step(dt: number, holding: boolean): void {
     if (this.over) return;
     const c = CONFIG;
+    if (this.readyRemaining > 0) {
+      this.readyRemaining = Math.max(0, this.readyRemaining - dt);
+      return;
+    }
     this.time += dt;
     this.speed = this.speedNow();
     this.scrollX += this.speed * dt;
@@ -410,6 +421,66 @@ export class GameSim {
     this.events.push('over');
   }
 
+  snapshot() {
+    return { version: 1, rngState: this.rng.state(),
+      state: { seed: this.seed, viewW: this.viewW, lanternXFrac: this.lanternXFrac,
+        time: this.time, scrollX: this.scrollX, speed: this.speed, ceilingY: this.ceilingY,
+        readyRemaining: this.readyRemaining, lantern: { ...this.lantern },
+        sparks: this.sparks, flames: this.flames, crows: this.crows, storms: this.storms,
+        sparksCollected: this.sparksCollected, hits: this.hits, nextId: this.nextId,
+        nextSpawnX: this.nextSpawnX, lastFlameX: this.lastFlameX, p1: this.p1, p2: this.p2 } };
+  }
+
+  static restore(value: unknown): GameSim | null {
+    if (!value || typeof value !== 'object') return null;
+    const v = value as Record<string, unknown>;
+    if (v.version !== 1 || !validNumber(v.rngState, 0, 4294967295, true) ||
+        !v.state || typeof v.state !== 'object') return null;
+    const data = v.state as Record<string, unknown>;
+    const sim = new GameSim();
+    const ranges: Record<string, [number, number, boolean?]> = {
+      seed: [0, 4294967295, true], viewW: [240, 20000], lanternXFrac: [0.1, 0.5],
+      time: [0, 1e7], scrollX: [0, 4e9], speed: [150, 320], ceilingY: [0, 310],
+      readyRemaining: [0, 3], sparksCollected: [0, 1e8, true], hits: [0, 1e8, true],
+      nextId: [1, 1e9, true], nextSpawnX: [0, 4e9], lastFlameX: [0, 4e9],
+      p1: [0, Math.PI * 2], p2: [0, Math.PI * 2],
+    };
+    for (const [key, range] of Object.entries(ranges)) {
+      if (!validNumber(data[key], ...range)) return null;
+      // Only allow-listed scalar fields can be assigned.
+      Reflect.set(sim, key, data[key]);
+    }
+    // Prevent corrupted cursors from generating an unbounded catch-up loop.
+    if (sim.nextSpawnX < sim.scrollX - CONFIG.sparkSpacing ||
+        sim.nextSpawnX > sim.scrollX + 32100 || sim.lastFlameX > sim.nextSpawnX) return null;
+    const lantern = validateRecord(data.lantern, {
+      y: [0, CONFIG.groundY - CONFIG.lanternR], vy: [-250, 340], fuel: [0, 100],
+      invuln: [0, CONFIG.invulnTime], knockX: [0, 36], tilt: [-0.5, 0.5],
+    });
+    if (!lantern) return null;
+    sim.lantern = lantern as unknown as Lantern;
+    for (const kind of ['sparks', 'flames', 'crows', 'storms'] as const) {
+      const list = data[kind];
+      if (!Array.isArray(list) || list.length > 512) return null;
+      const schema: Record<string, [number, number, boolean?] | 'boolean'> = {
+        id: [1, 1e9, true], x: [-1e6, 4e9], y: [0, 640],
+      };
+      if (kind === 'sparks' || kind === 'flames') schema.taken = 'boolean';
+      else schema.hit = 'boolean';
+      if (kind === 'crows') Object.assign(schema, {
+        baseX: [-1e6, 4e9], baseY: [0, 640], phase: [0, 1e9],
+        vxRel: [90, 170], frame: [0, 3, true], frameT: [0, 0.11],
+      });
+      const restored = list.map((item) => validateRecord(item, schema));
+      if (restored.some((item) => item === null)) return null;
+      if (restored.some((item) => (item!.id as number) >= sim.nextId ||
+          (item!.x as number) > sim.scrollX + 32100)) return null;
+      Reflect.set(sim, kind, restored);
+    }
+    sim.rng = makeRng(v.rngState as number);
+    return sim;
+  }
+
   distanceMeters(): number {
     return Math.floor(this.scrollX / 10);
   }
@@ -490,4 +561,18 @@ export class CorridorBot {
     // Hold (thrust up) when we are moving down faster than the safe speed.
     return p.vy > vyDes;
   }
+}
+
+function validNumber(n: unknown, lo: number, hi: number, integer = false): n is number {
+  return typeof n === 'number' && Number.isFinite(n) && n >= lo && n <= hi && (!integer || Number.isInteger(n));
+}
+function validateRecord(value: unknown, schema: Record<string, [number, number, boolean?] | 'boolean'>): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const [key, rule] of Object.entries(schema)) {
+    if (rule === 'boolean' ? typeof source[key] !== 'boolean' : !validNumber(source[key], ...rule)) return null;
+    result[key] = source[key];
+  }
+  return result;
 }

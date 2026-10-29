@@ -12,6 +12,7 @@ import {
 } from 'react';
 import {
   DEFAULT_LANG,
+  browserLanguage,
   isLangCode,
   LANG_ORDER,
   type Dict,
@@ -55,6 +56,8 @@ function detectInitialLang(dicts: Map<LangCode, Dict>): LangCode {
   } catch {
     /* ignore */
   }
+  const browser = browserLanguage(navigator.languages ?? [navigator.language]);
+  if (dicts.has(browser)) return browser;
   return dicts.has(DEFAULT_LANG) ? DEFAULT_LANG : (LANG_ORDER.find((l) => dicts.has(l)) ?? DEFAULT_LANG);
 }
 

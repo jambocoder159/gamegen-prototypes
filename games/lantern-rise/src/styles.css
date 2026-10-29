@@ -90,8 +90,8 @@ body,
 
 /* ------------------------------------------------------------------ Buttons */
 .lr-iconbtn {
-  width: clamp(44px, 12vmin, 60px);
-  height: clamp(44px, 12vmin, 60px);
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: none;
   background: transparent;
@@ -145,9 +145,9 @@ body,
   color: #fff;
   border-radius: 999px;
   padding: 12px 26px;
-  font-size: clamp(16px, 4.5vmin, 22px);
+  font-size: clamp(18px, 4.5vmin, 22px);
   font-weight: 700;
-  min-height: 44px;
+  min-height: 48px;
   touch-action: manipulation;
 }
 
@@ -158,7 +158,6 @@ body,
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-.lr-primary.lr-play,
 .lr-primary.lr-enter {
   padding: 14px 44px;
   font-size: clamp(18px, 5.5vmin, 26px);
@@ -275,6 +274,9 @@ button:focus-visible {
   gap: 12px;
   padding: 0 16px;
 }
+.lr-title-actions { display: flex; justify-content: center; gap: 8px; max-width: 100%; }
+.lr-title-actions .lr-textbtn { padding: var(--play-padding, 14px 44px); font-size: var(--play-font, clamp(18px, 5.5vmin, 26px)); min-width: 0; }
+.lr-has-save { --play-padding: 12px 16px; --play-font: 18px; }
 .lr-help {
   margin: 0;
   max-width: min(90vw, 520px);
@@ -297,108 +299,78 @@ button:focus-visible {
 
 .lr-pills {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 .lr-pill {
   position: relative;
-  height: clamp(30px, 8vmin, 42px);
-  min-width: clamp(84px, 24vw, 130px);
+  height: 42px;
+  min-width: 92px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.lr-pill-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-}
+.lr-pill-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
 .lr-pill-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--ink);
-  font-weight: 800;
-  font-size: clamp(13px, 3.7vmin, 18px);
-  padding: 0 18px;
-  white-space: nowrap;
+  position: relative; display: flex; align-items: center; gap: 6px;
+  color: var(--ink); font-weight: 800; font-size: 20px;
+  padding: 0 16px; white-space: nowrap;
 }
-.lr-pill-label {
-  font-size: 0.72em;
-  opacity: 0.85;
-}
-.lr-pill-unit {
-  font-size: 0.72em;
-}
-.lr-pill-icon {
-  width: 1.25em;
-  height: 1.25em;
-  object-fit: contain;
-}
-.lr-pill-value {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Fuel meter */
+.lr-pill-label, .lr-pill-unit { font-size: 18px; }
+.lr-pill-icon { width: 28px; height: 28px; object-fit: contain; }
+.lr-pill-value { font-variant-numeric: tabular-nums; }
 .lr-meter-wrap {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 44px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(58vw, 320px);
+  top: calc(env(safe-area-inset-top, 0px) + 110px);
+  left: 50%; transform: translateX(-50%);
+  width: min(320px, calc(100% - 32px));
+  padding: 0 8px;
+  background: #1a1140;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 18px;
 }
-.lr-meter {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 941 / 116;
+.lr-oil-label { display: flex; justify-content: space-between; line-height: 24px; padding: 0 8px; }
+.lr-oil-label strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.lr-meter { position: relative; width: 100%; height: 34px; }
+.lr-meter-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.lr-meter-channel { position: absolute; overflow: hidden; border-radius: 3px; }
+.lr-meter-fill { width: 100%; height: 100%; background: var(--flame); transition: width 0.08s linear; }
+.lr-oil-warning { min-height: 26px; line-height: 24px; text-align: center; font-weight: 700; }
+.lr-oil-low .lr-meter-fill { background: #ff7e64; animation: oil-warning 1.4s ease-in-out infinite; }
+@keyframes oil-warning { 50% { background-color: #ffc66d; } }
+.lr-mode-wide .lr-pills { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+.lr-mode-wide .lr-meter-wrap { top: calc(env(safe-area-inset-top, 0px) + 60px); }
+.lr-help-button { color: var(--ink); font-size: 28px; font-weight: 800; }
+.lr-countdown {
+  position: absolute; left: 50%; top: 53%; transform: translate(-50%, -50%);
+  z-index: 3; pointer-events: none; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 22px; background: #1a1140; border: 2px solid var(--cream); border-radius: 18px;
+  font-size: 20px;
 }
-.lr-meter-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
+.lr-countdown strong { font-size: 48px; line-height: 1.1; }
+.lr-coach {
+  position: absolute; z-index: 4;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  max-width: 480px; margin: 0 auto; padding: 10px 12px;
+  background: #1a1140; border: 2px solid var(--cream); border-radius: 14px;
+  display: flex; align-items: center; gap: 8px;
 }
-.lr-meter-channel {
-  position: absolute;
-  overflow: hidden;
-  border-radius: 3px;
+.lr-coach-message { display: flex; align-items: center; gap: 8px; flex: 1; font-size: 18px; line-height: 1.35; }
+.lr-coach-message > span[aria-hidden] { font-size: 30px; color: var(--cream); }
+.lr-coach-icon { width: 32px; height: 32px; object-fit: contain; }
+.lr-coach-skip { border: 1px solid var(--cream); padding: 8px 12px; border-radius: 12px; max-width: 130px; }
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .lr-coach { margin: 0 0 0 auto; max-width: 400px; padding: 6px 10px; }
+  .lr-coach-message { font-size: 18px; }
 }
-.lr-meter-fill {
-  width: 100%;
-  height: 100%;
-  background: var(--flame);
-  transition: width 0.08s linear;
-}
-
-/* Portrait: the corner button plates (up to 60px tall) occupy the top row, so
-   drop the info pills and fuel bar to a second row below them. This avoids the
-   top row crowding/overlap at narrow widths (360–390px). */
-.lr-mode-portrait .lr-pills {
-  top: calc(env(safe-area-inset-top, 0px) + 76px);
-}
-.lr-mode-portrait .lr-meter-wrap {
-  top: calc(env(safe-area-inset-top, 0px) + 124px);
-}
-
-/* Wide: fuel bar stands on the left side (rotated). */
-.lr-mode-wide .lr-meter-wrap {
-  top: 50%;
-  left: calc(env(safe-area-inset-left, 0px) + 34px);
-  width: min(42vh, 300px);
-  transform: translate(-50%, -50%) rotate(-90deg);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .lr-meter-fill {
-    transition: none;
-  }
+  .lr-meter-fill, .lr-oil-low .lr-meter-fill { transition: none; animation: none; }
 }
 
 /* ------------------------------------------------------------------ Overlays */
@@ -465,8 +437,8 @@ button:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .lr-stat-icon {
-  width: 1.1em;
-  height: 1.1em;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -503,6 +475,7 @@ button:focus-visible {
     grid-row: 1 / 4;
     width: auto;
     height: auto;
+    max-width: 100%;
     max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
   .lr-title .lr-title-text, .lr-title .lr-tagline, .lr-title-bottom { grid-column: 2; z-index: 3; text-align: center; }

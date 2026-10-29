@@ -12,6 +12,7 @@ import { GameRenderer } from '../game/renderer';
 import { WORLD_H, hudCeilingWorldY } from '../config/layout';
 import type { Viewport } from '../platform/viewport';
 import { audio } from '../platform/audio';
+import { saveRun, clearRun } from '../platform/storage';
 import type { AudioKey } from '../config/assets';
 
 export interface GameResult {
@@ -26,12 +27,17 @@ export interface HudRefs {
   fuelFill: RefObject<HTMLDivElement | null>;
 }
 
+export interface PlayStatus { fuel: number; countdown: number; time: number; sparks: number }
+
 interface Props {
   mode: 'demo' | 'play';
   viewport: Viewport;
   images: Map<string, HTMLImageElement>;
   reducedMotion: boolean;
   seed?: number;
+  initialSim?: GameSim | null;
+  onStatus?: (status: PlayStatus) => void;
+  onAction?: (action: 'hold' | 'release') => void;
   paused?: boolean;
   playfieldLabel?: string;
   hud?: HudRefs;
@@ -56,15 +62,22 @@ export function GameCanvas({
   images,
   reducedMotion,
   seed = 1,
+  initialSim,
+  onStatus,
+  onAction,
   paused = false,
   playfieldLabel,
   hud,
   onOver,
   onTogglePause,
 }: Props) {
+  const callbacks = useRef({ onStatus, onAction, onTogglePause, onOver });
+  callbacks.current = { onStatus, onAction, onTogglePause, onOver };
   const rootRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(paused);
   const vpRef = useRef(viewport);
+  const motionRef = useRef(reducedMotion);
+  motionRef.current = reducedMotion;
   const sizeRef = useRef({ w: viewport.w, h: viewport.h });
 
   pausedRef.current = mode === 'play' ? paused : false;
@@ -87,14 +100,15 @@ export function GameCanvas({
     const root = rootRef.current;
     if (!root) return;
 
-    const sim = new GameSim(seed);
+    const sim = initialSim ?? new GameSim(seed);
     const vp0 = vpRef.current;
     sim.setView(
       (WORLD_H * vp0.w) / vp0.h,
       xFracFor(vp0),
       hudCeilingWorldY(vp0.mode, vp0.w, vp0.h),
     );
-    sim.reset(seed);
+    if (!initialSim) sim.reset(seed);
+    if (mode === 'demo') sim.readyRemaining = 0;
     simRef.current = sim;
 
     const renderer = new GameRenderer(root, images, reducedMotion);
@@ -126,18 +140,23 @@ export function GameCanvas({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
-        onTogglePause?.();
+        callbacks.current.onTogglePause?.();
         return;
       }
       if (MOVE_KEYS.has(e.key)) {
+        if (e.target instanceof HTMLElement && e.target.closest('button')) return;
         heldKeys.add(e.key);
         e.preventDefault();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
-      if (MOVE_KEYS.has(e.key)) heldKeys.delete(e.key);
+      if (MOVE_KEYS.has(e.key)) {
+        heldKeys.delete(e.key);
+      }
     };
-    const clearKeys = () => heldKeys.clear();
+    const clearKeys = () => { heldKeys.clear(); pointers.clear(); };
+    const persist = () => { if (mode === 'play') saveRun(sim); };
+    const onVisibility = () => { if (document.hidden) { persist(); clearKeys(); } };
 
     if (mode === 'play') {
       root.addEventListener('pointerdown', onPointerDown);
@@ -147,6 +166,8 @@ export function GameCanvas({
       window.addEventListener('keydown', onKeyDown);
       window.addEventListener('keyup', onKeyUp);
       window.addEventListener('blur', clearKeys);
+      window.addEventListener('pagehide', persist);
+      document.addEventListener('visibilitychange', onVisibility);
     }
 
     // --- Loop ---
@@ -157,6 +178,10 @@ export function GameCanvas({
     let demoOverT = 0;
     let localSeed = seed >>> 0;
 
+    let lastSaved = -1;
+    let statusStamp = '';
+    let wasLow = false;
+    let previousHolding = false;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (last === 0) last = now;
@@ -169,6 +194,10 @@ export function GameCanvas({
         let guard = 0;
         while (acc >= FIXED_DT && guard < 600) {
           const hold = bot ? bot.decide(sim, FIXED_DT) : holding();
+          if (mode === 'play' && sim.readyRemaining <= 0 && hold !== previousHolding) {
+            previousHolding = hold;
+            callbacks.current.onAction?.(hold ? 'hold' : 'release');
+          }
           sim.step(FIXED_DT, hold);
           acc -= FIXED_DT;
           guard++;
@@ -179,10 +208,27 @@ export function GameCanvas({
       }
 
       const { w, h } = sizeRef.current;
-      renderer.render(sim, w, h);
+      if (mode === 'play') {
+        const meter = root.parentElement?.querySelector('.lr-meter-wrap');
+        if (meter) {
+          const bottom = meter.getBoundingClientRect().bottom;
+          const safeCeiling = (bottom + 12) * WORLD_H / h;
+          if (Math.abs(sim.ceilingY - safeCeiling) > 0.5) sim.setView(sim.viewW, sim.lanternXFrac, safeCeiling);
+        }
+      }
+      renderer.render(sim, w, h, motionRef.current);
 
       const events = sim.drainEvents();
       if (mode === 'play') {
+        const low = sim.lantern.fuel < 25;
+        if (low && !wasLow) audio.play('sfx_hit', 0.45);
+        wasLow = low;
+        const status = { fuel: Math.floor(sim.lantern.fuel), countdown: Math.ceil(sim.readyRemaining),
+          time: Math.floor(sim.time), sparks: sim.sparksCollected };
+        const stamp = JSON.stringify(status);
+        if (stamp !== statusStamp) { statusStamp = stamp; callbacks.current.onStatus?.(status); }
+        if (sim.over) clearRun();
+        else if (Math.floor(sim.time) !== lastSaved) { lastSaved = Math.floor(sim.time); saveRun(sim); }
         for (const ev of events) {
           const key = SFX[ev];
           if (key) audio.play(key, ev === 'over' ? 0.7 : 0.6);
@@ -204,12 +250,13 @@ export function GameCanvas({
             demoOverT = 0;
             localSeed = (Math.imul(localSeed, 1664525) + 1013904223) >>> 0;
             sim.reset(localSeed);
+            sim.readyRemaining = 0;
             bot.reset();
             acc = 0;
           }
         } else if (!reported) {
           reported = true;
-          onOver?.({
+          callbacks.current.onOver?.({
             distance: sim.distanceMeters(),
             sparks: sim.sparksCollected,
             score: sim.score(),
@@ -229,6 +276,8 @@ export function GameCanvas({
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('keyup', onKeyUp);
         window.removeEventListener('blur', clearKeys);
+        window.removeEventListener('pagehide', persist);
+        document.removeEventListener('visibilitychange', onVisibility);
       }
       renderer.destroy();
       simRef.current = null;
@@ -242,6 +291,7 @@ export function GameCanvas({
     <div
       ref={rootRef}
       className="lr-playfield"
+      tabIndex={mode === 'play' ? 0 : undefined}
       role={mode === 'play' ? 'application' : undefined}
       aria-label={mode === 'play' ? playfieldLabel : undefined}
       style={{ touchAction: 'none' }}

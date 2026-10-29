@@ -25,31 +25,8 @@ export type LayoutMode = 'portrait' | 'nearsquare' | 'wide';
 // The world's visible height is always this many world units.
 export const WORLD_H = 640;
 
-// Bottom edge of the top HUD band, in WORLD units, so the simulation can keep
-// the lantern's sprite clear of the buttons / Distance·Star pills / fuel bar.
-// This mirrors the HUD metrics in styles.css per layout (safe-area insets are 0
-// on the design viewports, so they are treated as 0 here):
-//   .lr-pill         height clamp(30px, 8vmin, 42px)
-//   .lr-iconbtn      height clamp(44px, 12vmin, 60px)
-//   .lr-meter        width  min(58vw, 320px), aspect-ratio 941/116
-// Portrait drops the pills (top 76px) and meter (top 124px) below the button
-// row; wide keeps a single top row and stands the meter on the left edge.
-export function hudCeilingWorldY(mode: LayoutMode, w: number, h: number): number {
-  const vmin = Math.min(w, h);
-  const clamp = (lo: number, v: number, hi: number) => Math.max(lo, Math.min(hi, v));
-  const pillH = clamp(30, 0.08 * vmin, 42);
-  const btnH = clamp(44, 0.12 * vmin, 60);
-  const meterH = (Math.min(0.58 * w, 320) * 116) / 941;
-
-  let bottomPx: number;
-  if (mode === 'portrait') {
-    bottomPx = Math.max(8 + btnH, 76 + pillH, 124 + meterH);
-  } else if (mode === 'wide') {
-    // Fuel meter is rotated onto the left side, so only the top row counts.
-    bottomPx = Math.max(8 + btnH, 8 + pillH);
-  } else {
-    bottomPx = Math.max(8 + btnH, 8 + pillH, 44 + meterH);
-  }
-  const HUD_GAP_PX = 10; // keep the lantern a hair below the HUD
-  return ((bottomPx + HUD_GAP_PX) * WORLD_H) / h;
+// Mirrors the reserved HUD band in styles.css; live play also measures the
+// meter bottom so safe-area insets are included. The bar stays horizontal.
+export function hudCeilingWorldY(mode: LayoutMode, _w: number, h: number): number {
+  return Math.min(310, ((mode === 'wide' ? 156 : 206) * WORLD_H) / h);
 }

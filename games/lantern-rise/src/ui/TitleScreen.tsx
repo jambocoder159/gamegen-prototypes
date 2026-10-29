@@ -9,7 +9,7 @@ import { GameCanvas } from './GameCanvas';
 import { AssetImg, TextButton } from './atoms';
 import { LanguageButton, SoundButton } from './Controls';
 
-export function TitleScreen({ viewport, onPlay }: { viewport: Viewport; onPlay: () => void }) {
+export function TitleScreen({ viewport, onPlay, hasSavedRun, onContinue }: { viewport: Viewport; onPlay: () => void; hasSavedRun: boolean; onContinue: () => void }) {
   const { images, reducedMotion } = useApp();
   const { t } = useI18n();
 
@@ -36,9 +36,12 @@ export function TitleScreen({ viewport, onPlay }: { viewport: Viewport; onPlay: 
       </div>
 
       <div className="lr-title-bottom">
-        <TextButton className="lr-primary lr-play" label={t('a11y.play')} onClick={onPlay}>
-          {t('play')}
-        </TextButton>
+        <div className={`lr-title-actions${hasSavedRun ? ' lr-has-save' : ''}`}>
+          {hasSavedRun && <TextButton className="lr-primary lr-continue" onClick={onContinue}>{t('continue')}</TextButton>}
+          <TextButton className="lr-primary lr-play" label={t(hasSavedRun ? 'newGame' : 'a11y.play')} onClick={onPlay}>
+            {t(hasSavedRun ? 'newGame' : 'play')}
+          </TextButton>
+        </div>
         <p className="lr-help">{t('help')}</p>
       </div>
     </div>

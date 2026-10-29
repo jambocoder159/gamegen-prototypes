@@ -27,10 +27,12 @@ export function GameControls({
   paused,
   onTogglePause,
   onRestart,
+  onHelp,
 }: {
   paused: boolean;
   onTogglePause: () => void;
   onRestart: () => void;
+  onHelp: () => void;
 }) {
   const { t } = useI18n();
   return (
@@ -50,6 +52,7 @@ export function GameControls({
           )}
         </GlyphButton>
         <IconButton icon="icon_restart" label={t('a11y.restart')} onClick={onRestart} />
+        <GlyphButton className="lr-help-button" label={t('coach.open')} onClick={onHelp}>?</GlyphButton>
       </div>
       <div className="lr-corner lr-corner-tr">
         <SoundButton />

@@ -10,6 +10,7 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import puppeteer from 'puppeteer-core';
+import { fixChecks } from './fix-checks.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..');
@@ -85,6 +86,8 @@ async function main() {
       headless: 'new',
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
+
+    await fixChecks(browser, BASE, check);
 
     // ---------- Main session ----------
     const page = await browser.newPage();

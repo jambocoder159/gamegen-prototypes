@@ -129,7 +129,7 @@ export class GameRenderer {
     }
   }
 
-  render(sim: GameSim, widthPx: number, heightPx: number): void {
+  render(sim: GameSim, widthPx: number, heightPx: number, reducedMotion = this.reducedMotion): void {
     const ppu = heightPx / WORLD_H; // pixels per world unit
     const sx = (wx: number) => (wx - sim.scrollX) * ppu;
     const sy = (wy: number) => wy * ppu;
@@ -222,14 +222,14 @@ export class GameRenderer {
     setSize(this.lanternEl, lw, lh);
     const lx = (sim.lanternScreenX() - l.knockX) * ppu;
     const ly = sy(l.y);
-    const rot = this.reducedMotion ? 0 : l.tilt;
+    const rot = reducedMotion ? 0 : l.tilt;
     this.lanternEl.style.transform =
       `translate3d(${lx - lw / 2}px,${ly - lh / 2}px,0) rotate(${rot}rad)`;
 
     // Invulnerability feedback: blink normally, steady dimming under reduced motion.
     let opacity = 1;
     if (l.invuln > 0) {
-      opacity = this.reducedMotion ? 0.55 : (Math.floor(sim.time * 12) % 2 === 0 ? 1 : 0.3);
+      opacity = reducedMotion ? 0.55 : (Math.floor(sim.time * 12) % 2 === 0 ? 1 : 0.3);
     }
     if (this.lanternEl.style.opacity !== String(opacity)) {
       this.lanternEl.style.opacity = String(opacity);

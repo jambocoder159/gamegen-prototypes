@@ -32,7 +32,7 @@
     "bowl": "どんぶり、タップで空にする",
     "bowlEmpty": "どんぶりは空です",
     "bowlHas": "どんぶりの中身：{list}",
-    "selectCustomer": "このお客さんに提供",
+    "selectCustomer": "お客さんを選ぶ",
     "order": "注文：{list}",
     "liveServed": "正解。コイン{coins}獲得。コンボ{combo}。",
     "liveWrong": "注文が違います。ライフを1つ失いました。",
@@ -42,6 +42,16 @@
   },
   "help": {
     "title": "遊び方",
-    "body": "お客さんの注文の吹き出しを読み、具材をタップしてどんぶりを作り、提供を押します。キー：1-6で具材の切替、EnterまたはSpaceで提供、CまたはBackspaceでクリア、左右キーでお客さん選択、Tabでボタン移動。"
-  }
+    "order": "注文の吹き出しをタップ",
+    "build": "同じ具材を入れる",
+    "serve": "「{serve}」をタップ",
+    "skip": "スキップ",
+    "pause": "一時停止／遊び方",
+    "resume": "再開",
+    "keys": "1–6：具材 · Enter／Space：{serve} · C／Backspace：空に · ←／→：お客さん · Tab：次のボタン"
+  },
+  "continue": "つづきから",
+  "newGame": "はじめから",
+  "emptyBowl": "どんぶりは空です。注文の具材を入れよう。",
+  "incompleteBowl": "あと少し。足りない具材を入れよう。"
 }

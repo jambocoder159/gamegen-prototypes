@@ -9,13 +9,14 @@ import { useImages, imgUrl } from './assets-context';
 import { PlayField } from './PlayField';
 import { SoundButton, LangButton, PlateButton } from './controls';
 import { createGame, step, drainEvents, type GameState } from '../game/logic';
+import { loadBest } from '../game/storage';
 import { createBot, stepBot, type BotState } from '../game/bot';
 
 function makeSeed(): number {
   return (performance.now() * 1000) % 2147483647 | 0 || 1;
 }
 
-export function TitleScreen({ onPlay }: { onPlay: () => void }) {
+export function TitleScreen({ onPlay, onContinue, canContinue }: { onPlay: () => void; onContinue: () => void; canContinue: boolean }) {
   const { t } = useI18n();
   const { mode } = useViewport();
   const reduced = usePrefersReducedMotion();
@@ -85,15 +86,21 @@ export function TitleScreen({ onPlay }: { onPlay: () => void }) {
           ) : (
             <div className="logo-fallback" aria-hidden="true" />
           )}
-          <h1 className="game-title">{t('title')}</h1>
-          <p className="game-tagline">{t('tagline')}</p>
+          <div className="title-copy">
+            <h1 className="game-title">{t('title')}</h1>
+            <p className="game-tagline">{t('tagline')}</p>
+            <p className="title-best">{t('bestScore')}: <strong>{loadBest()}</strong></p>
+          </div>
         </div>
 
         <div className="title-actions">
           <LangButton />
-          <PlateButton className="play-btn" onClick={onPlay} autoFocus>
-            {t('play')}
-          </PlateButton>
+          <div className="title-play-actions">
+            {canContinue && <PlateButton className="continue-btn" onClick={onContinue} autoFocus>{t('continue')}</PlateButton>}
+            <PlateButton className="play-btn" onClick={onPlay} autoFocus={!canContinue}>
+              {t(canContinue ? 'newGame' : 'play')}
+            </PlateButton>
+          </div>
           <SoundButton />
         </div>
       </div>

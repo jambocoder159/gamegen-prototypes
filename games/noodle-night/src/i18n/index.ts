@@ -29,9 +29,20 @@ function isLang(v: unknown): v is Lang {
   return typeof v === 'string' && (LANGS as readonly string[]).includes(v);
 }
 
+export function browserLanguage(languages: readonly string[]): Lang {
+  for (const value of languages) {
+    const tag = value.toLowerCase();
+    if (/^zh-(tw|hk|mo|hant)(-|$)/.test(tag)) return 'zh-tw';
+    if (tag === 'zh' || /^zh-(cn|sg|hans)(-|$)/.test(tag)) return 'zh-cn';
+    if (/^ja(-|$)/.test(tag)) return 'ja';
+    if (/^en(-|$)/.test(tag)) return 'en';
+  }
+  return DEFAULT_LANG;
+}
+
 export function initI18n(loaded: Record<string, Dict>): void {
   dicts = loaded;
-  let initial: Lang = DEFAULT_LANG;
+  let initial: Lang = browserLanguage(navigator.languages);
   try {
     const saved = localStorage.getItem(STORE_KEY);
     if (isLang(saved)) initial = saved;
@@ -45,6 +56,7 @@ export function initI18n(loaded: Record<string, Dict>): void {
 function applyHtmlLang(): void {
   try {
     document.documentElement.lang = HTML_LANG[current];
+    document.title = translate('title');
   } catch {
     /* ignore */
   }

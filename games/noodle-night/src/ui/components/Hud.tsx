@@ -34,7 +34,7 @@ export function Hud({ state }: { state: GameState }) {
         <span className="hud-combo-label">{t('combo')}</span>
         <span className="hud-combo-num">
           {state.combo}
-          {mult > 1 ? <span className="hud-combo-mult"> ×{mult.toFixed(2).replace(/0$/, '')}</span> : null}
+          {mult > 1 ? <span className="hud-combo-mult"> ×{Number(mult.toFixed(2))}</span> : null}
         </span>
       </div>
     </div>

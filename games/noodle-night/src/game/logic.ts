@@ -14,7 +14,8 @@ export type GameEvent = 'ok' | 'wrong' | 'over' | 'leave_angry';
 // ---- tunables -------------------------------------------------------------
 export const CONFIG = {
   maxHearts: 3,
-  patienceStart: 16, // seconds for the very first customers
+  patienceStart: 16, // base after the introductory customers
+  introPatience: [48, 40, 32, 24], // indexed by successful serves; then normal ramp
   patienceFloor: 7, // lower bound after ramping
   patienceDecayPerServed: 0.7, // seconds shaved off per customer served
   secondSeatAt: 6, // served count that opens the 2nd seat
@@ -25,8 +26,8 @@ export const CONFIG = {
   wrongPatienceKeep: 0.75, // patience retained after a wrong serve (−25%)
   coinsPerTopping: 10,
   patienceBonusMax: 10, // extra coins for serving fast
-  comboStep: 0.25,
-  comboCap: 2.5,
+  comboStep: 0.5,
+  comboCap: 10,
   maxBowl: 4, // orders never exceed 4 toppings
 } as const;
 
@@ -64,6 +65,7 @@ export interface GameState {
 
 export interface ServeResult {
   ok: boolean;
+  incomplete?: boolean;
   coins: number;
   combo: number;
 }
@@ -91,8 +93,8 @@ function minOrderSize(served: number): number {
   return served < 8 ? 1 : 2;
 }
 
-function patienceFor(served: number): number {
-  return Math.max(CONFIG.patienceFloor, CONFIG.patienceStart - served * CONFIG.patienceDecayPerServed);
+export function patienceFor(served: number): number {
+  return CONFIG.introPatience[served] ?? Math.max(CONFIG.patienceFloor, CONFIG.patienceStart - (served - CONFIG.introPatience.length) * CONFIG.patienceDecayPerServed);
 }
 
 export function comboMultiplier(combo: number): number {
@@ -221,7 +223,7 @@ export function step(state: GameState, dt: number): void {
 
   if (state.hearts <= 0) {
     state.hearts = 0;
-    state.status = 'over';
+    closeStall(state);
     state.bestCombo = Math.max(state.bestCombo, state.combo);
     state.events.push('over');
     return;
@@ -235,6 +237,14 @@ export function step(state: GameState, dt: number): void {
 
   ensureSelection(state);
   state.bestCombo = Math.max(state.bestCombo, state.combo);
+}
+
+function closeStall(state: GameState): void {
+  state.status = 'over';
+  state.customers = [];
+  state.bowl = [];
+  state.selectedId = null;
+  state.spawnTimer = 0;
 }
 
 // ---- actions --------------------------------------------------------------
@@ -303,7 +313,12 @@ export function serve(state: GameState): ServeResult | null {
     return { ok: true, coins: gain, combo: state.combo };
   }
 
-  // wrong
+  // A subset is still being built. Preserve it, the streak and all lives.
+  if (state.bowl.every((t) => c.order.includes(t))) {
+    return { ok: false, incomplete: true, coins: 0, combo: state.combo };
+  }
+
+  // wrong (contains an ingredient the customer did not order)
   state.hearts -= 1;
   state.combo = 0;
   state.bowl = [];
@@ -312,7 +327,7 @@ export function serve(state: GameState): ServeResult | null {
   state.events.push('wrong');
   if (state.hearts <= 0) {
     state.hearts = 0;
-    state.status = 'over';
+    closeStall(state);
     state.events.push('over');
   }
   return { ok: false, coins: 0, combo: 0 };

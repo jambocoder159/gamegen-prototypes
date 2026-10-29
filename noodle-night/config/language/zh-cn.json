@@ -32,7 +32,7 @@
     "bowl": "面碗，点一下可清空",
     "bowlEmpty": "面碗是空的",
     "bowlHas": "面碗里有 {list}",
-    "selectCustomer": "服务这位客人",
+    "selectCustomer": "选择客人",
     "order": "订单：{list}",
     "liveServed": "点对了，获得 {coins} 金币，连击 {combo}。",
     "liveWrong": "点错了，失去一颗爱心。",
@@ -42,6 +42,16 @@
   },
   "help": {
     "title": "玩法说明",
-    "body": "看懂每位客人的订单气泡，点配料把面碗做好，再按上菜。按键：1-6 切换配料、Enter 或空格键上菜、C 或退格键清空、左右键选择客人、Tab 切换按钮。"
-  }
+    "order": "点击客人的订单气泡",
+    "build": "加入相同配料",
+    "serve": "按“{serve}”",
+    "skip": "跳过",
+    "pause": "暂停／玩法说明",
+    "resume": "继续",
+    "keys": "1–6：配料 · Enter／空格键：{serve} · C／退格键：清空 · ←／→：客人 · Tab：下一个按钮"
+  },
+  "continue": "继续游戏",
+  "newGame": "新游戏",
+  "emptyBowl": "面碗还是空的，先加入订单配料。",
+  "incompleteBowl": "快完成了，再加入缺少的配料。"
 }

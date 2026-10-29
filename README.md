@@ -1,6 +1,6 @@
 # GameGen Prototypes｜小遊戲試玩目錄
 
-六款可直接在手機瀏覽器試玩的 HTML5 小遊戲原型（React 19 + TypeScript + Vite，符合 GameGen 平台規範）。
+七款可直接在手機瀏覽器試玩的 HTML5 小遊戲原型（React 19 + TypeScript + Vite，符合 GameGen 平台規範）。
 
 **目錄首頁：<https://jambocoder159.github.io/gamegen-prototypes/>**
 

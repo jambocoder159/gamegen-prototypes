@@ -25,6 +25,7 @@ const GAMES = [
   { id: 'shelf-sort',   name: '貨架理貨' },
   { id: 'tap-garden',   name: '芽芽花園' },
   { id: 'mahjong-deck', name: '麻將牌組' },
+  { id: 'match-hero',   name: '消消勇者塔' },
 ];
 
 const MIME = {
@@ -114,8 +115,8 @@ async function main() {
     else fail(`index.html status ${resp && resp.status()}`);
 
     const playHrefs = await page.$$eval('a.btn--play', (as) => as.map((a) => a.getAttribute('href')));
-    if (playHrefs.length === 6) pass('found 6 primary game links');
-    else fail(`expected 6 primary links, found ${playHrefs.length}`);
+    if (playHrefs.length === 7) pass('found 7 primary game links');
+    else fail(`expected 7 primary links, found ${playHrefs.length}`);
 
     for (let i = 0; i < GAMES.length; i++) {
       const href = playHrefs[i];
@@ -136,8 +137,8 @@ async function main() {
 
     // (b) all six covers loaded
     const coverWidths = await page.$$eval('img.card__cover', (imgs) => imgs.map((i) => i.naturalWidth));
-    if (coverWidths.length === 6 && coverWidths.every((w) => w > 0)) {
-      pass('all 6 cover images loaded (naturalWidth > 0)');
+    if (coverWidths.length === 7 && coverWidths.every((w) => w > 0)) {
+      pass('all 7 cover images loaded (naturalWidth > 0)');
     } else {
       fail(`cover images: count=${coverWidths.length}, widths=${JSON.stringify(coverWidths)}`);
     }
@@ -207,7 +208,7 @@ async function main() {
     // (g) primary link accessible names contain 開始玩 + the Chinese name
     const names = await page.$$eval('a.btn--play', (as) =>
       as.map((a) => a.getAttribute('aria-label') || a.textContent.trim()));
-    let gOk = names.length === 6;
+    let gOk = names.length === 7;
     for (let i = 0; i < GAMES.length; i++) {
       const n = names[i] || '';
       const vis = '開始玩';

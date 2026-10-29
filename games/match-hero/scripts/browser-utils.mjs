@@ -1,0 +1,13 @@
+import {spawn} from 'node:child_process';
+import puppeteer from 'puppeteer-core';
+import {mkdirSync} from 'node:fs';
+export const reports='/workspace/gamegen-games/_reports';mkdirSync(reports,{recursive:true});
+export const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+export const results=[];
+export function check(name,ok,detail=''){results.push({name,ok});console.log(`${ok?'PASS':'FAIL'} ${name}${detail?' :: '+detail:''}`);}
+export function finish(){const failed=results.filter(r=>!r.ok);console.log(`${results.length-failed.length}/${results.length} checks passed`);if(failed.length)process.exitCode=1;}
+export async function start(){const port=Number(process.env.PORT)||4227;const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--port',String(port),'--strictPort'],{stdio:'pipe'});let stderr='';server.stderr.on('data',d=>stderr+=d);const url=`http://localhost:${port}/`;for(let i=0;i<100;i++){await sleep(100);if(server.exitCode!==null)throw Error('preview failed '+stderr);try{if((await fetch(url)).ok)break;}catch{}}
+const browser=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--mute-audio']});return{url,browser,stop:async()=>{await browser.close();server.kill('SIGTERM');}};}
+export function overflow(){const W=innerWidth,H=innerHeight;const problems=[];if(document.documentElement.scrollHeight>H+1||document.documentElement.scrollWidth>W+1)problems.push('document overflow');for(const e of document.querySelectorAll('button,.board,.stats,.coach,.topbar,.battle,.skills')){if(e.closest('[inert]')&&document.querySelector('.modal'))continue;const r=e.getBoundingClientRect(),cs=getComputedStyle(e);if(!r.width||!r.height||cs.display==='none'||cs.visibility==='hidden')continue;if(e.closest('.modal'))continue;if(r.x<-.5||r.y<-.5||r.right>W+.5||r.bottom>H+.5)problems.push(e.className+' outside '+JSON.stringify(r.toJSON()));if(e.scrollWidth>e.clientWidth+1)problems.push(e.className+' text overflow');}
+for(const e of document.querySelectorAll('.stats span,.coach p,.skill span,h1,.title__tagline')){if(e.scrollWidth>e.clientWidth+1)problems.push(e.className+' text overflow '+e.textContent);}return problems;}
+export async function axe(page,name){await page.addScriptTag({path:'/workspace/deploy/node_modules/axe-core/axe.min.js'});const issues=await page.evaluate(async()=>{const r=await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','best-practice']}});return r.violations.map(v=>({id:v.id,help:v.help,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));});check(`axe ${name}`,issues.length===0,JSON.stringify(issues));return issues;}

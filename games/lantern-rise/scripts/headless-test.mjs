@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..');
 const qa = join(repo, 'qa');
-const PORT = 4173;
+const PORT = Number(process.env.PORT) || 4173;
 const BASE = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -71,7 +71,7 @@ async function main() {
   execSync('npm run build', { cwd: repo, stdio: 'inherit' });
 
   console.log('Starting preview…');
-  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+  const server = spawn(process.execPath, [join(repo, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], {
     cwd: repo,
     stdio: 'ignore',
   });

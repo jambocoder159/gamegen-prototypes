@@ -547,6 +547,24 @@ async function runV2(browser) {
   await load({...seed,discovered:9,plots:[9,...Array(15).fill(0)],celebrated:false}, false);
   check('Golden World Tree result is reachable', await page.$eval('.panel__tree', el => el.tagName === 'IMG'));
   await page.screenshot({path:join(qa,'result.png')});
+  const resultViewport = page.viewport();
+  for (const [width, height] of [[844, 390], [667, 375]]) {
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    await sleep(150);
+    const fits = await page.evaluate(() => {
+      const dialog = document.querySelector('[role=dialog]');
+      const body = dialog.querySelector('.dialog__body');
+      return body.scrollHeight <= body.clientHeight + 1 &&
+        [...dialog.querySelectorAll('button, .panel__mascot, .panel__tree')].every((el) => {
+          const r = el.getBoundingClientRect();
+          return r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
+        });
+    });
+    check(`celebration art and controls fit ${width}x${height} without scrolling`, fits);
+    await page.screenshot({ path: join(qa, `result-${width}x${height}.png`) });
+  }
+  await page.setViewport(resultViewport);
+  await sleep(150);
   await page.click('.panel__actions .btn--primary');
   check('celebration continues into endless garden', !(await page.$('[role=dialog]')) && (await readLevels(page))[0]===9);
   await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);

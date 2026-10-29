@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = 4173;
+const PORT = Number(process.env.PORT) || 4173;
 const BASE = `http://localhost:${PORT}/`;
 const PROBE = '/__deliberate_404_probe__';
 

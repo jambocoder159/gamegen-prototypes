@@ -81,6 +81,7 @@ img.art {
 .loading {
   position: fixed;
   inset: 0;
+  height: 100dvh;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -90,6 +91,7 @@ img.art {
     env(safe-area-inset-left);
 }
 .loading__box {
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -429,6 +431,8 @@ img.art {
   );
 }
 .title__content {
+  height: 100dvh;
+  gap: 16px;
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -437,17 +441,25 @@ img.art {
   align-items: center;
   justify-content: space-between;
   text-align: center;
-  padding: calc(env(safe-area-inset-top) + 5vh) 20px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 5dvh) calc(env(safe-area-inset-right) + 20px)
+    calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 20px);
 }
 .title__head {
+  min-height: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 }
-.title__logo {
-  width: min(42vw, 200px);
+/* Match the shared img.art specificity; reserve height for text and controls. */
+.title__logo.art {
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: min(52dvh, calc(100dvh - 280px));
+  min-height: 0;
+  flex: 0 1 auto;
 }
 .title__name {
   margin: 0;
@@ -461,6 +473,7 @@ img.art {
   color: var(--ink);
 }
 .title__actions {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -494,9 +507,11 @@ img.art {
   border: 3px solid var(--edge);
   border-radius: 24px;
 }
-.panel__mascot {
+.panel__mascot.art {
   width: clamp(120px, 34vw, 160px);
   height: auto;
+  max-height: 22dvh;
+  object-fit: contain;
 }
 .panel__title {
   margin: 0;
@@ -543,4 +558,29 @@ img.art {
   .pop-merge {
     animation: none !important;
   }
+}
+
+/* Short landscape screens put art beside the text and actions. */
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .title__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-content: center;
+    justify-items: center;
+    gap: 8px 20px;
+    padding: calc(env(safe-area-inset-top) + 16px) calc(env(safe-area-inset-right) + 20px)
+      calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 20px);
+  }
+  .title__head { display: contents; }
+  .title__logo.art {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  .title__name, .title__tagline, .title__actions { grid-column: 2; }
+  .title__name { font-size: clamp(24px, 4vw, 36px); }
+  .title__actions { gap: 8px; }
+  .panel { gap: 6px; padding: 12px 20px; }
+  .panel__mascot.art { max-height: 18dvh; }
 }

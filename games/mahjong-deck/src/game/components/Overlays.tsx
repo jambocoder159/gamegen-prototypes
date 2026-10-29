@@ -55,7 +55,7 @@ export function RewardOverlay({
                 <Button
                   className="card card--reward"
                   dataCard={key}
-                  ariaLabel={t('a11y.rewardCard', { name, effect })}
+                  title={t('a11y.rewardCard', { name, effect })}
                   onClick={() => onChoose(key)}
                 >
                   <span className="card__art">

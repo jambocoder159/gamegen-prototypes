@@ -106,7 +106,7 @@ img.art {
 .loading__title {
   font-size: clamp(30px, 9vw, 56px);
   font-weight: 800;
-  color: var(--teal);
+  color: var(--teal-dark);
 }
 .loading__slot {
   min-height: 56px;

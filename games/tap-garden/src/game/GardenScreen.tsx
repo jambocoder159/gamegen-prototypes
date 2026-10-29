@@ -12,8 +12,9 @@ import { useAudio } from '../platform/AudioContext';
 import type { Layout } from '../platform/layout';
 import { formatNumber } from './format';
 import { hasEmptyPlot } from './logic';
-import { PLOT_COUNT, isPlotUnlocked } from './config';
+import { PLOT_COUNT } from './config';
 import { useGarden } from './useGarden';
+import { Coach, OfflineRatio, StatisticsDialog, SettingsDialog, useFloatingSetting } from './components/GardenExtras';
 import { Stats } from './components/Stats';
 import { StageBar } from './components/StageBar';
 import { Collection } from './components/Collection';
@@ -32,7 +33,7 @@ const COLS = 4;
 const POP_MS = 650;
 const TOAST_MS = 2600;
 
-type Modal = 'none' | 'upgrades' | 'relics' | 'rebirth';
+type Modal = 'none' | 'upgrades' | 'relics' | 'rebirth' | 'stats' | 'settings';
 
 export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boolean }) {
   const { t } = useI18n();
@@ -42,13 +43,17 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
   const potRef = useRef<HTMLButtonElement>(null);
   const [resetting, setResetting] = useState(false);
   const [modal, setModal] = useState<Modal>('none');
+  const [floating, setFloating] = useFloatingSetting();
+  const [coach, setCoach] = useState(() => { try { return localStorage.getItem('tap-garden.coach') !== 'done' && !localStorage.getItem('tap-garden.save'); } catch { return true; } });
+  const [coachStep, setCoachStep] = useState(0);
+  const dismissCoach = useCallback(() => { setCoach(false); try { localStorage.setItem('tap-garden.coach', 'done'); } catch { /* optional */ } }, []);
   const [pop, setPop] = useState<number | null>(null);
   const [toast, setToast] = useState<typeof g.stageToast>(null);
 
   // merge pop / dew-droplet cue on the resulting plot
   useEffect(() => {
     const e = g.event;
-    if (e && (e.kind === 'merged' || e.kind === 'newMax') && e.plot != null) {
+    if (e && (e.kind === 'merged' || e.kind === 'newMax' || e.kind === 'plotBought') && e.plot != null) {
       setPop(e.plot);
       const id = window.setTimeout(() => setPop(null), POP_MS);
       return () => window.clearTimeout(id);
@@ -76,7 +81,7 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
       const active = document.activeElement as HTMLElement | null;
       const cur = active?.dataset?.plot != null ? Number(active.dataset.plot) : -1;
       let next = cur < 0 ? 0 : cur + delta;
-      while (next >= 0 && next < PLOT_COUNT && !isPlotUnlocked(next, g.snap.unlocked)) next += delta;
+
       if (next < 0 || next >= PLOT_COUNT) return;
       root.querySelector<HTMLButtonElement>(`[data-plot="${next}"]`)?.focus();
     },
@@ -162,16 +167,25 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
       <div className="garden__pot">
         <Pot
           onTap={g.tapPot}
+          autoRate={g.d.autoRate}
+          autoValue={g.d.expectedTap}
+          floating={floating}
           bloom={g.bloom}
           reduced={reduced}
           label={t('buttons.tapPot')}
           buttonRef={potRef}
         />
+        {!hasEmptyPlot(g.snap) && <Button className="btn auto-offer" onClick={() => setModal('settings')}>{t('extra.autoMerge')}</Button>}
+        {coach && <Coach g={g} step={coachStep} setStep={setCoachStep} dismiss={dismissCoach} />}
       </div>
 
       <div className="garden__board">
         <PlotGrid
           plots={g.snap.plots}
+          nextPlotCost={g.d.nextPlotCost}
+          dew={g.snap.dew}
+          floating={floating}
+          plantMult={g.d.plantMult}
           unlocked={g.snap.unlocked}
           selected={g.selected}
           interactive={!overlayOpen}
@@ -184,9 +198,9 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
 
       <div className="garden__controls">
         <div className="garden__actions">
-          <Button className="btn btn--cost btn--buy" onClick={g.buy} dimmed={!canBuy}>
+          <Button className="btn btn--cost btn--buy" onClick={hasEmptyPlot(g.snap) ? g.buy : g.mergeAll} dimmed={hasEmptyPlot(g.snap) && !canBuy}>
             <Art imgKey="iconSeedbag" alt="" className="btn__icon" />
-            <span className="btn__label">{t('buttons.buySeed')}</span>
+            <span className="btn__label">{t(hasEmptyPlot(g.snap) ? 'buttons.buySeed' : 'extra.mergeAll')}</span>
             <span className="btn__cost">
               <Art imgKey="iconDew" alt="" className="btn__dew" />
               {formatNumber(g.d.seedCost)}
@@ -213,6 +227,9 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
         </div>
 
         <div className="garden__icons">
+          <Button className="icon-btn btn--help" ariaLabel={t('extra.help')} onClick={() => { setCoachStep(0); setCoach(true); }}>?</Button>
+          <Button className="btn btn--stats" onClick={() => setModal('stats')}>{t('extra.stats')}</Button>
+          <Button className="btn btn--settings" onClick={() => setModal('settings')}>{t('extra.settings')}</Button>
           <SoundControl />
           <LanguageControl />
           <Button className="btn btn--reset" onClick={() => setResetting(true)}>
@@ -221,6 +238,7 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
         </div>
       </div>
 
+      <OfflineRatio state={g.snap} />
       <Help />
       <Announcer event={g.event} />
       <DewLive dew={g.liveDew} />
@@ -243,11 +261,13 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
 
       </div>
 
+      {modal === 'stats' && <StatisticsDialog g={g} onClose={() => setModal('none')} />}
+      {modal === 'settings' && <SettingsDialog g={g} floating={floating} setFloating={setFloating} onClose={() => setModal('none')} />}
       {modal === 'upgrades' && <UpgradesDialog g={g} onClose={() => setModal('none')} />}
       {modal === 'relics' && <RelicsDialog g={g} onClose={() => setModal('none')} />}
       {modal === 'rebirth' && <RebirthDialog g={g} onClose={() => setModal('none')} />}
 
-      {g.offline != null && <OfflineDialog amount={g.offline} onCollect={g.dismissOffline} />}
+      {g.offline != null && <OfflineDialog state={g.snap} amount={g.offline} onCollect={g.dismissOffline} />}
       {g.celebrate && <CelebrationOverlay reduced={reduced} onClose={g.dismissCelebrate} />}
       {resetting && (
         <ResetConfirm

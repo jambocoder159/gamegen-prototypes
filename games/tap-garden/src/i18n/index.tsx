@@ -41,6 +41,13 @@ function initialLang(): LangCode {
   } catch {
     /* ignore */
   }
+  for (const language of navigator.languages ?? [navigator.language]) {
+    const code = language.toLowerCase();
+    if (/^zh-(tw|hk|mo|hant)/.test(code)) return 'zh-tw';
+    if (code === 'zh' || /^zh-(cn|sg|hans)/.test(code)) return 'zh-cn';
+    if (/^ja/.test(code)) return 'ja';
+    if (/^en/.test(code)) return 'en';
+  }
   return 'en';
 }
 

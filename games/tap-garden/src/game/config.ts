@@ -28,18 +28,21 @@ export const SAVE_INTERVAL_MS = 5000;
 export const OFFLINE_MIN_SEC = 30; // only greet with the offline dialog past this gap
 
 // --- passive income ----------------------------------------------------------
-// A level-L plant makes INCOME_BASE × 2^(L−1) dew per second (before multipliers).
+// A level-L plant makes INCOME_BASE × INCOME_GROWTH^(L−1) dew per second (before multipliers).
 export const INCOME_BASE = 0.5;
+export const INCOME_GROWTH = 2.5;
+export const AUTO_MERGE_STAGE = 2;
 export function incomeForLevel(level: number): number {
-  return level > 0 ? INCOME_BASE * Math.pow(2, level - 1) : 0;
+  return level > 0 ? INCOME_BASE * Math.pow(INCOME_GROWTH, level - 1) : 0;
 }
 
 // --- seeds -------------------------------------------------------------------
-// Seed price: SEED_BASE × SEED_GROWTH^seedsBought × (1 − seed discount).
+// Seed price grows 6% through 100 seeds, then linearly (+3% of cap price/seed).
 export const SEED_BASE_COST = 10;
-export const SEED_GROWTH = 1.1;
+export const SEED_GROWTH = 1.06;
+export const SEED_SOFT_CAP = 100;
 export function seedCost(seedsBought: number, discount: number): number {
-  return Math.ceil(SEED_BASE_COST * Math.pow(SEED_GROWTH, seedsBought) * (1 - discount));
+  return Math.ceil(SEED_BASE_COST * Math.pow(SEED_GROWTH, Math.min(seedsBought, SEED_SOFT_CAP)) * (1 + Math.max(0, seedsBought - SEED_SOFT_CAP) * 0.03) * (1 - discount));
 }
 
 // --- plot expansion (upgrade line #9) ----------------------------------------
@@ -88,7 +91,7 @@ export function upgradeCost(index: number, level: number, discount: number): num
 
 // --- upgrade effect numbers (kept here so balancing is one file) --------------
 export const POT_POWER_DOUBLE_EVERY = 25; // Pot Power doubles every N levels
-export const WARMTH_PER_LEVEL = 0.02; // +2% of passive/sec added per tap, per level
+export const WARMTH_PER_LEVEL = 0.002; // +0.2% of passive/sec added per tap, per level
 export const CRIT_CHANCE_PER_LEVEL = 0.01; // +1% crit chance / level
 export const CRIT_CHANCE_CAP = 0.5; // combined crit chance cap
 export const CRIT_POWER_BASE = 3;
@@ -106,7 +109,7 @@ export const LIFETIME_BONUS_PER_COIN = 0.05;
 
 // --- stages ------------------------------------------------------------------
 // Stage n goal (dew earned this stage): STAGE_BASE × STAGE_GROWTH^(n−1).
-export const STAGE_BASE = 8000;
+export const STAGE_BASE = 16000;
 export const STAGE_GROWTH = 2.0;
 export const STAGE_INCOME_PER_LEVEL = 0.1; // passive ×(1 + 0.10 (stage−1))
 export const BOSS_EVERY = 5; // every 5th stage is a boss

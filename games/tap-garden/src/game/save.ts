@@ -17,7 +17,7 @@ import {
   RELIC_COUNT,
   RELICS,
 } from './config';
-import { newGame, type GameState } from './logic';
+import { newGame, freshCounters, type Counters, type GameState } from './logic';
 
 const KEY = 'tap-garden.save';
 const VERSION = 2;
@@ -84,7 +84,12 @@ function parseV2(data: Record<string, unknown>): GameState {
   const maxStage = Math.max(stage, intIn(data.maxStage, 1, MAX_STAGE, stage));
   const topPlanted = plots.reduce((m, lv) => Math.max(m, lv), 0);
   const sunCoins = Math.max(0, Math.floor(num(data.sunCoins, 0)));
+  const readCounters = (input: unknown): Counters => {
+    const source = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+    return Object.fromEntries(Object.keys(freshCounters()).map(k => [k, Math.max(0, Math.min(1e300, num(source[k], 0)))])) as unknown as Counters;
+  };
   return {
+    stats: readCounters(data.stats), runStats: readCounters(data.runStats), autoMerge: data.autoMerge === true,
     dew: Math.max(0, num(data.dew, 0)),
     plots,
     unlocked,
@@ -108,7 +113,7 @@ function parseV2(data: Record<string, unknown>): GameState {
 export function loadSave(): SaveBundle | null {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
+    if (!raw || raw.length > 50000) return null;
     const data: unknown = JSON.parse(raw);
     if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
     const rec = data as Record<string, unknown>;
@@ -133,6 +138,7 @@ export function writeSave(state: GameState, celebrated: boolean, now: number): v
       KEY,
       JSON.stringify({
         v: VERSION,
+        stats: state.stats, runStats: state.runStats, autoMerge: state.autoMerge,
         dew: state.dew,
         plots: state.plots,
         unlocked: state.unlocked,

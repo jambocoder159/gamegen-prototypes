@@ -71,7 +71,7 @@
     "merged": "合成為 {name}，第 {level} 階。",
     "newMax": "發現新植物：{name}，第 {level} 階！",
     "bought": "種子已種下。",
-    "full": "花園已滿，或露珠不足。",
+    "full": "地塊滿了？按全部合成，或於第 2 關後在設定開啟自動合成。",
     "nothing": "沒有任何變化。",
     "dewTotal": "{n} 露珠",
     "titleDemo": "標題畫面：花園正在自動展示。",
@@ -237,5 +237,46 @@
       "upgrades": "花盆升級",
       "stage": "本輪關卡"
     }
+  },
+  "extra": {
+    "stats": "統計",
+    "settings": "設定",
+    "help": "遊戲說明",
+    "skip": "略過",
+    "floating": "飄浮數字",
+    "autoMerge": "自動合成",
+    "autoMergeHelp": "第 {n} 關解鎖。已開放地塊全滿時，自動合成同階植物；花園任意兩棵同階植物都能合成。",
+    "mergeAll": "全部合成",
+    "offlineRatio": "離線獲得產量的 {pct}%，最多 {hours} 小時",
+    "minutes": "{n} 分鐘",
+    "shareNote": "本輪產量占比：點擊／自動點擊／植物。寶箱與合成獎勵另計。",
+    "needDew": "繼續點擊，收集更多露珠。",
+    "buyPlot": "地塊 {n}：花費 {cost} 露珠解鎖。請依序擴張。",
+    "full": "地塊滿了？按全部合成，或於第 2 關後在設定開啟自動合成。",
+    "mergedCount": "已合成 {n} 組植物。"
+  },
+  "statistics": {
+    "taps": "手動點擊",
+    "crits": "暴擊次數",
+    "dew": "累計露珠",
+    "runDew": "本輪露珠",
+    "merges": "合成次數",
+    "tier": "最高植物階級",
+    "stages": "通關次數",
+    "rebirths": "轉生次數",
+    "relics": "持有寶物",
+    "time": "遊玩時間",
+    "best": "最佳關卡",
+    "rate": "目前每秒產量",
+    "click": "點擊占比",
+    "auto": "自動點擊占比",
+    "passive": "植物占比",
+    "bonus": "本輪額外獎勵",
+    "offline": "累計離線露珠"
+  },
+  "coach": {
+    "step1": "點花盆 10 次收集露珠。",
+    "step2": "買兩包種子，種出小苗。",
+    "step3": "依序點兩棵同階植物來合成。"
   }
 }

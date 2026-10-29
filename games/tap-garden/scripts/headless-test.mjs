@@ -20,7 +20,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = Number(process.env.PORT ?? 4175);
+const PORT = Number(process.env.PORT ?? 4226);
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -126,6 +126,7 @@ async function main() {
       await runMain(browser);
       await runGrownGarden(browser);
       await runV2(browser);
+      await runFixes(browser);
       await runFallback(browser);
       await run404Probe();
       await runSubpath(browser);
@@ -597,4 +598,132 @@ async function runSubpath(browser) {
     await enterAndPlay(page); await page.click('.pot');
     check('ZIP works from an isolated sub-path with no root assets',await readDew(page)===1 && issues.length===0,issues.join(' | '));
   } finally { await page.close(); await new Promise(resolve=>server.close(resolve)); }
+}
+
+// Regression scenarios for the playtest fixes; all mutations use public UI or
+// validated save fixtures. No private game hooks.
+async function runFixes(browser) {
+  const reports = join(root, '..', '_reports'); mkdirSync(reports,{recursive:true});
+  const page = await browser.newPage(); const issues=[];
+  page.on('pageerror',e=>issues.push(e.message));
+  page.on('console',m=>{if(['warning','error'].includes(m.type())) issues.push(m.text());});
+  const seed={v:2,dew:1000,plots:Array(16).fill(0),upgrades:Array(8).fill(0),unlocked:9,stage:1,maxStage:1,discovered:0,relics:Array(12).fill(0),rng:12345,celebrated:true};
+  async function load(payload=seed,{fresh=false,away=0}={}) {
+    await page.goto(BASE_URL,{waitUntil:'networkidle0'});
+    await page.evaluate(({payload,fresh,away})=>{
+      localStorage.clear(); localStorage.setItem('tap-garden.lang','en');
+      if(!fresh) { localStorage.setItem('tap-garden.coach','done'); localStorage.setItem('tap-garden.save',JSON.stringify({...payload,savedAt:Date.now()-away*1000})); }
+    },{payload,fresh,away});
+    await page.reload({waitUntil:'networkidle0'});
+    await page.waitForSelector('.btn--enter'); await page.click('.btn--enter');
+    await page.waitForSelector('.btn--play');
+  }
+  async function play(){ await page.click('.btn--play'); await page.waitForSelector('.garden .plot'); }
+  async function axe(name) {
+    const path='/workspace/deploy/node_modules/axe-core/axe.min.js';
+    if(!existsSync(path)) throw new Error('Required axe-core is missing');
+    await page.addScriptTag({path});
+    const v=await page.evaluate(async()=> (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));
+    check('axe zero violations: '+name,v.length===0,JSON.stringify(v));
+  }
+  await page.setViewport({width:375,height:812});
+  await load(seed,{fresh:true}); await play();
+  check('first-run coach is visible and does not block pot', await page.$eval('.coach',e=>!!e) && await page.evaluate(()=>{const a=document.querySelector('.coach').getBoundingClientRect(),b=document.querySelector('.pot').getBoundingClientRect();return a.right<=b.left || a.bottom<=b.top || a.left>=b.right;}));
+  await page.screenshot({path:join(reports,'fix_tap-garden_onboarding.png')});
+  for(let i=0;i<10;i++) await page.click('.pot');
+  await page.waitForFunction(()=>document.querySelector('.coach p')?.textContent.includes('two seeds'));
+  check('coach advances after tapping', (await page.$eval('.coach p',e=>e.textContent)).includes('two seeds'));
+  for(let i=0;i<15;i++) await page.click('.pot');
+  await page.click('.btn--buy'); await page.click('.btn--buy');
+  await page.waitForFunction(()=>document.querySelector('.coach p')?.textContent.includes('matching'));
+  check('coach advances after buying two seeds',(await page.$eval('.coach p',e=>e.textContent)).includes('matching'));
+  const pair=await page.$$eval('.plot[data-level="1"]',els=>els.map(e=>e.dataset.plot));
+  const oldRate=await page.$eval('.pill--rate .pill__value',e=>e.textContent);
+  await page.click(`[data-plot="${pair[0]}"]`);await page.click(`[data-plot="${pair[1]}"]`);
+  check('merge visibly increases per-second pill',oldRate!==await page.$eval('.pill--rate .pill__value',e=>e.textContent));
+  await page.waitForFunction(()=>!document.querySelector('.coach'));
+  check('coach completes after merge',!(await page.$('.coach')));
+  await page.reload({waitUntil:'networkidle0'});await enterAndPlay(page);
+  check('completed onboarding stays dismissed after reload',!(await page.$('.coach')));
+  check('in-progress save resumes immediately after moves',(await readLevels(page)).some(l=>l===2));
+  await page.click('.btn--help');check('help reopens the coach',!!(await page.$('.coach')));await page.click('.coach__skip');
+  await page.click('.btn--stats');await page.waitForSelector('.dialog--stats');
+  check('statistics shows changed taps, dew and merge counts',await page.$eval('[data-stat=taps]',e=>+e.textContent)>=25 && await page.$eval('[data-stat=merges]',e=>+e.textContent)===1 && await page.$eval('[data-stat=dew]',e=>+e.textContent)>0);
+  await page.screenshot({path:join(reports,'fix_tap-garden_stats.png')});await page.keyboard.press('Escape');
+  const levels=Array(16).fill(0); for(const i of [0,1,2,4,5,6,8,9,10]) levels[i]=1;
+  await load({...seed,plots:levels,stage:2,maxStage:2});await play();
+  check('full garden offers Merge all on seed button',(await page.$eval('.btn--buy',e=>e.textContent)).includes('Merge all'));
+  await page.click('.btn--settings');await page.click('.auto-merge-switch');await page.keyboard.press('Escape');
+  await page.waitForFunction(()=>document.querySelectorAll('.plot[data-level="2"]').length>=4);
+  check('auto merge frees full garden without manual selection',(await readLevels(page)).filter(l=>l===2).length===4);
+  await page.reload({waitUntil:'networkidle0'});await enterAndPlay(page);await page.click('.btn--settings');
+  check('auto merge choice persists',await page.$eval('.auto-merge-switch',e=>e.checked));
+  await page.keyboard.press('Escape');
+  await load({...seed,plots:levels});await play();await page.click('.btn--buy');
+  check('manual Merge all performs one pass',(await readLevels(page)).filter(l=>l===2).length===4);
+  await load(seed);await play();
+  check('next locked plot shows price and affordable highlight',await page.$eval('[data-plot="3"]',e=>e.classList.contains('plot--affordable') && e.textContent.includes('200')));
+  const before=await readDew(page);await page.click('[data-plot="3"]');
+  check('tapping affordable lock buys that plot',await page.$eval('[data-plot="3"]',e=>!e.dataset.locked) && await readDew(page)===before-200);
+  await page.click('.btn--upgrades');check('Plots upgrade stays consistent with direct purchase',(await page.$eval('.urow--plot .urow__level',e=>e.textContent)).includes('10'));await page.keyboard.press('Escape');
+  const plants=[1,1,2,0,3,2,1,...Array(9).fill(0)];
+  await load({...seed,plots:plants});await play();
+  await page.waitForSelector('.plant-float');
+  check('plants show bounded production numbers',await page.$$eval('.plant-float',els=>els.length>0 && els.length<=3 && els.every(e=>e.textContent.startsWith('+'))));
+  await page.click('.btn--settings');
+  check('floating numbers accessible switch defaults on',await page.$eval('.floating-switch',e=>e.checked && e.getAttribute('role')==='switch'));
+  await page.click('.floating-switch');await page.keyboard.press('Escape');
+  check('floating-number switch hides production cues',await page.$$eval('.plant-float,.pot__float',els=>els.length)===0);
+  await page.reload({waitUntil:'networkidle0'});await enterAndPlay(page);await page.click('.btn--settings');
+  check('floating-number setting persists after reload',!(await page.$eval('.floating-switch',e=>e.checked)));await page.keyboard.press('Escape');
+  const many=Array(16).fill(1);await load({...seed,plots:many,unlocked:16});await play();
+  await page.waitForFunction(()=>[...document.querySelectorAll('.plant-float')].some(e=>e.textContent.includes('Σ')));
+  check('dense garden aggregates production numbers',await page.$$eval('.plant-float',els=>els.length<=3));
+  const up=Array(8).fill(0);up[4]=40;
+  await load({...seed,upgrades:up});await play();
+  await page.waitForSelector('.pot__float');
+  check('Auto Tap animates and shows dew without manual taps',await page.$eval('.pot__img',e=>!e.src.includes('_1.png')) || !!(await page.$('.pot__float')));
+  await sleep(1200);check('auto visuals stay bounded',await page.$$eval('.pot__float',els=>els.length<=4));
+  up[2]=40;up[3]=10;
+  await load({...seed,upgrades:up});await play();
+  for(let i=0;i<12 && !(await page.$('.pot--crit'));i++) await page.click('.pot');
+  check('crit displays distinct gold number and star burst',!!(await page.$('.pot__burst .art')) && !!(await page.$('.pot__float--crit')));
+  await page.screenshot({path:join(reports,'fix_tap-garden_crit.png')});
+  await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);
+  check('reduced motion removes crit shake, flash and floating movement',await page.evaluate(()=>getComputedStyle(document.querySelector('.pot__img')).animationName==='none' && getComputedStyle(document.querySelector('.garden'),'::after').display==='none' && [...document.querySelectorAll('.pot__float,.plant-float')].every(e=>getComputedStyle(e).animationName==='none')));
+  await page.emulateMediaFeatures([]);
+  const moon=Array(12).fill(0);moon[2]=5;
+  for(const [width,height] of [[375,812],[1440,900]]) {
+    await page.setViewport({width,height});await load({...seed,plots:[3,...Array(15).fill(0)],relics:moon},{away:3600});
+    await axe(`title ${width}`);await play();await page.waitForSelector('[role=dialog]');
+    check(`offline dialog includes relic-adjusted ratio at ${width}`,(await page.$eval('[role=dialog] .offline-ratio',e=>e.textContent)).includes('65%') && (await page.$eval('[role=dialog] .offline-ratio',e=>e.textContent)).includes('3.67'));
+    await axe(`offline ${width}`);await page.screenshot({path:join(reports,`fix_tap-garden_offline_${width}.png`)});await page.keyboard.press('Escape');
+    for(const dialog of ['stats','settings']) {await page.click('.btn--'+dialog);await axe(`${dialog} ${width}`);await page.keyboard.press('Escape');}
+    await page.click('.btn--reset');await axe(`reset ${width}`);await page.keyboard.press('Escape');
+    await load({...seed,plots:[9,...Array(15).fill(0)],discovered:9,celebrated:false});await play();await page.waitForSelector('.panel__tree');await axe(`celebration ${width}`);await page.keyboard.press('Escape');
+  }
+  await load({...seed,plots:[3,...Array(15).fill(0)],relics:moon});await play();
+  for(const lang of ['en','zh-tw','zh-cn','ja']) {
+    await page.setViewport({width:360,height:640});await setLanguage(page,lang);
+    check(`small-phone HUD at ${lang} has no text overflow`,await page.evaluate(()=>[...document.querySelectorAll('.garden__controls button,.pill__label,.pill__value,.stagebar')].every(e=>e.scrollWidth<=e.clientWidth+1)));
+    check(`HUD numbers and labels are readable at ${lang}`,await page.evaluate(()=>parseFloat(getComputedStyle(document.querySelector('.pill__value')).fontSize)>=20 && [...document.querySelectorAll('.pill__label,.stagebar__label,.stagebar__amount')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=18)));
+    for(const dialog of ['stats','settings']) {await page.click('.btn--'+dialog);const a=await auditDialog(page);check(`new dialog fits ${lang} ${dialog} at 360`,a.inside && !a.overflow.length && !a.unreachable.length);await page.keyboard.press('Escape');}
+    await page.click('.btn--settings');check(`offline ratio is localized in ${lang}`,!(await page.$eval('.dialog--settings .offline-ratio',e=>e.textContent)).includes('extra.') && (await page.$eval('.dialog--settings .offline-ratio',e=>e.textContent)).includes('65'));await page.keyboard.press('Escape');
+  }
+  await setLanguage(page,'en');
+  for(const [width,height] of [[375,812],[360,640],[390,844],[445,626],[466,678],[667,375],[844,390],[1440,900]]) {
+    await page.setViewport({width,height});await sleep(180);
+    const a=await auditLayout(page);
+    check(`fixed garden fits ${width}x${height}`,!a.clipped && !a.overlap);
+    if(height>width && width<=466) check(`primary pot is at least 40% viewport at ${width}`,await page.$eval('.pot__img',(e,w)=>e.getBoundingClientRect().width>=w*.4-1,width));
+    if(height>width) check(`pot is above plots at ${width}`,await page.evaluate(()=>document.querySelector('.pot').getBoundingClientRect().bottom<=document.querySelector('.plot').getBoundingClientRect().top+1));
+    if(width===360 || width===844 || width===1440) await page.screenshot({path:join(reports,`fix_tap-garden_${width}x${height}.png`)});
+  }
+  // The first supported browser language wins unless a player chose one earlier.
+  for(const [languages,expected] of [[['zh-HK','en'],'zh-TW'],[['zh-Hant-TW'],'zh-TW'],[['zh-SG'],'zh-CN'],[['zh'],'zh-CN'],[['ja-JP'],'ja'],[['fr-FR','ja'],'ja'],[['de-DE'],'en']]) {
+    const tab=await browser.newPage();await tab.evaluateOnNewDocument(l=>{localStorage.clear();Object.defineProperty(navigator,'languages',{get:()=>l});},languages);
+    await tab.goto(BASE_URL,{waitUntil:'networkidle0'});await tab.waitForSelector('.btn--enter');check(`browser language ${languages.join(',')} maps to ${expected}`,await tab.evaluate(()=>document.documentElement.lang)===expected);await tab.close();
+  }
+  const saved=await browser.newPage();await saved.evaluateOnNewDocument(()=>{localStorage.setItem('tap-garden.lang','ja');Object.defineProperty(navigator,'languages',{get:()=>['zh-TW']});});await saved.goto(BASE_URL,{waitUntil:'networkidle0'});await saved.waitForSelector('.btn--enter');check('saved language overrides browser',await saved.evaluate(()=>document.documentElement.lang)==='ja');await saved.close();
+  check('fix scenarios have no console errors or warnings',issues.length===0,issues.slice(0,5).join(' | '));await page.close();
 }

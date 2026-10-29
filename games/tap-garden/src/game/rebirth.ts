@@ -3,7 +3,7 @@
 // the codex, the best stage ever and the rebirth count. The Ancient Acorn relic
 // seeds the next run with some starting dew.
 
-import type { GameState } from './logic';
+import { freshCounters, type GameState } from './logic';
 import { START_PLOTS, PLOT_COUNT, UPGRADE_COUNT, R, rebirthCoins } from './config';
 import { relicFx } from './relics';
 
@@ -24,6 +24,7 @@ export function applyRebirth(s: GameState): RebirthResult {
   if (coins <= 0) return { state: s, ok: false, coins: 0 };
   const state: GameState = {
     ...s,
+    runStats: freshCounters(),
     dew: relicFx.acornDew(s.relics[R.acorn]),
     plots: new Array(PLOT_COUNT).fill(0),
     unlocked: START_PLOTS,

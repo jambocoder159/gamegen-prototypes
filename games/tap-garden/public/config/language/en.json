@@ -71,7 +71,7 @@
     "merged": "Merged into {name}, level {level}.",
     "newMax": "New plant discovered: {name}, level {level}!",
     "bought": "Seed planted.",
-    "full": "The garden is full or you need more dew.",
+    "full": "Garden full? Merge all, or enable Auto-merge in Settings from stage 2.",
     "nothing": "Nothing happened.",
     "dewTotal": "{n} dew",
     "titleDemo": "Title screen: the garden is playing itself.",
@@ -237,5 +237,46 @@
       "upgrades": "Pot upgrades",
       "stage": "Current stage"
     }
+  },
+  "extra": {
+    "stats": "Stats",
+    "settings": "Settings",
+    "help": "Help",
+    "skip": "Skip",
+    "floating": "Floating numbers",
+    "autoMerge": "Auto-merge",
+    "autoMergeHelp": "Unlocks at stage {n}. When all open plots are full, automatically merges matching plants. Any two matching plants can be selected, even across the garden.",
+    "mergeAll": "Merge all",
+    "offlineRatio": "Offline earns {pct}% of production, up to {hours} h",
+    "minutes": "{n} min",
+    "shareNote": "This run’s production share: clicks / auto taps / plants. Chests and merge bonuses are counted separately.",
+    "needDew": "Keep tapping for more dew.",
+    "buyPlot": "Plot {n}: unlock for {cost} dew. Expand plots in order.",
+    "full": "Garden full? Merge all, or enable Auto-merge in Settings from stage 2.",
+    "mergedCount": "Merged {n} pairs."
+  },
+  "statistics": {
+    "taps": "Manual taps",
+    "crits": "Critical taps",
+    "dew": "Dew earned · lifetime",
+    "runDew": "Dew earned · this run",
+    "merges": "Merges",
+    "tier": "Highest plant tier",
+    "stages": "Stages cleared",
+    "rebirths": "Rebirths",
+    "relics": "Relics owned",
+    "time": "Active play time",
+    "best": "Best stage",
+    "rate": "Production / second now",
+    "click": "Click share",
+    "auto": "Auto-tap share",
+    "passive": "Plant share",
+    "bonus": "Bonuses · this run",
+    "offline": "Offline earned · lifetime"
+  },
+  "coach": {
+    "step1": "Tap the pot 10 times for dew.",
+    "step2": "Buy two seeds to grow your garden.",
+    "step3": "Select two matching plants to merge."
   }
 }

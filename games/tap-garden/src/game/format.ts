@@ -42,7 +42,12 @@ export function formatNumber(value: number): string {
 
 /** Per-second rate: keep a decimal for small rates, else compact. */
 export function formatRate(value: number): string {
-  if (value > 0 && value < 1000) return trimZeros(value.toFixed(1));
+  if (value > 0 && value < 1000) return trimZeros(value.toFixed(2));
+  if (value >= 1000) {
+    const tier = Math.floor(Math.log10(value) / 3);
+    if (tier < UNITS.length) return trimZeros((value / 1000 ** tier).toFixed(4)) + UNITS[tier];
+    return value.toExponential(5).replace('e+', 'e');
+  }
   if (value === 0) return '0';
   return formatNumber(value);
 }

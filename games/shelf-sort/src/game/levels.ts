@@ -83,7 +83,7 @@ function generate(index: number): Level {
     // Exact optima verified by test:logic's exhaustive IDA* search.
     const optimum = [undefined, 5, 7, 5][index];
     return { index, number: index + 1, S, K, board, par: optimum ?? sol.length,
-      ...(optimum === undefined ? {} : { budgets: { three: optimum + 1, two: optimum + 4 } }) };
+      ...(optimum === undefined ? {} : { budgets: { three: optimum + (index === 1 ? 1 : 0), two: optimum + 3 } }) };
   }
   throw new Error(`could not generate level ${index + 1}`);
 }

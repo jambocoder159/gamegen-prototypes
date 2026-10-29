@@ -17,3 +17,14 @@ export type Dict = { [key: string]: string | Dict };
 export function isLangCode(x: unknown): x is LangCode {
   return typeof x === 'string' && (LANG_CODES as string[]).includes(x);
 }
+
+export function browserLanguage(languages: readonly string[]): LangCode {
+  for (const language of languages) {
+    const code = language.toLowerCase();
+    if (/^zh-(tw|hk|mo)(-|$)/.test(code) || /^zh-hant/.test(code)) return 'zh-tw';
+    if (/^zh($|-)/.test(code)) return 'zh-cn';
+    if (/^ja($|-)/.test(code)) return 'ja';
+    if (/^en($|-)/.test(code)) return 'en';
+  }
+  return 'en';
+}

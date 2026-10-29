@@ -17,6 +17,7 @@ export interface GameState {
   board: Board;
   moves: number; // relocations made (clears are free)
   history: Board[]; // board snapshots before each move (for unlimited undo)
+  path: Move[]; // replayable, validated reload recovery
 }
 
 export interface Move {
@@ -65,7 +66,7 @@ export function isWon(board: Board): boolean {
 }
 
 export function newGame(S: number, K: number, board: Board): GameState {
-  return { S, K, board: cloneBoard(board), moves: 0, history: [] };
+  return { S, K, board: cloneBoard(board), moves: 0, history: [], path: [] };
 }
 
 export interface MoveResult {
@@ -82,7 +83,7 @@ export interface MoveResult {
  */
 export function applyMove(state: GameState, from: number, to: number): MoveResult {
   if (
-    from === to ||
+    !Number.isInteger(from) || !Number.isInteger(to) || from === to ||
     from < 0 ||
     to < 0 ||
     from >= state.board.length ||
@@ -97,6 +98,7 @@ export function applyMove(state: GameState, from: number, to: number): MoveResul
   state.board[to] = type;
   state.board[from] = null;
   state.moves += 1;
+  state.path.push({ from, to });
   const destShelf = shelfOf(to);
   let cleared: number[] = [];
   let clearedType: number | null = null;
@@ -113,12 +115,13 @@ export function undo(state: GameState): boolean {
   if (!prev) return false;
   state.board = prev;
   state.moves -= 1;
+  state.path.pop();
   return true;
 }
 
 /** Star rating for finishing in `moves` against `par`. */
-export function starsFor(moves: number, par: number): number {
-  if (moves <= par) return 3;
-  if (moves <= Math.ceil(par * 1.5)) return 2;
+export function starsFor(moves: number, par: number, budgets?: { three: number; two: number }): number {
+  if (moves <= (budgets?.three ?? par)) return 3;
+  if (moves <= (budgets?.two ?? Math.ceil(par * 1.5))) return 2;
   return 1;
 }

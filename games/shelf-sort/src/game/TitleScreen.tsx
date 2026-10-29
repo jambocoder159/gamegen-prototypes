@@ -10,6 +10,7 @@ import { applyMove, newGame, type GameState } from './logic';
 import { solve } from './solver';
 import { getLevels } from './levels';
 import { loadProgress } from './progress';
+import { clearRun, loadRun, type SavedRun } from './run';
 import { BoardView } from './components/BoardView';
 import { Button } from './components/Button';
 import { LanguageControl, SoundControl } from './components/Controls';
@@ -41,11 +42,12 @@ export function TitleScreen({
 }: {
   layout: Layout;
   reduced: boolean;
-  onPlay: (level: number) => void;
+  onPlay: (level: number, resume?: SavedRun) => void;
 }) {
   const { t } = useI18n();
   const progress = loadProgress();
   const hasProgress = progress.unlocked > 1;
+  const [savedRun] = useState(loadRun);
   const demoRef = useRef<Demo>(startDemo(0));
   const [board, setBoard] = useState(() => demoRef.current.state.board.slice());
   const [S, setS] = useState(() => demoRef.current.state.S);
@@ -114,10 +116,13 @@ export function TitleScreen({
         <div className="title__actions">
           <Button
             className="btn btn--primary btn--play"
-            onClick={() => onPlay(hasProgress ? progress.unlocked : 1)}
+            onClick={() => onPlay(savedRun?.level ?? (hasProgress ? progress.unlocked : 1), savedRun ?? undefined)}
           >
-            {hasProgress ? t('buttons.continue') : t('buttons.play')}
+            {savedRun || hasProgress ? t('buttons.continue') : t('buttons.play')}
           </Button>
+          {savedRun && <Button className="btn btn--new" onClick={() => { clearRun(); onPlay(1); }}>
+            {t('buttons.newGame')}
+          </Button>}
           <div className="title__icons">
             <LanguageControl />
             <SoundControl />

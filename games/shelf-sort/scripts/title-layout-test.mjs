@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'shelf-sort';
-const DEFAULT_PORT = 4184;
+const DEFAULT_PORT = 4224;
 const LANG_KEY = 'shelf-sort.lang';
 const SCREENS = [
   { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },
@@ -36,6 +36,7 @@ const VIEWPORTS = [
   [844, 390],
   [667, 375],
   [390, 844],
+  [375, 812],
   [360, 640],
 ];
 // Tightest viewports are re-checked in every language for text fit.
@@ -144,6 +145,14 @@ function measure(screen) {
         problems.push(`foreground overlap: ${desc(a)} / ${desc(b)}`);
     }
   }
+  if (screen.id === 'title') {
+    const art = rootEl.querySelector('.title__logo').getBoundingClientRect();
+    for (const text of rootEl.querySelectorAll('.title__name, .title__tagline')) {
+      const r = text.getBoundingClientRect();
+      if (r.left < art.right && r.right > art.left && r.top < art.bottom && r.bottom > art.top)
+        problems.push('title text intersects title artwork');
+    }
+  }
   return problems;
 }
 
@@ -157,20 +166,23 @@ async function settle(page) {
   await sleep(350);
 }
 
-async function runViewport(browser, w, h, lang) {
-  const tag = `${w}x${h}${lang === 'en' ? '' : ' ' + lang}`;
+async function runViewport(browser, w, h, lang, resume = false) {
+  const tag = `${w}x${h}${lang === 'en' ? '' : ' ' + lang}${resume ? ' saved run' : ''}`;
   const page = await browser.newPage();
   try {
     await page.evaluateOnNewDocument(
-      (key, value) => {
+      (key, value, resume) => {
         try {
           localStorage.setItem(key, value);
+          localStorage.removeItem('shelf-sort.run');
+          if (resume) localStorage.setItem('shelf-sort.run', JSON.stringify({version:1,level:1,path:[{from:4,to:14}],selected:null}));
         } catch {
           /* ignore */
         }
       },
       LANG_KEY,
       lang,
+      resume,
     );
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
     await page.goto(BASE_URL, { waitUntil: 'networkidle0' });
@@ -189,7 +201,7 @@ async function runViewport(browser, w, h, lang) {
       check(`${tag} ${screen.id}: fits viewport`, problems.length === 0, problems.slice(0, 6).join(' | '));
       if (lang === 'en') {
         const suffix = screen.id === 'title' ? '' : `_${screen.id}`;
-        await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${suffix}.png`) });
+        await page.screenshot({ path: join(reports, `fix_${GAME}_title_${w}x${h}${suffix}${resume ? "_resume" : ""}.png`) });
       }
       if (i < SCREENS.length - 1) await page.click(`${screen.root} ${screen.primary}`);
     }
@@ -225,8 +237,12 @@ async function main() {
       try {
         for (const [w, h] of VIEWPORTS) {
           await runViewport(browser, w, h, 'en');
+          await runViewport(browser, w, h, 'en', true);
           if (LANG_VIEWPORTS.includes(`${w}x${h}`)) {
-            for (const lang of LANGS.slice(1)) await runViewport(browser, w, h, lang);
+            for (const lang of LANGS.slice(1)) {
+              await runViewport(browser, w, h, lang);
+              await runViewport(browser, w, h, lang, true);
+            }
           }
         }
       } finally {

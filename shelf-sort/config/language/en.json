@@ -20,7 +20,10 @@
     "close": "Close",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
-    "language": "Change language"
+    "language": "Change language",
+    "newGame": "New game",
+    "help": "How to play",
+    "skip": "Skip"
   },
   "hud": {
     "level": "Level",
@@ -60,6 +63,13 @@
     "cleared": "Shelf of {name} sorted.",
     "won": "Level complete in {moves} moves, {stars} of 3 stars.",
     "nothing": "That slot is empty.",
-    "titleDemo": "Title screen: the game is sorting itself."
+    "titleDemo": "Title screen: the game is sorting itself.",
+    "occupied": "That slot is occupied. Choose an empty slot."
+  },
+  "coach": {
+    "step1": "Tap an item to lift it.",
+    "step2": "Tap an empty slot to place it.",
+    "step3": "Match three on a shelf to clear it.",
+    "keys": "Keys: arrows · Enter/Space · Z undo · R restart"
   }
 }

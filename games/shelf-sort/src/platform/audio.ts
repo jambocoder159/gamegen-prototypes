@@ -70,14 +70,18 @@ export class AudioManager {
     return this.muted;
   }
 
-  playSfx(key: AudioKey): void {
+  playSfx(key: AudioKey, volume = 1): void {
     if (!this.ctx || !this.master || this.muted) return;
     const buf = this.buffers.get(key);
     if (!buf) return;
     if (this.ctx.state === 'suspended') return;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(this.master);
+    const gain = this.ctx.createGain();
+    gain.gain.value = volume;
+    src.connect(gain);
+    gain.connect(this.master);
+    src.onended = () => { src.disconnect(); gain.disconnect(); };
     src.start();
   }
 

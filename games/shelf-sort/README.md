@@ -1,56 +1,68 @@
 # Shelf Sort（貨架理貨）
 
-A cozy sorting puzzle. Each shelf has three slots; lift a goods item and drop it
-on an empty slot (any shelf). Fill a shelf with three matching goods and it
-clears. Clear every shelf to win, in as few moves as possible for three stars.
-React 19 + TypeScript + Vite, built to the GameGen HTML-ZIP platform standard
-(noskin assets under `public/common/`, four languages, sub-path safe).
+A React 19 + TypeScript + Vite sorting puzzle: lift an item, place it in an empty
+slot, and clear shelves of three matching goods. Twelve seeded, solvable levels;
+four languages; sub-path-safe assets; no external services.
 
-## Run
+## Run and verify
 
 ```bash
 npm install
-npm run dev        # local dev server
-npm run build      # typecheck (tsc) + production build to dist/
-npm run preview    # serve the build on http://localhost:4173
+npm run dev -- --port 4224 --strictPort
+npm run build
+npm run check:i18n
+npm run test:logic
+PORT=4224 npm run test:headless
+PORT=4224 npm run test:title
+npm run pack
 ```
 
-## Test / pack
+Browser tests use `/usr/bin/google-chrome`, start and stop their own preview on
+port 4224 (`PORT` overrides it), and must run sequentially on that port. Headless
+QA checks gameplay, recovery, onboarding, languages, invalid input, responsive
+layout and axe WCAG violations on the gate/title/play/menu/dialogs at 375 and
+1440px. Title QA checks artwork/text separation across desktop and phone sizes.
+Final fix screenshots are in `../_reports/fix_shelf-sort_*.png`.
+`pack` writes `shelf-sort.zip`, with `index.html` and `poster.png` at its root.
 
-```bash
-npm run check:i18n     # all four language files share keys, none empty
-npm run test:headless  # builds, serves on 4173, drives the real UI in Chrome
-npm run pack           # builds, writes shelf-sort.zip (dist contents at the root)
-```
+## Play
 
-`test:headless` needs `/usr/bin/google-chrome`. Free port 4173 first if a preview
-is already bound to it (`--strictPort`): `lsof -ti tcp:4173 | xargs -r kill`.
+- Tap an item, then an empty slot. Tap the lifted item again to cancel.
+  An occupied destination preserves your selection and move count, with a
+  visible rejection mark, a short screen-reader message and quiet sound.
+- Arrow keys move focus; Enter/Space lift/place; Z undoes; R restarts.
+- The first-run, three-step on-screen coach follows your actions. Skip dismisses
+  it; the **?** button reopens it. It occupies a separate region from the shelves.
+- Undo is unlimited. Restart resets the current level. Levels opens unlocked
+  levels; sound and language controls apply immediately.
+- Levels 2–4 use exact solver optima of 5/7/5 moves, with three-star budgets of
+  6/8/6 and two-star budgets of 9/11/9. Other levels retain greedy-solver par.
 
-## How to play / keys
+## Language and storage
 
-- **Tap** a goods item to lift it, then **tap an empty slot** to place it. Tap the
-  lifted item again to put it back down. Tapping another item swaps the selection.
-- **Arrow keys** move focus between slots; **Enter / Space** lift and place;
-  **Z** undoes a move (unlimited); **R** restarts the level.
-- Controls row: Undo · Restart · Levels · Sound · Language.
-- 12 levels, deterministically generated and guaranteed solvable; par (for the
-  star rating) is the solver's solution length. Progress (unlocked levels, best
-  stars) is saved in `localStorage` and validated on load.
+A validated saved language choice takes priority. Otherwise the first supported
+entry in `navigator.languages` wins: zh-TW/HK/MO or zh-Hant → Traditional Chinese;
+zh-CN/SG/Hans or plain zh → Simplified Chinese; ja → Japanese; en → English.
+Unsupported entries are skipped; English is the fallback. Language changes do
+not reset play.
 
-## Structure
+Runs save after moves, undo and selection changes, and on pagehide/visibility
+changes. After reload, **Continue** restores the level, board, lifted item, move
+count and undo history; **New game** starts level 1. Restart, a win and New game
+clear the run. Storage uses a versioned, bounded move log (5,000 moves / 200 KB),
+replayed and checked field by field; invalid data safely resets. Storage errors
+never interrupt play. Best stars, unlocked levels and coach dismissal are also
+saved locally. The preload/Enter audio gate remains required after reload.
 
-- `src/game/logic.ts` — pure rules (board, moves, clears, win, star rating).
-- `src/game/solver.ts` — deterministic greedy solver (generator validity + par,
-  title demo, test reference).
-- `src/game/levels.ts` — seeded level generator (reject-until-solvable).
-- `src/game/progress.ts` — validated `localStorage` progress.
-- `src/game/layout.ts` — shelf geometry + responsive column/size fit.
-- `src/platform/`, `src/services/`, `src/i18n/`, `src/config/` — reusable
-  GameGen infrastructure (loader, audio, asset resolver, i18n).
+## Structure and limits
 
-## Known gaps
+`src/game/logic.ts` contains rules; `solver.ts` supplies the fast greedy solver;
+`levels.ts` generates boards and holds star budgets; `run.ts` validates recovery;
+`scripts/optimal-solver.mjs` proves the small-level optima by exhaustive IDA*.
+`test:logic` checks legal solutions, complete undo, all rating boundaries, browser
+language mappings, storage round trips and corrupt/disabled storage.
 
-- Audio is placeholder procedural synthesis awaiting a human ear pass
-  (see `AUDIO_NOTES.md`).
-- Level difficulty curve is deterministic but not hand-tuned; par comes from the
-  greedy solver, so three stars is achievable but not necessarily optimal play.
+Audio is original placeholder synthesis awaiting a human ear pass (see
+`AUDIO_NOTES.md`). Human difficulty tuning and physical-device checks remain
+outside automated QA. Games exceeding the recovery cap continue normally but
+are no longer saved until restarted or undone below the cap.

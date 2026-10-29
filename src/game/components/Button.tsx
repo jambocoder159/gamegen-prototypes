@@ -11,10 +11,11 @@ interface ButtonProps {
   ariaLabel?: string;
   ariaPressed?: boolean;
   title?: string;
+  dataCard?: string;
   children: ReactNode;
 }
 
-export function Button({ onClick, className, ariaLabel, ariaPressed, title, children }: ButtonProps) {
+export function Button({ onClick, className, ariaLabel, ariaPressed, title, dataCard, children }: ButtonProps) {
   const { manager } = useAudio();
   return (
     <button
@@ -23,6 +24,7 @@ export function Button({ onClick, className, ariaLabel, ariaPressed, title, chil
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       title={title ?? ariaLabel}
+      data-card={dataCard}
       onPointerEnter={() => manager.playSfx('sfxHover')}
       onClick={() => {
         manager.playSfx('sfxClick');

@@ -1,37 +1,28 @@
-// Title screen: the real game sorts itself behind the logo — the solver's actual
-// move list for each level, played step by step, then on to the next level,
-// endlessly. No HUD, no sfx. Logo + localised title on top; Play/Continue +
-// language + sound at the bottom. "Continue" (to the highest unlocked level)
-// replaces "Play" once progress exists.
+// Title screen: the real game plays itself behind the logo — a bot that deals
+// stage 1 with the real logic, finds any valid free pair, removes it after a
+// short delay and re-deals when the stack is clear, endlessly. No HUD, no sfx.
+// Logo + localised title on top, Play + language + sound at the bottom, with the
+// dealer mascot. Under reduced motion the board is shown static (no ambient loop).
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import type { Layout } from '../platform/layout';
-import { applyMove, newGame, type GameState } from './logic';
-import { solve } from './solver';
-import { getLevels } from './levels';
-import { loadProgress } from './progress';
+import { findMatch, generateDeal, type Tile } from './logic';
+import { getStage } from './layouts';
 import { BoardView } from './components/BoardView';
 import { Button } from './components/Button';
 import { LanguageControl, SoundControl } from './components/Controls';
+import { Dealer } from './components/Dealer';
 import { Art } from './components/Art';
-import type { ClearFx } from './useGame';
 
-const MAX_COLS: Record<Layout, number> = { portrait: 2, nearSquare: 3, wide: 3 };
-const STEP_MS = 650;
-const LEVEL_PAUSE_MS = 1300;
+const STEP_MS = 850;
+const REDEAL_MS = 1500;
 
-interface Demo {
-  idx: number;
-  state: GameState;
-  moves: ReturnType<typeof solve>;
-  step: number;
-}
-
-function startDemo(idx: number): Demo {
-  const levels = getLevels();
-  const lv = levels[idx % levels.length];
-  const state = newGame(lv.S, lv.K, lv.board);
-  return { idx, state, moves: solve(lv.board), step: 0 };
+function deal(seed: number): Tile[] {
+  const stage = getStage(0);
+  return (
+    generateDeal(stage.positions, stage.K, seed) ??
+    stage.positions.map((p, id) => ({ ...p, id, type: 0, removed: false }))
+  );
 }
 
 export function TitleScreen({
@@ -41,16 +32,13 @@ export function TitleScreen({
 }: {
   layout: Layout;
   reduced: boolean;
-  onPlay: (level: number) => void;
+  onPlay: () => void;
 }) {
   const { t } = useI18n();
-  const progress = loadProgress();
-  const hasProgress = progress.unlocked > 1;
-  const demoRef = useRef<Demo>(startDemo(0));
-  const [board, setBoard] = useState(() => demoRef.current.state.board.slice());
-  const [S, setS] = useState(() => demoRef.current.state.S);
-  const [clearFx, setClearFx] = useState<ClearFx | null>(null);
-  const fxSeq = useRef(0);
+  const seedRef = useRef(1);
+  const tilesRef = useRef<Tile[]>(deal(seedRef.current));
+  const [tiles, setTiles] = useState<Tile[]>(() => tilesRef.current);
+  const [cheer, setCheer] = useState(0);
 
   useEffect(() => {
     if (reduced) return; // no continuous ambient movement under reduced motion
@@ -59,52 +47,39 @@ export function TitleScreen({
       timer = window.setTimeout(tick, ms);
     };
     const tick = () => {
-      const d = demoRef.current;
-      const moves = d.moves;
-      if (!moves || d.step >= moves.length) {
-        // finished (or unsolvable) → next level after a pause
-        const next = startDemo(d.idx + 1);
-        demoRef.current = next;
-        setBoard(next.state.board.slice());
-        setS(next.state.S);
-        setClearFx(null);
-        schedule(STEP_MS);
+      const cur = tilesRef.current;
+      const match = findMatch(cur);
+      if (!match) {
+        seedRef.current += 1;
+        tilesRef.current = deal(seedRef.current);
+        setTiles(tilesRef.current);
+        schedule(REDEAL_MS);
         return;
       }
-      const m = moves[d.step];
-      const res = applyMove(d.state, m.from, m.to);
-      d.step += 1;
-      setBoard(d.state.board.slice());
-      if (res.cleared.length > 0 && res.clearedType !== null) {
-        fxSeq.current += 1;
-        setClearFx({ seq: fxSeq.current, shelf: res.cleared[0], type: res.clearedType });
-      }
-      schedule(d.step >= moves.length ? LEVEL_PAUSE_MS : STEP_MS);
+      const next = cur.map((o) =>
+        o.id === match[0] || o.id === match[1] ? { ...o, removed: true } : o,
+      );
+      tilesRef.current = next;
+      setTiles(next);
+      setCheer((c) => c + 1);
+      schedule(STEP_MS);
     };
     schedule(STEP_MS);
     return () => window.clearTimeout(timer);
   }, [reduced]);
 
-  useEffect(() => {
-    if (!clearFx) return;
-    const id = window.setTimeout(() => setClearFx(null), 420);
-    return () => window.clearTimeout(id);
-  }, [clearFx]);
-
   return (
     <div className={`title title--${layout}`}>
-      <div className="title__demo" aria-hidden>
+      <div className="title__demo" aria-hidden="true">
         <BoardView
-          board={board}
-          S={S}
+          tiles={tiles}
           selected={null}
+          hint={null}
           interactive={false}
           reduced={reduced}
-          clearFx={clearFx}
-          maxCols={MAX_COLS[layout]}
         />
       </div>
-      <div className="title__vignette" aria-hidden />
+      <div className="title__vignette" aria-hidden="true" />
       <div className="title__content">
         <div className="title__head">
           <Art imgKey="logo" alt="" className="title__logo" />
@@ -112,11 +87,9 @@ export function TitleScreen({
           <p className="title__tagline">{t('game.tagline')}</p>
         </div>
         <div className="title__actions">
-          <Button
-            className="btn btn--primary btn--play"
-            onClick={() => onPlay(hasProgress ? progress.unlocked : 1)}
-          >
-            {hasProgress ? t('buttons.continue') : t('buttons.play')}
+          <Dealer cheer={cheer} reduced={reduced} className="title__dealer" />
+          <Button className="btn btn--primary btn--play" onClick={onPlay}>
+            {t('buttons.play')}
           </Button>
           <div className="title__icons">
             <LanguageControl />

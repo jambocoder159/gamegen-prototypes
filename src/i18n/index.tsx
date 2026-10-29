@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 import { LANG_CODES, LANG_NAMES, isLangCode, type Dict, type LangCode } from './dict';
 
-const STORAGE_KEY = 'shelf-sort.lang';
+const STORAGE_KEY = 'mahjong-deck.lang';
 
 function lookup(dict: Dict | null | undefined, path: string): string | undefined {
   if (!dict) return undefined;

@@ -1,9 +1,9 @@
 {
   "lang": "ja",
-  "documentTitle": "棚の仕分け",
+  "documentTitle": "麻雀デッキ",
   "game": {
-    "title": "棚の仕分け",
-    "tagline": "各段を同じ商品3つで埋めよう"
+    "title": "麻雀デッキ",
+    "tagline": "ペアを消し、カードを選び、5つの山を崩そう"
   },
   "loading": {
     "progress": "読み込み中 {pct}%",
@@ -11,55 +11,83 @@
   },
   "buttons": {
     "play": "プレイ",
-    "continue": "つづきから",
-    "undo": "もどす",
-    "restart": "やり直し",
-    "levels": "レベル選択",
-    "next": "次のレベル",
-    "replay": "もう一度",
-    "close": "閉じる",
-    "mute": "ミュート",
+    "restart": "やり直す",
+    "playAgain": "もう一度遊ぶ",
+    "retry": "再挑戦",
+    "mute": "音を消す",
     "unmute": "音を出す",
     "language": "言語を変更"
   },
   "hud": {
-    "level": "レベル",
-    "moves": "手数"
+    "stage": "ステージ",
+    "score": "スコア",
+    "hearts": "ハート：{n}",
+    "combo": "コンボ ×{n}",
+    "wild": "ワイルド準備完了"
   },
-  "goods": {
-    "milk": "牛乳",
-    "soda": "ソーダ",
-    "cereal": "シリアル",
-    "jam": "ジャム",
-    "tuna": "ツナ缶",
-    "juice": "ジュース",
-    "chips": "ポテチ",
-    "soap": "せっけん"
+  "tiles": {
+    "bamboo": "竹",
+    "dots": "筒",
+    "coin": "コイン",
+    "koi": "鯉",
+    "peach": "桃",
+    "plum": "梅",
+    "orchid": "蘭",
+    "lantern": "提灯",
+    "fan": "扇",
+    "crane": "鶴",
+    "pagoda": "塔",
+    "moon": "月",
+    "sun": "太陽",
+    "tea": "茶",
+    "dragon": "龍",
+    "cat": "猫"
   },
-  "result": {
-    "win": "仕分け完了！",
-    "stars": "3つ中 {n} つ星",
-    "score": "手数 {moves} · 基準 {par}"
+  "cards": {
+    "hint": { "name": "ヒント", "effect": "揃うペアを表示" },
+    "shuffle": { "name": "シャッフル", "effect": "牌をシャッフル" },
+    "undo": { "name": "もどす", "effect": "直前のペアを戻す" },
+    "wild": { "name": "ワイルド", "effect": "次は任意の2枚" },
+    "heal": { "name": "回復", "effect": "ハートを1つ回復" },
+    "combo": { "name": "コンボ", "effect": "次の3回 得点×2" }
   },
-  "levels": {
-    "title": "レベル選択",
-    "level": "レベル {n}",
-    "locked": "ロック中",
-    "best": "ベスト {n} つ星",
-    "unplayed": "未クリア"
+  "reward": {
+    "title": "ステージクリア！",
+    "pick": "手札に加えるカードを選ぼう"
+  },
+  "victory": {
+    "title": "全ステージ制覇！",
+    "score": "最終スコア {n}",
+    "best": "ベスト {n}"
+  },
+  "defeat": {
+    "title": "ハートが尽きた",
+    "retry": "再挑戦"
   },
   "a11y": {
-    "slot": "{shelf} 段目、{slot} 番の枠：{content}",
-    "slotSelected": "{shelf} 段目、{slot} 番の枠：{content}、持ち上げ中",
-    "empty": "空き",
-    "boardLabel": "棚",
-    "help": "商品をタップして持ち上げ、空き枠をタップして置きます。持ち上げた商品をもう一度タップすると戻せます。矢印キーで枠を移動、Enter かスペースで持ち上げ・設置、Z で1手もどす、R でレベルをやり直します。",
-    "selected": "{name} を持ち上げました。",
-    "placed": "{name} を置きました。",
-    "putDown": "{name} を元に戻しました。",
-    "cleared": "{name} の棚が完成しました。",
-    "won": "{moves} 手でクリア、3つ中 {stars} つ星。",
-    "nothing": "その枠は空です。",
-    "titleDemo": "タイトル画面：ゲームが自動で仕分けしています。"
+    "boardLabel": "牌の山",
+    "handLabel": "能力カード",
+    "tile": "{name}牌、{state}",
+    "tileSelected": "{name}牌、{state}、選択中",
+    "tileFree": "選択可能",
+    "tileCovered": "重なっている",
+    "card": "カード枠 {key}：{name}、{effect}、所持 {n} 枚",
+    "rewardCard": "{name}：{effect}",
+    "help": "空いた牌をタップし、同じ種類の空いた牌をもう1枚タップするとペアが消えます。違う牌を選ぶとハートを1つ失います。矢印キーで空いた牌の間を移動、Enterまたはスペースで選択、1〜4で手札を使用、Zでもどす、Hでヒント、Sでシャッフルを使います。",
+    "match": "ペア成立、{n} 点加算。",
+    "mismatch": "ペア失敗、残りハート {n}。",
+    "stageClear": "ステージクリア、ボーナス {n} 点。カードを選んでください。",
+    "reshuffleCard": "手がありません。シャッフルカードで並べ直しました。",
+    "reshuffleHeart": "手がありません。並べ直し、残りハート {n}。",
+    "noPair": "カードは使われませんでした。",
+    "cardHint": "ヒント：揃うペアを表示しました。",
+    "cardShuffle": "牌を並べ直しました。",
+    "cardUndo": "直前のペアを戻しました。",
+    "cardWild": "ワイルド準備完了：次のペアは任意の2枚で成立します。",
+    "cardCombo": "コンボカード：次の3回のペアは得点が2倍。",
+    "heal": "回復、ハート {n}。",
+    "victory": "5つの山をすべて崩しました。",
+    "defeat": "ハートが尽きました。ゲームオーバー。",
+    "titleDemo": "タイトル画面：ゲームが自動で進行しています。"
   }
 }

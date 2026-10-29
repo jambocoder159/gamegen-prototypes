@@ -1,36 +1,59 @@
-// Screen-reader support: the in-game help text and a polite aria-live region that
-// announces the result of each action. All strings are localised.
+// Screen-reader support: the localised in-game help text (documents the keys) and
+// a polite aria-live region that announces the result of each action.
 import { useI18n } from '../../i18n';
-import type { GameEvent } from '../useGame';
+import type { Notice } from '../useGame';
 
 export function Help() {
   const { t } = useI18n();
   return <p className="sr-only">{t('a11y.help')}</p>;
 }
 
-export function Announcer({ event }: { event: GameEvent | null }) {
+export function Announcer({ notice }: { notice: Notice | null }) {
   const { t } = useI18n();
   let message = '';
-  if (event) {
-    const name = event.name ? t(`goods.${event.name}`) : '';
-    switch (event.kind) {
-      case 'selected':
-        message = t('a11y.selected', { name });
+  if (notice) {
+    switch (notice.kind) {
+      case 'match':
+        message = t('a11y.match', { n: notice.n ?? 0 });
         break;
-      case 'placed':
-        message = t('a11y.placed', { name });
+      case 'mismatch':
+        message = t('a11y.mismatch', { n: notice.n ?? 0 });
         break;
-      case 'putDown':
-        message = t('a11y.putDown', { name });
+      case 'stageClear':
+        message = t('a11y.stageClear', { n: notice.n ?? 0 });
         break;
-      case 'cleared':
-        message = t('a11y.cleared', { name });
+      case 'reshuffleCard':
+        message = t('a11y.reshuffleCard');
         break;
-      case 'won':
-        message = t('a11y.won', { moves: event.moves ?? 0, stars: event.stars ?? 0 });
+      case 'reshuffleHeart':
+        message = t('a11y.reshuffleHeart', { n: notice.n ?? 0 });
         break;
-      case 'nothing':
-        message = t('a11y.nothing');
+      case 'noPair':
+        message = t('a11y.noPair');
+        break;
+      case 'cardHint':
+        message = t('a11y.cardHint');
+        break;
+      case 'cardShuffle':
+        message = t('a11y.cardShuffle');
+        break;
+      case 'cardUndo':
+        message = t('a11y.cardUndo');
+        break;
+      case 'cardWild':
+        message = t('a11y.cardWild');
+        break;
+      case 'cardCombo':
+        message = t('a11y.cardCombo');
+        break;
+      case 'heal':
+        message = t('a11y.heal', { n: notice.n ?? 0 });
+        break;
+      case 'victory':
+        message = t('a11y.victory');
+        break;
+      case 'defeat':
+        message = t('a11y.defeat');
         break;
     }
   }

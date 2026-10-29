@@ -1,150 +1,198 @@
-// The playing screen: pills, the shelf board, the controls row (undo, restart,
-// levels, sound, language), the clerk mascot and the win / level-picker overlays.
-// Owns keyboard input: arrows move focus between slots, Enter/Space (native on
-// the slot buttons) lift/place, Z undoes, R restarts.
-import { useCallback, useEffect, useRef, useState } from 'react';
+// The playing screen: HUD (stage/score/hearts), the tile board, the card hand,
+// the controls row (restart, sound, language), the dealer mascot (side column
+// only) and the reward / victory / defeat overlays. Owns keyboard input: arrows
+// move focus between free tiles, Enter/Space select (native), 1–4 play hand
+// cards, Z/H/S play the undo/hint/shuffle cards.
+import { useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { useAudio } from '../platform/AudioContext';
 import type { Layout } from '../platform/layout';
-import { SLOTS_PER_SHELF } from './logic';
+import { STAGE_COUNT } from './layouts';
 import { useGame } from './useGame';
 import { BoardView } from './components/BoardView';
-import { Hud } from './components/Hud';
-import { Clerk } from './components/Clerk';
-import { Button, IconButton } from './components/Button';
+import { Hud, ComboPill } from './components/Hud';
+import { Hand } from './components/Hand';
+import { Dealer } from './components/Dealer';
+import { IconButton } from './components/Button';
 import { SoundControl, LanguageControl } from './components/Controls';
-import { WinOverlay, LevelPicker } from './components/Overlays';
+import { RewardOverlay, VictoryOverlay, DefeatOverlay } from './components/Overlays';
 import { Help, Announcer } from './components/A11y';
 
-const MAX_COLS: Record<Layout, number> = { portrait: 2, nearSquare: 3, wide: 3 };
-
-export function GameScreen({
-  layout,
-  reduced,
-  startLevel,
-}: {
-  layout: Layout;
-  reduced: boolean;
-  startLevel: number;
-}) {
+export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boolean }) {
   const { t } = useI18n();
   const { manager } = useAudio();
-  const game = useGame(manager, startLevel);
-  const { tapSlot, undo, restart, win } = game;
-  const [picker, setPicker] = useState(false);
+  const game = useGame(manager);
   const rootRef = useRef<HTMLDivElement>(null);
+  const showDealer = layout !== 'portrait';
 
-  const total = game.level.S * SLOTS_PER_SHELF;
+  const { tiles, playCard, hand, phase } = game;
 
+  // Keyboard focus movement between free tiles (nearest in the pressed direction).
   const moveFocus = useCallback(
-    (delta: number) => {
+    (dx: number, dy: number) => {
       const root = rootRef.current;
       if (!root) return;
+      const free = tiles.filter((tl) => !tl.removed);
+      const centre = (tl: { x: number; y: number; z: number }) => ({
+        cx: tl.x + 1 - tl.z * 0.2,
+        cy: tl.y + 1 - tl.z * 0.24,
+      });
       const active = document.activeElement as HTMLElement | null;
-      const cur = active?.dataset?.slot != null ? Number(active.dataset.slot) : -1;
-      let next = cur < 0 ? 0 : cur + delta;
-      next = Math.max(0, Math.min(total - 1, next));
-      const btn = root.querySelector<HTMLButtonElement>(`[data-slot="${next}"]`);
-      btn?.focus();
+      const curId = active?.dataset?.tid != null ? Number(active.dataset.tid) : null;
+      const cur = curId != null ? tiles.find((tl) => tl.id === curId) : null;
+      const focusTile = (id: number) =>
+        root.querySelector<HTMLButtonElement>(`[data-tid="${id}"]`)?.focus();
+
+      if (!cur) {
+        const first = root.querySelector<HTMLButtonElement>('.tile--free');
+        first?.focus();
+        return;
+      }
+      const from = centre(cur);
+      let best: { id: number; score: number } | null = null;
+      for (const tl of free) {
+        if (tl.id === cur.id) continue;
+        const btn = root.querySelector<HTMLButtonElement>(`[data-tid="${tl.id}"]`);
+        if (!btn || btn.getAttribute('data-free') !== '1') continue;
+        const c = centre(tl);
+        const ddx = c.cx - from.cx;
+        const ddy = c.cy - from.cy;
+        // must be meaningfully in the requested direction
+        const along = dx !== 0 ? ddx * dx : ddy * dy;
+        if (along <= 0) continue;
+        const across = dx !== 0 ? Math.abs(ddy) : Math.abs(ddx);
+        const score = along + across * 2;
+        if (!best || score < best.score) best = { id: tl.id, score };
+      }
+      if (best) focusTile(best.id);
     },
-    [total],
+    [tiles],
   );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (win || picker) {
-        if (e.key === 'Escape' && picker) setPicker(false);
-        return;
-      }
+      if (phase !== 'playing') return;
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          moveFocus(-1);
+          moveFocus(-1, 0);
           break;
         case 'ArrowRight':
           e.preventDefault();
-          moveFocus(1);
+          moveFocus(1, 0);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          moveFocus(-SLOTS_PER_SHELF);
+          moveFocus(0, -1);
           break;
         case 'ArrowDown':
           e.preventDefault();
-          moveFocus(SLOTS_PER_SHELF);
+          moveFocus(0, 1);
           break;
+        case '1':
+        case '2':
+        case '3':
+        case '4': {
+          const idx = Number(e.key) - 1;
+          if (hand[idx]) {
+            e.preventDefault();
+            playCard(hand[idx].type);
+          }
+          break;
+        }
         case 'z':
         case 'Z':
           e.preventDefault();
-          undo();
+          playCard('undo');
           break;
-        case 'r':
-        case 'R':
+        case 'h':
+        case 'H':
           e.preventDefault();
-          restart();
+          playCard('hint');
+          break;
+        case 's':
+        case 'S':
+          e.preventDefault();
+          playCard('shuffle');
           break;
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [moveFocus, undo, restart, win, picker]);
+  }, [moveFocus, playCard, hand, phase]);
+
+  const interactive = phase === 'playing';
 
   return (
     <div className={`game game--${layout}`} ref={rootRef}>
       <div className="game__hud">
-        <Clerk cheer={game.cheer} reduced={reduced} className="hud__clerk" />
-        <Hud level={game.level.number} moves={game.moves} />
+        <Hud
+          stage={game.stage.number}
+          stageCount={STAGE_COUNT}
+          score={game.score}
+          hearts={game.hearts}
+        />
       </div>
 
       <div className="game__board">
+        {game.comboActive && <ComboPill combo={game.combo} />}
+        {game.wildActive && (
+          <div className="wild-flag" role="status" aria-hidden="true">
+            {t('hud.wild')}
+          </div>
+        )}
         <BoardView
-          board={game.state.board}
-          S={game.level.S}
+          tiles={tiles}
           selected={game.selected}
-          interactive={!win && !picker}
+          hint={game.hint}
+          interactive={interactive}
           reduced={reduced}
-          clearFx={game.clearFx}
-          maxCols={MAX_COLS[layout]}
-          onTap={tapSlot}
+          shakeId={game.shakeId}
+          onTap={game.tapTile}
           ariaLabel={t('a11y.boardLabel')}
         />
       </div>
 
+      {showDealer && (
+        <div className="game__dealer">
+          <Dealer cheer={game.cheer} reduced={reduced} />
+        </div>
+      )}
+
+      <div className="game__hand">
+        <Hand hand={hand} onPlay={(i) => hand[i] && playCard(hand[i].type)} disabled={!interactive} />
+      </div>
+
       <div className="game__controls">
-        <IconButton imgKey="iconUndo" label={t('buttons.undo')} onClick={undo} />
-        <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={restart} />
-        <Button className="btn btn--levels" onClick={() => setPicker(true)}>
-          {t('buttons.levels')}
-        </Button>
+        <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={game.restart} />
         <SoundControl />
         <LanguageControl />
       </div>
 
       <Help />
-      <Announcer event={game.event} />
+      <Announcer notice={game.notice} />
 
-      {win && (
-        <WinOverlay
-          win={win}
-          levelNumber={game.level.number}
+      {phase === 'reward' && game.rewards && (
+        <RewardOverlay
+          rewards={game.rewards}
           reduced={reduced}
-          onNext={game.nextLevel}
-          onReplay={restart}
-          onLevels={() => setPicker(true)}
+          cheer={game.cheer}
+          onChoose={game.chooseReward}
         />
       )}
-      {picker && (
-        <LevelPicker
-          levels={game.levels}
-          progress={game.progress}
-          current={game.level.number}
-          onPick={(n) => {
-            game.gotoLevel(n);
-            setPicker(false);
-          }}
-          onClose={() => setPicker(false)}
+      {phase === 'victory' && (
+        <VictoryOverlay
+          score={game.score}
+          best={game.best}
+          hearts={game.hearts}
+          reduced={reduced}
+          cheer={game.cheer}
+          onPlayAgain={game.restart}
         />
+      )}
+      {phase === 'defeat' && (
+        <DefeatOverlay score={game.score} best={game.best} reduced={reduced} onRetry={game.restart} />
       )}
     </div>
   );

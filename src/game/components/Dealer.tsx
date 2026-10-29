@@ -1,13 +1,14 @@
-// The clerk-cat mascot. Stands idle on frame 1; when `cheer` increments (a shelf
-// cleared or the level was won) it plays the cheer frames once. Under reduced
-// motion it briefly shows the cheer pose with no continuous animation.
+// The red-panda dealer mascot. Idle on frame 1; when `cheer` increments (a match
+// or a stage clear) it plays up to the frame-3 toss-and-cheer pose, then settles
+// back to idle. Under reduced motion it holds the cheer pose briefly with no
+// continuous animation. Decorative (aria-hidden).
 import { useEffect, useRef, useState } from 'react';
-import { clerkFrameKey } from '../../config/assets';
+import { dealerFrameKey } from '../../config/assets';
 import { Art } from './Art';
 
-const SEQ = [1, 2, 3, 2, 3, 0]; // frame indices → clerkFrameKey (0=idle, 2=box up)
+const SEQ = [1, 2, 2, 1, 0]; // frame indices (0 = idle, 2 = frame-3 cheer)
 
-export function Clerk({
+export function Dealer({
   cheer,
   reduced,
   className,
@@ -36,11 +37,15 @@ export function Clerk({
       } else {
         setFrame(SEQ[i]);
       }
-    }, 110);
+    }, 130);
     return () => window.clearInterval(id);
   }, [cheer, reduced]);
 
   return (
-    <Art imgKey={clerkFrameKey(frame)} alt="" className={className ? `clerk ${className}` : 'clerk'} />
+    <Art
+      imgKey={dealerFrameKey(frame)}
+      alt=""
+      className={className ? `dealer ${className}` : 'dealer'}
+    />
   );
 }

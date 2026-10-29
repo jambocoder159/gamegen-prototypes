@@ -1,90 +1,99 @@
 // Single source of truth for every runtime asset.
 //
 // relativePath is ALWAYS a fixed path like "textures/bg_base.webp" or
-// "audio/sfx_pick.mp3" — never a full URL and never a leading "/". The resolver
+// "audio/sfx_match.mp3" — never a full URL and never a leading "/". The resolver
 // (src/services/assets.ts) prepends a base (?style → commonPath → /common/ →
 // local) to each of these. poster.png is NOT here on purpose: it is a platform
 // cover shipped at the dist root, never preloaded.
 
-export type GoodsKey =
-  | 'milk' | 'soda' | 'cereal' | 'jam' | 'tuna' | 'juice' | 'chips' | 'soap';
+// The 16 tile faces (a stage uses the first N). Order is fixed: the deal uses
+// the first K entries so lower stages always draw the same recognisable set.
+export type TileKey =
+  | 'bamboo' | 'dots' | 'coin' | 'koi' | 'peach' | 'plum' | 'orchid' | 'lantern'
+  | 'fan' | 'crane' | 'pagoda' | 'moon' | 'sun' | 'tea' | 'dragon' | 'cat';
 
-/** Goods type id (0..7) → asset/i18n key. The first K are used on each level. */
-export const GOODS_KEYS: GoodsKey[] = [
-  'milk', 'soda', 'cereal', 'jam', 'tuna', 'juice', 'chips', 'soap',
+export const TILE_KEYS: TileKey[] = [
+  'bamboo', 'dots', 'coin', 'koi', 'peach', 'plum', 'orchid', 'lantern',
+  'fan', 'crane', 'pagoda', 'moon', 'sun', 'tea', 'dragon', 'cat',
 ];
 
+// The 6 ability cards.
+export type CardKey = 'hint' | 'shuffle' | 'undo' | 'wild' | 'heal' | 'combo';
+
+export const CARD_KEYS: CardKey[] = ['hint', 'shuffle', 'undo', 'wild', 'heal', 'combo'];
+
 export type ImageKey =
-  | 'goodsMilk' | 'goodsSoda' | 'goodsCereal' | 'goodsJam'
-  | 'goodsTuna' | 'goodsJuice' | 'goodsChips' | 'goodsSoap'
-  | 'shelf'
-  | 'pillTeal' | 'pillOrange'
-  | 'iconRestart' | 'iconUndo' | 'iconSoundOn' | 'iconSoundOff'
-  | 'iconLanguage' | 'iconStar'
+  | `tile${Capitalize<TileKey>}`
+  | `card${Capitalize<CardKey>}`
+  | 'pillFelt' | 'pillGold'
+  | 'iconHeart' | 'iconStar' | 'iconRestart' | 'iconSoundOn' | 'iconSoundOff'
+  | 'iconLanguage'
   | 'logo'
-  | 'clerk1' | 'clerk2' | 'clerk3' | 'clerk4'
+  | 'dealer1' | 'dealer2' | 'dealer3' | 'dealer4'
   | 'bgBase' | 'bgPortrait';
 
 export type AudioKey =
   | 'bgm'
-  | 'sfxPick' | 'sfxPlace' | 'sfxClear' | 'sfxWin' | 'sfxNope'
+  | 'sfxSelect' | 'sfxMatch' | 'sfxWrong' | 'sfxCard'
+  | 'sfxClear' | 'sfxWin' | 'sfxLose'
   | 'sfxClick' | 'sfxHover';
 
+function cap<T extends string>(s: T): Capitalize<T> {
+  return (s.charAt(0).toUpperCase() + s.slice(1)) as Capitalize<T>;
+}
+
+const tileImages = Object.fromEntries(
+  TILE_KEYS.map((k) => [`tile${cap(k)}`, `textures/icon_tile_${k}.png`]),
+) as Record<`tile${Capitalize<TileKey>}`, string>;
+
+const cardImages = Object.fromEntries(
+  CARD_KEYS.map((k) => [`card${cap(k)}`, `textures/card_${k}.png`]),
+) as Record<`card${Capitalize<CardKey>}`, string>;
+
 export const IMAGES: Record<ImageKey, string> = {
-  goodsMilk: 'textures/icon_goods_milk.png',
-  goodsSoda: 'textures/icon_goods_soda.png',
-  goodsCereal: 'textures/icon_goods_cereal.png',
-  goodsJam: 'textures/icon_goods_jam.png',
-  goodsTuna: 'textures/icon_goods_tuna.png',
-  goodsJuice: 'textures/icon_goods_juice.png',
-  goodsChips: 'textures/icon_goods_chips.png',
-  goodsSoap: 'textures/icon_goods_soap.png',
-  shelf: 'textures/panel_shelf.png',
-  pillTeal: 'textures/panel_pill_teal.png',
-  pillOrange: 'textures/panel_pill_orange.png',
+  ...tileImages,
+  ...cardImages,
+  pillFelt: 'textures/panel_pill_felt.png',
+  pillGold: 'textures/panel_pill_gold.png',
+  iconHeart: 'textures/icon_heart.png',
+  iconStar: 'textures/icon_star.png',
   iconRestart: 'textures/icon_restart.png',
-  iconUndo: 'textures/icon_undo.png',
   iconSoundOn: 'textures/icon_sound_on.png',
   iconSoundOff: 'textures/icon_sound_off.png',
   iconLanguage: 'textures/icon_language.png',
-  iconStar: 'textures/icon_star.png',
   logo: 'textures/logo_base.png',
-  clerk1: 'textures/seq_clerk_cheer_1.png',
-  clerk2: 'textures/seq_clerk_cheer_2.png',
-  clerk3: 'textures/seq_clerk_cheer_3.png',
-  clerk4: 'textures/seq_clerk_cheer_4.png',
+  dealer1: 'textures/seq_dealer_deal_1.png',
+  dealer2: 'textures/seq_dealer_deal_2.png',
+  dealer3: 'textures/seq_dealer_deal_3.png',
+  dealer4: 'textures/seq_dealer_deal_4.png',
   bgBase: 'textures/bg_base.webp',
   bgPortrait: 'textures/bg_portrait.webp',
 };
 
 export const AUDIO: Record<AudioKey, string> = {
   bgm: 'audio/bgm_base.mp3',
-  sfxPick: 'audio/sfx_pick.mp3',
-  sfxPlace: 'audio/sfx_place.mp3',
+  sfxSelect: 'audio/sfx_select.mp3',
+  sfxMatch: 'audio/sfx_match.mp3',
+  sfxWrong: 'audio/sfx_wrong.mp3',
+  sfxCard: 'audio/sfx_card.mp3',
   sfxClear: 'audio/sfx_clear.mp3',
   sfxWin: 'audio/sfx_win.mp3',
-  sfxNope: 'audio/sfx_nope.mp3',
+  sfxLose: 'audio/sfx_lose.mp3',
   sfxClick: 'audio/sfx_click.mp3',
   sfxHover: 'audio/sfx_hover.mp3',
 };
 
-const GOODS_IMAGE: Record<GoodsKey, ImageKey> = {
-  milk: 'goodsMilk',
-  soda: 'goodsSoda',
-  cereal: 'goodsCereal',
-  jam: 'goodsJam',
-  tuna: 'goodsTuna',
-  juice: 'goodsJuice',
-  chips: 'goodsChips',
-  soap: 'goodsSoap',
-};
-
-/** Goods type id (0..7) → its image key. */
-export function goodsImageKey(type: number): ImageKey {
-  return GOODS_IMAGE[GOODS_KEYS[type]];
+/** Tile type id (0..15) → its image key. */
+export function tileImageKey(type: number): ImageKey {
+  return `tile${cap(TILE_KEYS[type])}` as ImageKey;
 }
 
-/** Clerk cheer frame (0..3) → image key. */
-export function clerkFrameKey(frame: number): ImageKey {
-  return (`clerk${(frame % 4) + 1}`) as ImageKey;
+/** Card key → its image key. */
+export function cardImageKey(card: CardKey): ImageKey {
+  return `card${cap(card)}` as ImageKey;
+}
+
+/** Dealer frame (0..3) → image key. */
+export function dealerFrameKey(frame: number): ImageKey {
+  return `dealer${(frame % 4) + 1}` as ImageKey;
 }

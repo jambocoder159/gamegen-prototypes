@@ -1,9 +1,9 @@
 {
   "lang": "en",
-  "documentTitle": "Shelf Sort",
+  "documentTitle": "Mahjong Deck",
   "game": {
-    "title": "Shelf Sort",
-    "tagline": "Fill every shelf with three matching goods"
+    "title": "Mahjong Deck",
+    "tagline": "Match pairs, pick a card, clear five stacks"
   },
   "loading": {
     "progress": "Loading {pct}%",
@@ -11,55 +11,83 @@
   },
   "buttons": {
     "play": "Play",
-    "continue": "Continue",
-    "undo": "Undo",
     "restart": "Restart",
-    "levels": "Levels",
-    "next": "Next level",
-    "replay": "Replay",
-    "close": "Close",
+    "playAgain": "Play again",
+    "retry": "Try again",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
     "language": "Change language"
   },
   "hud": {
-    "level": "Level",
-    "moves": "Moves"
+    "stage": "Stage",
+    "score": "Score",
+    "hearts": "Hearts: {n}",
+    "combo": "Combo ×{n}",
+    "wild": "Wild ready"
   },
-  "goods": {
-    "milk": "Milk",
-    "soda": "Soda",
-    "cereal": "Cereal",
-    "jam": "Jam",
-    "tuna": "Tuna",
-    "juice": "Juice",
-    "chips": "Chips",
-    "soap": "Soap"
+  "tiles": {
+    "bamboo": "Bamboo",
+    "dots": "Dots",
+    "coin": "Coin",
+    "koi": "Koi",
+    "peach": "Peach",
+    "plum": "Plum",
+    "orchid": "Orchid",
+    "lantern": "Lantern",
+    "fan": "Fan",
+    "crane": "Crane",
+    "pagoda": "Pagoda",
+    "moon": "Moon",
+    "sun": "Sun",
+    "tea": "Tea",
+    "dragon": "Dragon",
+    "cat": "Cat"
   },
-  "result": {
-    "win": "Shelves sorted!",
-    "stars": "{n} of 3 stars",
-    "score": "Moves {moves} · Par {par}"
+  "cards": {
+    "hint": { "name": "Hint", "effect": "Show a matching pair" },
+    "shuffle": { "name": "Shuffle", "effect": "Reshuffle the tiles" },
+    "undo": { "name": "Undo", "effect": "Restore the last pair" },
+    "wild": { "name": "Wild", "effect": "Match any two tiles once" },
+    "heal": { "name": "Heal", "effect": "Gain one heart" },
+    "combo": { "name": "Combo", "effect": "Next 3 matches ×2" }
   },
-  "levels": {
-    "title": "Levels",
-    "level": "Level {n}",
-    "locked": "Locked",
-    "best": "Best {n} stars",
-    "unplayed": "Not cleared yet"
+  "reward": {
+    "title": "Stage cleared!",
+    "pick": "Choose a card to add to your hand"
+  },
+  "victory": {
+    "title": "All stacks cleared!",
+    "score": "Final score {n}",
+    "best": "Best {n}"
+  },
+  "defeat": {
+    "title": "Out of hearts",
+    "retry": "Try again"
   },
   "a11y": {
-    "slot": "Shelf {shelf}, slot {slot}: {content}",
-    "slotSelected": "Shelf {shelf}, slot {slot}: {content}, lifted",
-    "empty": "empty",
-    "boardLabel": "Shelves",
-    "help": "Tap a goods item to lift it, then tap an empty slot to place it; tap the lifted item again to put it down. Arrow keys move between slots, Enter or Space lifts and places, Z undoes a move, R restarts the level.",
-    "selected": "Lifted {name}.",
-    "placed": "Placed {name}.",
-    "putDown": "Put {name} back down.",
-    "cleared": "Shelf of {name} sorted.",
-    "won": "Level complete in {moves} moves, {stars} of 3 stars.",
-    "nothing": "That slot is empty.",
-    "titleDemo": "Title screen: the game is sorting itself."
+    "boardLabel": "Tile stack",
+    "handLabel": "Ability cards",
+    "tile": "{name} tile, {state}",
+    "tileSelected": "{name} tile, {state}, selected",
+    "tileFree": "free",
+    "tileCovered": "covered",
+    "card": "Card slot {key}: {name}, {effect}, {n} held",
+    "rewardCard": "{name}: {effect}",
+    "help": "Tap a free tile then a second free tile of the same type to clear the pair. Matching a wrong tile loses a heart. Arrow keys move focus between free tiles, Enter or Space selects, keys 1 to 4 play your hand cards, Z plays Undo, H plays Hint, S plays Shuffle.",
+    "match": "Matched, plus {n} points.",
+    "mismatch": "Wrong pair, {n} hearts left.",
+    "stageClear": "Stage cleared, bonus {n} points. Choose a card.",
+    "reshuffleCard": "No moves left. A shuffle card reshuffled the tiles.",
+    "reshuffleHeart": "No moves left. Tiles reshuffled, {n} hearts left.",
+    "noPair": "No card played.",
+    "cardHint": "Hint: a matching pair is highlighted.",
+    "cardShuffle": "Tiles reshuffled.",
+    "cardUndo": "Last pair restored.",
+    "cardWild": "Wild ready: your next match can be any two tiles.",
+    "cardCombo": "Combo card: the next three matches score double.",
+    "heal": "Healed, {n} hearts.",
+    "victory": "You cleared all five stacks.",
+    "defeat": "Out of hearts. Game over.",
+    "titleDemo": "Title screen: the game is playing itself."
   }
 }

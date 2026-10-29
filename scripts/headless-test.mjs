@@ -1,12 +1,13 @@
-// Headless QA for Shelf Sort. Builds, serves with `vite preview`, and drives the
-// real game through its public pointer/keyboard UI (clicking slot buttons and
-// reading their aria-labels — no private hooks). Checks: zero console
-// errors/warnings and zero failed requests, the loading gate + enter, a running
-// title demo, a full level-1 solve to the win overlay with a star rating, all
-// four languages with no text overflow, resize mid-game without reload/state
-// loss, no clipping/overlap of slots+pills+buttons across the viewport matrix
-// (incl. a 9-shelf level at 360×640), and a blocked-image fallback. Screenshots
-// go to qa/. Prints PASS/FAIL.
+// Headless QA for Mahjong Deck. Builds, serves with `vite preview`, and drives the
+// real game through its public pointer/keyboard UI (clicking tile buttons and
+// reading their data attributes / aria-labels — no private hooks). Checks: zero
+// console errors/warnings and zero failed requests, the loading gate + enter, a
+// running title demo, a mismatch costing a heart, the hint card highlighting a
+// pair, score increasing on a match, stage 1 cleared to the reward screen,
+// choosing a reward card that then appears in the hand, all four languages with no
+// text overflow, resize mid-game without reload/state loss, no clipping/overlap of
+// the HUD/hand/control chrome across the viewport matrix, and a blocked-image
+// fallback. Also runs the node logic test. Screenshots go to qa/. Prints PASS/FAIL.
 
 import { spawn, execSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -42,103 +43,123 @@ async function waitForServer(url, tries = 60) {
   return false;
 }
 
-// --- greedy solver mirrored from src/game/solver.ts, over aria-label contents --
-function findItem(cells, t, excludeShelf) {
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i] === t && Math.floor(i / 3) !== excludeShelf) return i;
-  }
-  return -1;
-}
-function chooseMove(cells) {
-  const S = cells.length / 3;
-  const shelf = (s) => [cells[s * 3], cells[s * 3 + 1], cells[s * 3 + 2]];
-  const empties = (s) => [s * 3, s * 3 + 1, s * 3 + 2].filter((i) => cells[i] === null);
-  // 1) completion: two of a kind + one empty
-  for (let s = 0; s < S; s++) {
-    const items = shelf(s).filter((x) => x !== null);
-    const e = empties(s);
-    if (items.length === 2 && items[0] === items[1] && e.length === 1) {
-      const src = findItem(cells, items[0], s);
-      if (src >= 0) return [src, e[0]];
-    }
-  }
-  // 2) extend a pure single into a pair
-  for (let s = 0; s < S; s++) {
-    const items = shelf(s).filter((x) => x !== null);
-    const e = empties(s);
-    if (items.length === 1 && e.length >= 1) {
-      const src = findItem(cells, items[0], s);
-      if (src >= 0) return [src, e[0]];
-    }
-  }
-  // 3) start a build: most-concentrated type into a fully empty shelf
-  let emptyShelf = -1;
-  for (let s = 0; s < S; s++) if (shelf(s).every((c) => c === null)) { emptyShelf = s; break; }
-  if (emptyShelf < 0) return null;
-  const counts = new Map();
-  for (let s = 0; s < S; s++) {
-    const items = shelf(s).filter((x) => x !== null);
-    const local = new Map();
-    for (const t of items) local.set(t, (local.get(t) || 0) + 1);
-    for (const [t, c] of local) {
-      const cur = counts.get(t);
-      if (!cur || c > cur.c) {
-        const src = [s * 3, s * 3 + 1, s * 3 + 2].find((i) => cells[i] === t);
-        counts.set(t, { c, src });
-      }
-    }
-  }
-  let pick = null;
-  for (const [, v] of counts) if (!pick || v.c > pick.c) pick = v;
-  if (!pick) return null;
-  return [pick.src, emptyShelf * 3];
-}
-
-async function readCells(page) {
-  const rows = await page.$$eval('.game [data-slot]', (els) =>
-    els.map((e) => ({ i: Number(e.dataset.slot), label: e.getAttribute('aria-label') || '' })),
+// --- read the live board from the real DOM --------------------------------
+async function readTiles(page) {
+  return page.$$eval('.game [data-tid]', (els) =>
+    els.map((e) => ({
+      id: Number(e.dataset.tid),
+      type: e.dataset.type,
+      free: e.dataset.free === '1',
+    })),
   );
-  const cells = [];
-  for (const { i, label } of rows) {
-    const after = label.split(': ')[1] || '';
-    const content = after.split(',')[0].trim();
-    cells[i] = content.toLowerCase() === 'empty' ? null : content;
-  }
-  return cells;
+}
+async function readFullTiles(page) {
+  return page.$$eval('.game [data-tid]', (els) =>
+    els.map((e) => ({
+      id: Number(e.dataset.tid),
+      x: Number(e.dataset.x),
+      y: Number(e.dataset.y),
+      z: Number(e.dataset.z),
+      type: e.dataset.type,
+    })),
+  );
 }
 
-async function playToWin(page, cap = 300) {
-  for (let n = 0; n < cap; n++) {
-    if (await page.$('.panel--win')) return true;
-    const cells = await readCells(page);
-    const mv = chooseMove(cells);
-    if (!mv) return false;
-    await page.click(`.game [data-slot="${mv[0]}"]`);
-    await sleep(25);
-    await page.click(`.game [data-slot="${mv[1]}"]`);
-    await sleep(55);
+// Compute a full winning pair order with DFS (mirror of the game's free rule),
+// so the bot never strands the board and triggers a reshuffle.
+function planSolve(full) {
+  const tiles = full.map((t) => ({ ...t, removed: false }));
+  const overlap = (a, b) => Math.abs(a.x - b.x) < 2 && Math.abs(a.y - b.y) < 2;
+  const isFree = (t) => {
+    if (t.removed) return false;
+    for (const o of tiles) if (!o.removed && o.z > t.z && overlap(t, o)) return false;
+    let left = false, right = false;
+    for (const o of tiles) {
+      if (o.removed || o.z !== t.z) continue;
+      if (o.x === t.x - 2 && Math.abs(o.y - t.y) < 2) left = true;
+      if (o.x === t.x + 2 && Math.abs(o.y - t.y) < 2) right = true;
+    }
+    return !left || !right;
+  };
+  const failed = new Set();
+  const plan = [];
+  let nodes = 0;
+  const key = () => tiles.filter((t) => !t.removed).map((t) => t.id).join(',');
+  function dfs() {
+    if (tiles.every((t) => t.removed)) return true;
+    if (++nodes > 2_000_000) return false;
+    const k = key();
+    if (failed.has(k)) return false;
+    const free = tiles.filter((t) => isFree(t));
+    const byType = new Map();
+    for (const t of free) {
+      if (!byType.has(t.type)) byType.set(t.type, []);
+      byType.get(t.type).push(t);
+    }
+    for (const [, g] of byType) {
+      for (let i = 0; i < g.length; i++)
+        for (let j = i + 1; j < g.length; j++) {
+          g[i].removed = true;
+          g[j].removed = true;
+          plan.push([g[i].id, g[j].id]);
+          if (dfs()) return true;
+          plan.pop();
+          g[i].removed = false;
+          g[j].removed = false;
+        }
+    }
+    failed.add(k);
+    return false;
   }
-  return !!(await page.$('.panel--win'));
+  return dfs() ? plan : null;
+}
+function mismatchPair(tiles) {
+  const free = tiles.filter((t) => t.free);
+  for (let i = 0; i < free.length; i++)
+    for (let j = i + 1; j < free.length; j++)
+      if (free[i].type !== free[j].type) return [free[i].id, free[j].id];
+  return null;
+}
+async function clickTile(page, id) {
+  await page.$eval(`.game [data-tid="${id}"]`, (el) => el.click());
+}
+async function readScore(page) {
+  return page.$$eval('.pill__value', (els) => {
+    const txt = els[1]?.textContent || '0';
+    return Number(txt.replace(/[^0-9]/g, '')) || 0;
+  });
+}
+async function readHearts(page) {
+  return page.$$eval('.hearts__icon', (els) =>
+    els.filter((e) => !e.className.includes('hearts__icon--off')).length,
+  );
 }
 
-// pairwise-overlap + inside-viewport audit of slots, pills and control buttons
+// pairwise-overlap + inside-viewport audit of the HUD/hand/control chrome (the
+// tile stack is intentionally overlapping, so tiles are excluded).
 async function auditLayout(page) {
   return page.evaluate(() => {
-    const sel = '.slot, .pill, .game__controls .btn, .game__controls .icon-btn';
+    const sel =
+      '.pill, .hearts, .hand .card, .game__controls .btn, .game__controls .icon-btn, .combo-pill, .wild-flag';
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const rects = [...document.querySelectorAll(sel)]
       .map((el) => el.getBoundingClientRect())
       .filter((r) => r.width > 0 && r.height > 0);
+    // the board must also stay on-screen
+    const board = document.querySelector('.game__board');
+    if (board) rects.push(board.getBoundingClientRect());
     let clipped = false;
     for (const r of rects) {
       if (r.right > vw + 1 || r.bottom > vh + 1 || r.left < -1 || r.top < -1) clipped = true;
     }
+    // overlap audit excludes the board rect (last) — tiles live inside it
+    const chrome = rects.slice(0, board ? -1 : undefined);
     let overlap = false;
-    for (let i = 0; i < rects.length && !overlap; i++) {
-      for (let j = i + 1; j < rects.length; j++) {
-        const a = rects[i];
-        const b = rects[j];
+    for (let i = 0; i < chrome.length && !overlap; i++) {
+      for (let j = i + 1; j < chrome.length; j++) {
+        const a = chrome[i];
+        const b = chrome[j];
         const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
         const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
         if (ox > 1 && oy > 1) {
@@ -152,6 +173,14 @@ async function auditLayout(page) {
 }
 
 async function main() {
+  console.log('Running logic test…');
+  try {
+    execSync('node scripts/test-logic.mjs', { cwd: root, stdio: 'inherit' });
+    check('node logic test (layouts + generation)', true);
+  } catch {
+    check('node logic test (layouts + generation)', false);
+  }
+
   console.log('Building…');
   execSync('npm run build', { cwd: root, stdio: 'inherit' });
 
@@ -177,7 +206,6 @@ async function main() {
     });
     try {
       await runMain(browser);
-      await runManyShelves(browser);
       await runFallback(browser);
     } finally {
       await browser.close();
@@ -221,49 +249,85 @@ async function runMain(browser) {
 
   // title demo running (board changes over time)
   await page.waitForSelector('.title__content', { timeout: 10000 });
-  await page.waitForSelector('.title__demo .slot', { timeout: 10000 });
-  const snap1 = await page.$eval('.title__demo .board__grid', (el) => el.innerHTML);
-  await sleep(1600);
-  const snap2 = await page.$eval('.title__demo .board__grid', (el) => el.innerHTML);
+  await page.waitForSelector('.title__demo .tile', { timeout: 10000 });
+  const snap1 = await page.$eval('.title__demo .board__stack', (el) => el.innerHTML);
+  await sleep(1800);
+  const snap2 = await page.$eval('.title__demo .board__stack', (el) => el.innerHTML);
   check('title demo is running (board changes over time)', snap1 !== snap2);
   await page.screenshot({ path: join(qa, 'title.png') });
 
-  // start a real game at level 1
+  // start a real game at stage 1
   await page.click('.btn--play');
-  await page.waitForSelector('.game .board__grid .slot', { timeout: 10000 });
+  await page.waitForSelector('.game .board__stack .tile', { timeout: 10000 });
   await page.evaluate(() => {
     window.__ALIVE__ = 'yes';
   });
   await sleep(200);
   await page.screenshot({ path: join(qa, 'gameplay.png') });
 
-  // solve level 1 to the win overlay
-  const won = await playToWin(page);
-  check('level 1 solved to win overlay', won);
-  if (won) {
-    const stars = await page.$$eval('.panel--win .stars--lg .stars__star', (els) => ({
-      total: els.length,
-      on: els.filter((e) => !e.className.includes('stars__star--off')).length,
-    }));
-    check('win overlay shows a 3-star rating', stars.total === 3 && stars.on >= 1, `on=${stars.on}`);
-    const hasScore = (await page.$('.panel__stars')) !== null && (await page.$('.panel__score')) !== null;
-    check('win overlay shows stars + score text', hasScore);
-    await page.screenshot({ path: join(qa, 'result.png') });
-    // back to a live game for language/resize checks
-    await page.click('.panel--win .btn');
-    await page.waitForSelector('.game .board__grid .slot', { timeout: 10000 });
+  // --- mismatch costs a heart ---
+  {
+    const heartsBefore = await readHearts(page);
+    const tiles = await readTiles(page);
+    const mm = mismatchPair(tiles);
+    if (mm) {
+      await clickTile(page, mm[0]);
+      await sleep(30);
+      await clickTile(page, mm[1]);
+      await sleep(120);
+      const heartsAfter = await readHearts(page);
+      check('mismatch costs a heart', heartsAfter === heartsBefore - 1, `${heartsBefore}→${heartsAfter}`);
+    } else {
+      check('mismatch costs a heart', false, 'no differing free pair found');
+    }
   }
 
-  // make a couple of moves so there is non-trivial state to preserve
+  // --- hint card highlights a pair ---
   {
-    const cells = await readCells(page);
-    const mv = chooseMove(cells);
-    if (mv) {
-      await page.click(`.game [data-slot="${mv[0]}"]`);
-      await sleep(30);
-      await page.click(`.game [data-slot="${mv[1]}"]`);
-      await sleep(60);
+    await page.keyboard.press('h');
+    await sleep(120);
+    const hinted = await page.$$eval('.tile--hint, .tile--hint-static', (els) => els.length);
+    check('hint card highlights a pair', hinted >= 2, `${hinted} tiles highlighted`);
+  }
+
+  // --- score increases on a match, then clear stage 1 following a full plan ---
+  const plan = planSolve(await readFullTiles(page));
+  check('bot computed a full solve plan for stage 1', !!plan);
+  let reward = false;
+  if (plan) {
+    const scoreBefore = await readScore(page);
+    // first planned match → score should rise
+    await clickTile(page, plan[0][0]);
+    await sleep(30);
+    await clickTile(page, plan[0][1]);
+    await sleep(110);
+    const scoreAfter = await readScore(page);
+    check('score increases on a match', scoreAfter > scoreBefore, `${scoreBefore}→${scoreAfter}`);
+    // execute the rest of the plan
+    for (let i = 1; i < plan.length; i++) {
+      if (await page.$('.panel--reward')) break;
+      await clickTile(page, plan[i][0]);
+      await sleep(16);
+      await clickTile(page, plan[i][1]);
+      await sleep(36);
     }
+    await sleep(120);
+    reward = !!(await page.$('.panel--reward'));
+  }
+  check('stage 1 cleared to the reward screen', reward);
+  if (reward) {
+    const choices = await page.$$eval('.card--reward', (els) => els.length);
+    check('reward screen offers three cards', choices === 3, `${choices} cards`);
+    await page.screenshot({ path: join(qa, 'result.png') });
+    // pick the first reward and confirm it appears in the hand on the next stage
+    const picked = await page.$eval('.card--reward', (el) => el.getAttribute('data-card'));
+    await page.click('.card--reward');
+    await page.waitForSelector('.game .board__stack .tile', { timeout: 10000 });
+    await sleep(150);
+    const handHas = await page.$$eval('.hand .card', (els) =>
+      els.map((e) => e.getAttribute('data-card')),
+    );
+    check('chosen reward card appears in the hand', handHas.includes(picked), `picked ${picked} · hand ${handHas.join(',')}`);
   }
 
   // languages: cycle all four, check <html lang> and no text overflow
@@ -279,7 +343,7 @@ async function runMain(browser) {
       const idx = order.indexOf(code);
       if (items[idx]) items[idx].click();
     }, item);
-    await sleep(140);
+    await sleep(150);
     const htmlLang = await page.evaluate(() => document.documentElement.lang);
     if (htmlLang !== expectLang[item]) {
       langOk = false;
@@ -288,7 +352,7 @@ async function runMain(browser) {
     const overflow = await page.evaluate(() => {
       const bad = [];
       const els = document.querySelectorAll(
-        '.btn, .pill__value, .pill__label, .panel__title, .lang__item, .title__name, .title__tagline, .loading__pct, .levelcell__n',
+        '.btn, .pill__value, .pill__label, .panel__title, .lang__item, .title__name, .title__tagline, .loading__pct, .card__name, .card__effect, .combo-pill',
       );
       for (const el of els) {
         if (el.scrollWidth > el.clientWidth + 1) bad.push((el.className || el.tagName) + ':' + el.textContent);
@@ -316,80 +380,45 @@ async function runMain(browser) {
     [375, 812], [360, 640], [390, 844], [844, 390], [1280, 720],
     [1920, 1080], [466, 678], [678, 466], [626, 890], [890, 626], [445, 626],
   ];
-  const sig = (cells) => cells.map((c) => (c === null ? '.' : c)).join(',');
-  const before = sig(await readCells(page));
+  const sig = (tiles) => tiles.map((t) => `${t.id}:${t.type}`).sort().join(',');
+  const before = sig(await readTiles(page));
   let resizeAlive = true;
   let stateOk = true;
   let onScreen = true;
   let noOverlap = true;
   for (const [w, h] of sizes) {
     await page.setViewport({ width: w, height: h, deviceScaleFactor: w === 390 ? 3 : 1 });
-    await sleep(150);
+    await sleep(160);
     if ((await page.evaluate(() => window.__ALIVE__)) !== 'yes') resizeAlive = false;
-    if (sig(await readCells(page)) !== before) stateOk = false;
+    if (sig(await readTiles(page)) !== before) stateOk = false;
     const a = await auditLayout(page);
-    if (a.clipped) onScreen = false;
+    if (a.clipped) {
+      onScreen = false;
+      check(`nothing clipped at ${w}x${h}`, false);
+    }
     if (a.overlap) {
       noOverlap = false;
-      check(`no overlap at ${w}x${h}`, false);
+      check(`no chrome overlap at ${w}x${h}`, false);
     }
   }
   check('no reload across resizes (window var survived)', resizeAlive);
   check('game state survived resizes (board unchanged)', stateOk);
-  check('slots/pills/buttons stay within viewport across sizes', onScreen);
-  check('no pairwise overlap of slots/pills/buttons across sizes', noOverlap);
+  check('HUD/hand/controls stay within viewport across sizes', onScreen);
+  check('no pairwise overlap of HUD/hand/controls across sizes', noOverlap);
 
   // layout screenshots
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
-  await sleep(160);
+  await sleep(180);
   await page.screenshot({ path: join(qa, 'wide.png') });
   await page.setViewport({ width: 626, height: 890, deviceScaleFactor: 1 });
-  await sleep(160);
+  await sleep(180);
   await page.screenshot({ path: join(qa, 'near-square.png') });
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
-  await sleep(160);
+  await sleep(180);
   await page.screenshot({ path: join(qa, 'portrait.png') });
 
   check('no console errors/warnings', consoleIssues.length === 0, consoleIssues.slice(0, 4).join(' | '));
   check('no failed requests', failedRequests.length === 0, failedRequests.slice(0, 4).join(' | '));
-  await page.close();
-}
-
-// A high level (9 shelves) at 360×640 must fit with no clipping/overlap.
-async function runManyShelves(browser) {
-  const page = await browser.newPage();
-  await page.evaluateOnNewDocument(() => {
-    try {
-      localStorage.setItem(
-        'shelf-sort.progress',
-        JSON.stringify({ unlocked: 12, stars: new Array(12).fill(3) }),
-      );
-    } catch {
-      /* ignore */
-    }
-  });
-  await page.setViewport({ width: 360, height: 640, deviceScaleFactor: 1 });
-  await page.goto(BASE_URL, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('.btn--enter', { timeout: 20000 });
-  await page.click('.btn--enter');
-  await page.waitForSelector('.btn--play', { timeout: 10000 });
-  await page.click('.btn--play');
-  await page.waitForSelector('.game .board__grid .slot', { timeout: 10000 });
-  // open level picker and choose level 11 (9 shelves)
-  await page.click('.game__controls .btn--levels');
-  await page.waitForSelector('.levelgrid', { timeout: 5000 });
-  await page.evaluate(() => {
-    const cells = [...document.querySelectorAll('.levelcell')];
-    if (cells[10]) cells[10].click();
-  });
-  await page.waitForSelector('.game .board__grid .slot', { timeout: 10000 });
-  await sleep(250);
-  const shelves = await page.$$eval('.board__grid > div', (els) => els.length);
-  check('level 11 has 9 shelves', shelves === 9, `got ${shelves}`);
-  const a = await auditLayout(page);
-  check('9-shelf level at 360x640: nothing clipped', !a.clipped);
-  check('9-shelf level at 360x640: no overlap', !a.overlap, `${a.count} elements`);
-  await page.screenshot({ path: join(qa, 'many-shelves.png') });
   await page.close();
 }
 
@@ -399,7 +428,7 @@ async function runFallback(browser) {
   await page.setRequestInterception(true);
   let blocked = 0;
   page.on('request', (req) => {
-    if (req.url().includes('icon_goods_milk.png')) {
+    if (req.url().includes('icon_tile_bamboo.png')) {
       blocked += 1;
       req.abort();
       return;

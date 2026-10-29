@@ -15,13 +15,18 @@ after entering).
 | File | Where it is used |
 |---|---|
 | `bgm_base.mp3` | Background music loop; starts after the enter gesture. |
-| `sfx_tap.mp3` | Pot tap; also plant select / move / deselect. |
-| `sfx_buy.mp3` | Buying a seed. |
+| `sfx_tap.mp3` | Noncritical pot tap; also plant select / move. |
+| `sfx_buy.mp3` | Buying a seed or unlocking a relic. |
 | `sfx_merge.mp3` | Merging two plants (no new max tier). |
 | `sfx_big.mp3` | Reaching a brand-new highest tier (level ≥ 5). |
-| `sfx_upgrade.mp3` | Upgrading tap power. |
+| `sfx_upgrade.mp3` | Buying pot upgrades, plot expansion or relic levels. |
 | `sfx_click.mp3` | Press on every button. |
 | `sfx_hover.mp3` | Pointer-enter on every button. |
+
+| `sfx_crit.mp3` | A manual critical pot tap, with the crit icon burst. |
+| `sfx_stage.mp3` | Stage clear and its 30-second passive reward chest. |
+| `sfx_draw.mp3` | Successful relic draw, including duplicates. |
+| `sfx_rebirth.mp3` | Confirmed rebirth after the preview dialog. |
 
 A per-file failure is non-fatal: a file that fails to load or decode is simply
 silent, and the game continues.

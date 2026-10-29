@@ -41,7 +41,7 @@ function bases(): string[] {
   const list: string[] = [];
   const style = styleRoot();
   if (style) list.push(style);
-  if (config.commonPath) list.push(withTrailingSlash(config.commonPath));
+  if (config.commonPath) list.push(withTrailingSlash(config.commonPath === '/common/' ? BASE + 'common/' : config.commonPath));
   list.push(withTrailingSlash(BASE + 'common/'));
   list.push(withTrailingSlash(BASE));
   return [...new Set(list)];

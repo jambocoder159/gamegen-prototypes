@@ -11,16 +11,20 @@ export type ImageKey =
   | 'plant6' | 'plant7' | 'plant8' | 'plant9'
   | 'pot1' | 'pot2' | 'pot3' | 'pot4'
   | 'plot'
-  | 'pillGreen' | 'pillGold'
+  | 'pillGreen' | 'pillGold' | 'sign'
   | 'iconDew' | 'iconSeedbag' | 'iconUpgrade'
   | 'iconSoundOn' | 'iconSoundOff' | 'iconLanguage'
+  | 'iconSuncoin' | 'iconChest' | 'iconRebirth' | 'iconFlag' | 'iconCrit' | 'iconLock'
+  | 'relicLens' | 'relicSun' | 'relicMoon' | 'relicBee' | 'relicClover' | 'relicThunder'
+  | 'relicTrowel' | 'relicCloud' | 'relicLotus' | 'relicLadybug' | 'relicCan' | 'relicAcorn'
   | 'logo'
   | 'bgBase' | 'bgPortrait';
 
 export type AudioKey =
   | 'bgm'
   | 'sfxTap' | 'sfxBuy' | 'sfxMerge' | 'sfxBig' | 'sfxUpgrade'
-  | 'sfxClick' | 'sfxHover';
+  | 'sfxClick' | 'sfxHover'
+  | 'sfxCrit' | 'sfxStage' | 'sfxDraw' | 'sfxRebirth';
 
 export const IMAGES: Record<ImageKey, string> = {
   plant1: 'textures/icon_plant_1.png',
@@ -39,12 +43,31 @@ export const IMAGES: Record<ImageKey, string> = {
   plot: 'textures/panel_plot.png',
   pillGreen: 'textures/panel_pill_green.png',
   pillGold: 'textures/panel_pill_gold.png',
+  sign: 'textures/panel_sign.png',
   iconDew: 'textures/icon_dew.png',
   iconSeedbag: 'textures/icon_seedbag.png',
   iconUpgrade: 'textures/icon_upgrade.png',
   iconSoundOn: 'textures/icon_sound_on.png',
   iconSoundOff: 'textures/icon_sound_off.png',
   iconLanguage: 'textures/icon_language.png',
+  iconSuncoin: 'textures/icon_suncoin.png',
+  iconChest: 'textures/icon_chest.png',
+  iconRebirth: 'textures/icon_rebirth.png',
+  iconFlag: 'textures/icon_flag.png',
+  iconCrit: 'textures/icon_crit.png',
+  iconLock: 'textures/icon_lock.png',
+  relicLens: 'textures/icon_relic_lens.png',
+  relicSun: 'textures/icon_relic_sun.png',
+  relicMoon: 'textures/icon_relic_moon.png',
+  relicBee: 'textures/icon_relic_bee.png',
+  relicClover: 'textures/icon_relic_clover.png',
+  relicThunder: 'textures/icon_relic_thunder.png',
+  relicTrowel: 'textures/icon_relic_trowel.png',
+  relicCloud: 'textures/icon_relic_cloud.png',
+  relicLotus: 'textures/icon_relic_lotus.png',
+  relicLadybug: 'textures/icon_relic_ladybug.png',
+  relicCan: 'textures/icon_relic_can.png',
+  relicAcorn: 'textures/icon_relic_acorn.png',
   logo: 'textures/logo_base.png',
   bgBase: 'textures/bg_base.webp',
   bgPortrait: 'textures/bg_portrait.webp',
@@ -59,7 +82,22 @@ export const AUDIO: Record<AudioKey, string> = {
   sfxUpgrade: 'audio/sfx_upgrade.mp3',
   sfxClick: 'audio/sfx_click.mp3',
   sfxHover: 'audio/sfx_hover.mp3',
+  sfxCrit: 'audio/sfx_crit.mp3',
+  sfxStage: 'audio/sfx_stage.mp3',
+  sfxDraw: 'audio/sfx_draw.mp3',
+  sfxRebirth: 'audio/sfx_rebirth.mp3',
 };
+
+// Relic image keys in the same order as RELICS (PLAN §3.5, icons 1..12).
+const RELIC_IMAGE_KEYS: ImageKey[] = [
+  'relicLens', 'relicSun', 'relicMoon', 'relicBee', 'relicClover', 'relicThunder',
+  'relicTrowel', 'relicCloud', 'relicLotus', 'relicLadybug', 'relicCan', 'relicAcorn',
+];
+
+/** Relic index (0..11) → its image key. */
+export function relicImageKey(index: number): ImageKey {
+  return RELIC_IMAGE_KEYS[index] ?? 'relicLens';
+}
 
 /** Plant level (1..9) → its image key. */
 export function plantImageKey(level: number): ImageKey {

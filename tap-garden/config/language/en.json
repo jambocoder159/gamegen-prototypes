@@ -13,11 +13,14 @@
     "play": "Play",
     "tapPot": "Tap the magic pot to collect dew",
     "buySeed": "Buy seed",
-    "upgrade": "Tap power",
     "reset": "Reset",
     "mute": "Mute sound",
     "unmute": "Unmute sound",
-    "language": "Change language"
+    "language": "Change language",
+    "upgrades": "Upgrades",
+    "relics": "Relics",
+    "rebirth": "Rebirth",
+    "close": "Close"
   },
   "hud": {
     "dew": "Dew",
@@ -52,13 +55,13 @@
   },
   "reset": {
     "title": "Reset progress?",
-    "body": "This clears your garden, dew and upgrades. It cannot be undone.",
+    "body": "This permanently clears dew, plants, upgrades, coins and relics.",
     "confirm": "Reset",
     "cancel": "Cancel"
   },
   "a11y": {
     "boardLabel": "Garden, 16 plots",
-    "help": "Tap the pot to collect dew. Buy seeds, then tap a plant to select it and tap a matching plant to merge them into the next level. Tap an empty plot to move a selected plant. Keys: arrow keys move between plots, Enter or Space select and act, T taps the pot, B buys a seed, U upgrades tap power.",
+    "help": "Tap the pot, buy seeds, and select two matching plants to merge. Select a plant then an empty plot to move. Arrow keys move focus; Enter/Space act; T taps; B buys a seed; G opens Upgrades; R opens Relics; E opens Rebirth; Esc closes dialogs.",
     "plot": "Plot {n}: {name}, level {level}",
     "plotSelected": "Plot {n}: {name}, level {level}, selected",
     "plotEmpty": "Plot {n}: empty",
@@ -68,10 +71,171 @@
     "merged": "Merged into {name}, level {level}.",
     "newMax": "New plant discovered: {name}, level {level}!",
     "bought": "Seed planted.",
-    "upgraded": "Tap power upgraded to level {level}.",
     "full": "The garden is full or you need more dew.",
     "nothing": "Nothing happened.",
     "dewTotal": "{n} dew",
-    "titleDemo": "Title screen: the garden is playing itself."
+    "titleDemo": "Title screen: the garden is playing itself.",
+    "plotLocked": "Plot {n}: locked",
+    "freeSeed": "Ladybug planted a free seed."
+  },
+  "upgrade": {
+    "title": "Pot upgrades",
+    "amountLabel": "Purchase amount",
+    "buyOne": "×1",
+    "buyMax": "Max",
+    "level": "Lv. {level}",
+    "maxed": "Max level",
+    "buyCost": "Buy {name} for {value} dew",
+    "needMore": "Need {value} more dew",
+    "bought": "{name} is now level {level}.",
+    "cantAfford": "Not enough dew for {name}.",
+    "plotBought": "Plot {n} unlocked.",
+    "power": {
+      "name": "Pot Power",
+      "effect": "{value} dew per tap"
+    },
+    "warmth": {
+      "name": "Pot Warmth",
+      "effect": "Adds {value} of passive income per tap"
+    },
+    "crit": {
+      "name": "Crit Chance",
+      "effect": "{value} critical chance"
+    },
+    "critPower": {
+      "name": "Crit Power",
+      "effect": "Critical taps ×{value}"
+    },
+    "auto": {
+      "name": "Auto Tap",
+      "effect": "{value} automatic taps per second"
+    },
+    "fert": {
+      "name": "Fertilizer",
+      "effect": "Passive income ×{value}"
+    },
+    "merge": {
+      "name": "Merge Burst",
+      "effect": "Merge reward ×{value}"
+    },
+    "seed": {
+      "name": "Seed Quality",
+      "effect": "{value} chance of a level 2 seed"
+    },
+    "plots": {
+      "name": "More Plots",
+      "effect": "Unlock one more plot, up to 16"
+    }
+  },
+  "stage": {
+    "label": "Stage {n}",
+    "boss": "Boss · Stage {n}",
+    "bossReq": "Own a level {level} plant to clear this boss.",
+    "reqLevel": "Plant ≥ {level}",
+    "progress": "Stage {n}: {earned} of {goal} dew earned",
+    "cleared": "Stage {n} cleared!"
+  },
+  "relic": {
+    "title": "Permanent relics",
+    "coins": "Sun coins",
+    "draw": "Draw relic",
+    "drawCost": "Draw relic · {value} sun coins",
+    "codex": "Relic collection",
+    "needCoins": "Not enough sun coins.",
+    "drewNew": "Discovered {name}!",
+    "drewUp": "{name} rose to level {level}!",
+    "unlocked": "{name} unlocked.",
+    "upgraded": "{name} upgraded to level {level}.",
+    "ownedCard": "{name}, level {level}",
+    "lockedCard": "{name}, locked. Select to unlock.",
+    "pickHint": "Select a relic to see its effect or unlock it.",
+    "level": "Level {level}",
+    "notOwned": "Not owned · level 1 preview",
+    "unlock": "Unlock · {value} coins",
+    "upgradeTo": "Level {level} · {value} coins",
+    "maxed": "Max level",
+    "lens": {
+      "name": "Dew Lens",
+      "desc": "Makes every pot tap stronger.",
+      "effect": "Tap dew ×{value}"
+    },
+    "sun": {
+      "name": "Sun Pendant",
+      "desc": "Helps plants produce more dew.",
+      "effect": "Passive dew ×{value}"
+    },
+    "moon": {
+      "name": "Moon Watch",
+      "desc": "Keeps the garden working longer while you are away.",
+      "effect": "Offline yield +{rate}; limit +{cap} min"
+    },
+    "bee": {
+      "name": "Bee Charm",
+      "desc": "Sweetens the reward for merging plants.",
+      "effect": "Merge reward ×{value}"
+    },
+    "clover": {
+      "name": "Lucky Clover",
+      "desc": "Brings luck to critical pot taps.",
+      "effect": "Critical chance +{value}"
+    },
+    "thunder": {
+      "name": "Thunder Seed",
+      "desc": "Adds power to critical pot taps.",
+      "effect": "Critical multiplier +{value}"
+    },
+    "trowel": {
+      "name": "Golden Trowel",
+      "desc": "Makes every seed more affordable.",
+      "effect": "Seed prices −{value}"
+    },
+    "cloud": {
+      "name": "Rain Cloud",
+      "desc": "Taps the pot for you.",
+      "effect": "Auto taps +{value}/s"
+    },
+    "lotus": {
+      "name": "Rebirth Lotus",
+      "desc": "Rewards each rebirth with more sun coins.",
+      "effect": "Rebirth coins ×{value}"
+    },
+    "ladybug": {
+      "name": "Ladybug",
+      "desc": "Sometimes plants a free seed after a merge.",
+      "effect": "Free seed chance {value}"
+    },
+    "can": {
+      "name": "Watering Can",
+      "desc": "Lowers the dew cost of pot upgrades.",
+      "effect": "Upgrade costs −{value}"
+    },
+    "acorn": {
+      "name": "Ancient Acorn",
+      "desc": "Gives the next garden a head start.",
+      "effect": "Start each run with {value} dew"
+    },
+    "buyCard": "Unlock {name} · {value} coins"
+  },
+  "rebirth": {
+    "title": "Rebirth",
+    "coinsGained": "Sun coins to gain",
+    "body": "Start a new garden with permanent bonuses. Confirm below when you are ready.",
+    "keepTitle": "Keep",
+    "resetTitle": "Reset",
+    "confirm": "Confirm rebirth",
+    "need": "Reach {n} more stages to unlock rebirth.",
+    "keep": {
+      "coins": "Coins and lifetime bonus",
+      "relics": "Relics and their levels",
+      "codex": "Plant collection",
+      "bestStage": "Best stage and settings"
+    },
+    "reset": {
+      "dew": "Dew balance",
+      "plants": "Plants and seed prices",
+      "plots": "Plot expansions",
+      "upgrades": "Pot upgrades",
+      "stage": "Current stage"
+    }
   }
 }

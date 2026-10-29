@@ -13,11 +13,14 @@
     "play": "プレイ",
     "tapPot": "魔法の植木鉢をタップして露を集める",
     "buySeed": "種を買う",
-    "upgrade": "タップ強化",
     "reset": "リセット",
     "mute": "ミュート",
     "unmute": "音を出す",
-    "language": "言語を切り替える"
+    "language": "言語を切り替える",
+    "upgrades": "強化",
+    "relics": "宝物",
+    "rebirth": "転生",
+    "close": "閉じる"
   },
   "hud": {
     "dew": "露",
@@ -52,13 +55,13 @@
   },
   "reset": {
     "title": "進行状況をリセットしますか？",
-    "body": "庭・露・強化がすべて消え、元に戻せません。",
+    "body": "露・植物・強化・コイン・宝物がすべて消え、元に戻せません。",
     "confirm": "リセット",
     "cancel": "キャンセル"
   },
   "a11y": {
     "boardLabel": "庭、16マス",
-    "help": "植木鉢をタップして露を集めます。種を買ったら、植物をタップして選び、同じ植物をタップすると次の段階に合成できます。選んだあと空きマスをタップすると移動します。キー操作：矢印キーでマス間を移動、EnterまたはSpaceで選択・実行、Tで植木鉢をタップ、Bで種を購入、Uでタップ力を強化。",
+    "help": "鉢をタップし、種を買い、同じ植物を2つ選んで合成。植物を選んで空きマスを押すと移動。矢印キーで移動、Enter／Spaceで操作、Tでタップ、Bで種、Gで強化、Rで宝物、Eで転生、Escで閉じます。",
     "plot": "{n}番のマス：{name}、レベル{level}",
     "plotSelected": "{n}番のマス：{name}、レベル{level}、選択中",
     "plotEmpty": "{n}番のマス：空き",
@@ -68,10 +71,171 @@
     "merged": "{name}、レベル{level}に合成しました。",
     "newMax": "新しい植物を発見：{name}、レベル{level}！",
     "bought": "種を植えました。",
-    "upgraded": "タップ力をレベル{level}に強化しました。",
     "full": "庭がいっぱいか、露が足りません。",
     "nothing": "変化はありませんでした。",
     "dewTotal": "露 {n}",
-    "titleDemo": "タイトル画面：庭が自動でプレイしています。"
+    "titleDemo": "タイトル画面：庭が自動でプレイしています。",
+    "plotLocked": "{n}番のマス：未開放",
+    "freeSeed": "テントウムシが無料の芽を植えました。"
+  },
+  "upgrade": {
+    "title": "植木鉢の強化",
+    "amountLabel": "購入数",
+    "buyOne": "×1",
+    "buyMax": "最大",
+    "level": "Lv. {level}",
+    "maxed": "最大レベル",
+    "buyCost": "{name}を露 {value}で購入",
+    "needMore": "露があと{value}必要",
+    "bought": "{name}がレベル{level}になりました。",
+    "cantAfford": "{name}に必要な露が足りません。",
+    "plotBought": "{n}番のマスを開放しました。",
+    "power": {
+      "name": "鉢の力",
+      "effect": "1タップで露 {value}"
+    },
+    "warmth": {
+      "name": "鉢のぬくもり",
+      "effect": "毎秒生産量の{value}をタップに加算"
+    },
+    "crit": {
+      "name": "会心率",
+      "effect": "会心率 {value}"
+    },
+    "critPower": {
+      "name": "会心の威力",
+      "effect": "会心時 ×{value}"
+    },
+    "auto": {
+      "name": "自動タップ",
+      "effect": "毎秒{value}回自動タップ"
+    },
+    "fert": {
+      "name": "肥料",
+      "effect": "自動生産 ×{value}"
+    },
+    "merge": {
+      "name": "合成ボーナス",
+      "effect": "合成報酬 ×{value}"
+    },
+    "seed": {
+      "name": "種の品質",
+      "effect": "Lv.2の芽になる確率 {value}"
+    },
+    "plots": {
+      "name": "マスの拡張",
+      "effect": "次のマスを開放（最大16マス）"
+    }
+  },
+  "stage": {
+    "label": "ステージ {n}",
+    "boss": "ボス · ステージ {n}",
+    "bossReq": "レベル{level}以上の植物が必要です。",
+    "reqLevel": "植物 ≥ Lv.{level}",
+    "progress": "ステージ{n}：露 {earned}／{goal}",
+    "cleared": "ステージ{n}クリア！"
+  },
+  "relic": {
+    "title": "永久の宝物",
+    "coins": "太陽コイン",
+    "draw": "宝物を引く",
+    "drawCost": "太陽コイン{value}枚で宝物を引く",
+    "codex": "宝物図鑑",
+    "needCoins": "太陽コインが足りません。",
+    "drewNew": "{name}を発見！",
+    "drewUp": "{name}がレベル{level}に！",
+    "unlocked": "{name}を開放しました。",
+    "upgraded": "{name}がレベル{level}になりました。",
+    "ownedCard": "{name}、レベル{level}",
+    "lockedCard": "{name}、未開放。選んで購入。",
+    "pickHint": "宝物を選ぶと効果の確認や購入ができます。",
+    "level": "レベル{level}",
+    "notOwned": "未所持 · レベル1の効果",
+    "unlock": "開放 · {value}枚",
+    "upgradeTo": "Lv.{level}へ · {value}枚",
+    "maxed": "最大レベル",
+    "lens": {
+      "name": "露のレンズ",
+      "desc": "鉢のタップを強くします。",
+      "effect": "タップの露 ×{value}"
+    },
+    "sun": {
+      "name": "太陽のペンダント",
+      "desc": "植物の露の生産量を増やします。",
+      "effect": "自動生産 ×{value}"
+    },
+    "moon": {
+      "name": "月光の懐中時計",
+      "desc": "留守中の生産効率と時間を増やします。",
+      "effect": "留守中の効率 +{rate}、上限 +{cap}分"
+    },
+    "bee": {
+      "name": "ミツバチのお守り",
+      "desc": "植物の合成報酬を増やします。",
+      "effect": "合成報酬 ×{value}"
+    },
+    "clover": {
+      "name": "幸運の四つ葉",
+      "desc": "会心タップが出やすくなります。",
+      "effect": "会心率 +{value}"
+    },
+    "thunder": {
+      "name": "雷の種",
+      "desc": "会心タップの威力を増やします。",
+      "effect": "会心倍率 +{value}"
+    },
+    "trowel": {
+      "name": "金のスコップ",
+      "desc": "種の価格を下げます。",
+      "effect": "種の価格 −{value}"
+    },
+    "cloud": {
+      "name": "雨雲",
+      "desc": "代わりに鉢をタップします。",
+      "effect": "自動タップ +{value}/秒"
+    },
+    "lotus": {
+      "name": "転生の蓮",
+      "desc": "転生で得る太陽コインを増やします。",
+      "effect": "転生コイン ×{value}"
+    },
+    "ladybug": {
+      "name": "テントウムシ",
+      "desc": "合成時に無料の芽を植えることがあります。",
+      "effect": "無料の芽の確率 {value}"
+    },
+    "can": {
+      "name": "じょうろ",
+      "desc": "鉢の強化に必要な露を減らします。",
+      "effect": "強化費用 −{value}"
+    },
+    "acorn": {
+      "name": "古代のどんぐり",
+      "desc": "新しい庭の開始時に露を得ます。",
+      "effect": "開始時に露 {value}を獲得"
+    },
+    "buyCard": "{name}を開放 · {value}枚"
+  },
+  "rebirth": {
+    "title": "庭の転生",
+    "coinsGained": "獲得する太陽コイン",
+    "body": "永久ボーナスを持って新しい庭へ。準備ができたら下のボタンで転生を確定します。",
+    "keepTitle": "引き継ぐ",
+    "resetTitle": "リセット",
+    "confirm": "転生を確定",
+    "need": "あと{n}ステージで転生できます。",
+    "keep": {
+      "coins": "コインと累計ボーナス",
+      "relics": "宝物とレベル",
+      "codex": "植物図鑑",
+      "bestStage": "最高ステージと設定"
+    },
+    "reset": {
+      "dew": "所持する露",
+      "plants": "植物と種の価格",
+      "plots": "マスの拡張",
+      "upgrades": "植木鉢の強化",
+      "stage": "現在のステージ"
+    }
   }
 }

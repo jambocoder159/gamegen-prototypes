@@ -32,7 +32,6 @@ export async function preloadMedia(
   onProgress(0);
 
   const images = {} as Record<ImageKey, string | null>;
-  const rawAudio: Partial<Record<AudioKey, ArrayBuffer | null>> = {};
 
   const imageJobs = imageKeys.map(async (key) => {
     images[key] = await loadImage(IMAGES[key]);
@@ -40,7 +39,8 @@ export async function preloadMedia(
   });
 
   const audioJobs = audioKeys.map(async (key) => {
-    rawAudio[key] = await fetchAudio(AUDIO[key]);
+    const raw = await fetchAudio(AUDIO[key]);
+    await audio.decode({ [key]: raw });
     tick();
   });
 
@@ -54,6 +54,5 @@ export async function preloadMedia(
   })();
 
   await Promise.all([...imageJobs, ...audioJobs, fontsJob]);
-  await audio.decode(rawAudio);
   return images;
 }

@@ -1,15 +1,17 @@
-// The 4×4 garden: sixteen real <button> plots. Shared by the play screen
-// (interactive) and the title demo (read-only). The grid measures its container
-// and sizes the square cells to fit, keeping cells ≥ 44px where the space allows.
-// A selected plant lifts + outlines; a freshly merged plant pops and sprays
-// icon_dew droplets (both skipped under reduced motion, but the new plant still
-// appears).
+// The 4×4 garden: sixteen real <button> plots. Plots beyond `unlocked` show the
+// lock icon and are not interactive (they are expanded with dew in the Upgrades
+// dialog). Shared by the play screen (interactive) and the title demo (read-only).
+// The grid measures its container and sizes the square cells to fit, keeping cells
+// ≥ 44px where the space allows. A selected plant lifts + outlines; a freshly
+// merged plant pops and sprays icon_dew droplets (both skipped under reduced
+// motion, but the new plant still appears).
 
 import { useI18n } from '../../i18n';
 import { useElementSize } from '../../platform/useElementSize';
 import { plantImageKey } from '../../config/assets';
-import { PLOT_COUNT } from '../../config/config';
+import { PLOT_COUNT, isPlotUnlocked } from '../../game/config';
 import { Art } from './Art';
+import { useAudio } from '../../platform/AudioContext';
 
 const COLS = 4;
 const ROWS = 4;
@@ -33,6 +35,7 @@ function cellSize(w: number, h: number): number {
 function Plot({
   index,
   level,
+  locked,
   selected,
   interactive,
   popping,
@@ -41,6 +44,7 @@ function Plot({
 }: {
   index: number;
   level: number;
+  locked: boolean;
   selected: boolean;
   interactive: boolean;
   popping: boolean;
@@ -48,28 +52,33 @@ function Plot({
   onTap?: (i: number) => void;
 }) {
   const { t } = useI18n();
+  const { manager } = useAudio();
   const name = level > 0 ? t(`plant.${level}`) : '';
-  const label =
-    level > 0
-      ? (selected
-          ? t('a11y.plotSelected', { n: index + 1, name, level })
-          : t('a11y.plot', { n: index + 1, name, level }))
+  const label = locked
+    ? t('a11y.plotLocked', { n: index + 1 })
+    : level > 0
+      ? selected
+        ? t('a11y.plotSelected', { n: index + 1, name, level })
+        : t('a11y.plot', { n: index + 1, name, level })
       : t('a11y.plotEmpty', { n: index + 1 });
   const showPop = popping && !reduced;
   return (
     <button
       type="button"
-      className={`plot${selected ? ' plot--selected' : ''}`}
+      className={`plot${selected ? ' plot--selected' : ''}${locked ? ' plot--locked' : ''}`}
       data-plot={index}
       data-level={level}
+      data-locked={locked ? 'true' : undefined}
       aria-label={label}
-      aria-pressed={selected}
-      disabled={!interactive}
-      tabIndex={interactive ? 0 : -1}
-      onClick={() => onTap?.(index)}
+      aria-pressed={locked ? undefined : selected}
+      disabled={!interactive || locked}
+      tabIndex={interactive && !locked ? 0 : -1}
+      onPointerEnter={() => interactive && !locked && manager.playSfx('sfxHover')}
+      onClick={() => { if (interactive && !locked) { manager.playSfx('sfxClick'); onTap?.(index); } }}
     >
       <Art imgKey="plot" alt="" className="plot__soil" />
-      {level > 0 && (
+      {locked && <Art imgKey="iconLock" alt="" className="plot__lock" />}
+      {!locked && level > 0 && (
         <span className={`plant${selected ? ' plant--lifted' : ''}${showPop ? ' plant--pop' : ''}`}>
           <Art imgKey={plantImageKey(level)} alt="" className="plant__img" />
         </span>
@@ -93,6 +102,7 @@ function Plot({
 
 export function PlotGrid({
   plots,
+  unlocked = PLOT_COUNT,
   selected,
   interactive,
   reduced,
@@ -101,6 +111,7 @@ export function PlotGrid({
   ariaLabel,
 }: {
   plots: number[];
+  unlocked?: number;
   selected: number | null;
   interactive: boolean;
   reduced: boolean;
@@ -127,6 +138,7 @@ export function PlotGrid({
               key={i}
               index={i}
               level={plots[i] ?? 0}
+              locked={!isPlotUnlocked(i, unlocked)}
               selected={selected === i}
               interactive={interactive}
               popping={popPlot === i}

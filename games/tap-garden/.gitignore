@@ -3,3 +3,5 @@ dist
 qa
 *.zip
 _brief.md
+
+_brief*.md

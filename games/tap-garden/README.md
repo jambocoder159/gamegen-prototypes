@@ -1,82 +1,126 @@
-# Tap Garden （芽芽花園 / タップガーデン）
+# Tap Garden v2 （芽芽花園 / タップガーデン）
 
-A tap / idle + merge game. Tap the smiling magic pot to collect **dew**, spend dew
-on **seeds** that sprout on a random empty plot, **merge** two same-level plants
-into the next tier (1 → 9), and let the garden drip dew on its own — all the way to
-the level-9 **Golden World Tree**. React 19 + TypeScript + Vite, GameGen "noskin"
-platform layout.
+Tap the magic pot for dew, grow and merge nine plant tiers, and buy nine upgrade
+lines. Clear garden stages and plant-gated bosses, then rebirth from stage 10 for
+sun coins. Twelve permanent relics and a +5% lifetime bonus per earned coin make
+later gardens faster. React 19 + TypeScript + Vite; GameGen HTML ZIP layout.
 
-## Run / build / test / pack
+## Run and verify
 
 ```bash
 npm install
-npm run dev            # local dev server
-npm run build          # type-check (strict) + production build to dist/
-npm run check:i18n     # verify the 4 language files share keys and have no empties
-npm run test:headless  # build, serve, drive the real UI in headless Chrome, screenshots → qa/
-npm run pack           # build + write tap-garden.zip (contents of dist/ at the zip root)
+npm run dev
+npm run build           # strict TypeScript + production build
+npm run check:i18n      # four matching, nonempty dictionaries
+npm run test:logic      # actual TypeScript logic bundled with esbuild
+npm run test:sim        # five standard-player runs; asserts economy targets
+npm run test:headless   # builds, serves, drives Chrome; screenshots in qa/
+npm run pack            # builds tap-garden.zip, index.html and poster.png at root
 ```
 
-`npm run preview` serves the built `dist/` on port **4173** (used by the headless
-test). If the port is busy, find the pid with `ss -ltnp` and `kill <pid>` — do not
-pattern-kill.
+`npm run preview` retains port 4173. The headless suite starts its own Vite preview
+on **4175**, configurable with `PORT=4180 npm run test:headless`, and stops only
+its own process. It also tests an isolated `/tap-garden/` mount. If a port is busy,
+inspect `ss -ltnp` and use `kill <pid>` only for a process you own.
+Axe uses `/workspace/deploy/node_modules/axe-core/axe.min.js`; if absent, the suite
+prints an explicit skip. Chrome must be at `/usr/bin/google-chrome`.
 
-## How to play
+## Play
 
-- **Tap the pot** to earn dew (`+tap power` each tap).
-- **Buy seed** drops a level-1 plant on a random empty plot (price rises per seed).
-- **Tap a plant** to select it, then **tap a matching plant** to merge them into the
-  next level. Tap an **empty plot** to move a selected plant. Tap the selection
-  again to cancel.
-- **Tap power** upgrades how much each tap earns.
-- Plants produce dew every second; leave and come back for **offline earnings**
-  (capped at 2 h, at 50%).
-- Reach the **Golden World Tree** (level 9) for a one-time celebration, then keep
-  going endlessly.
+- Tap for dew; buy seeds; select two matching plants to merge. Select a plant
+  then an empty plot to move it. Level 9 unlocks a one-time celebration.
+- Open **Upgrades** for Pot Power, Pot Warmth, Crit Chance, Crit Power, Auto Tap,
+  Fertilizer, Merge Burst, Seed Quality and plot expansion (9→16). Buy ×1 or Max.
+- Stages count earned dew, independently of spending. Every fifth stage also
+  needs a sufficiently high plant. Clearing grants 30 seconds of passive dew.
+- Open **Rebirth** from stage 10, inspect coins and reset/keep lists, and confirm.
+  Dew, plants, expansions, upgrades, stage and seed prices restart. Coins, lifetime
+  bonus, relics, plant collection, best stage, rebirth count and settings persist.
+- **Relics** cost 8 coins for a seeded random draw or 20 for a chosen unlock.
+  Duplicate draws add one level; upgrade prices scale by 1.5 per level. All twelve
+  relics have caps and effect previews in the codex.
+- Offline plants earn at 50% for up to two hours; Moon Watch increases both limits.
+  Ancient Acorn gives starting dew when a new run begins.
 
-### Keyboard
+Keys: **arrows** move plot focus; **Enter/Space** act; **T** taps; **B** buys a seed;
+**G** opens Upgrades; **R** opens Relics; **E** opens Rebirth; **Esc** closes dialogs.
+Dialog focus stays inside and returns to its opener. All purchases announce their
+result. Sound and language controls remain available on the garden and title.
 
-- **Arrow keys** — move focus across the 16 plots
-- **Enter / Space** — select / act on the focused plot (and activate any button)
-- **T** — tap the pot · **B** — buy a seed · **U** — upgrade tap power
-- Every control is a real `<button>` with a localised accessible name; a polite
-  live region announces dew and each action.
+## Economy simulation
 
-## Layout, languages, accessibility
+All game constants are in `src/game/config.ts`. Adopted values:
+`STAGE_BASE=8000`, `STAGE_GROWTH=2`, `REBIRTH_COIN_MULT=10`,
+`LIFETIME_BONUS_PER_COIN=0.05`. Other upgrade and relic formulas follow PLAN §3.
+The higher starting stage goal keeps the first rebirth within 10–20 minutes;
+coin income and lifetime bonuses provide the required later-run acceleration.
 
-- Layout is chosen from the live viewport aspect ratio (portrait / near-square /
-  wide) and re-flows on resize without reload or state loss. Portrait is primary.
-- Four languages (English, 繁體中文, 简体中文, 日本語), switchable live, persisted and
-  validated. Numbers use `Intl.NumberFormat` compact notation (1.2K / 1.2万) so
-  there are no hard-coded suffixes.
-- WCAG 2.2 AA basics: real buttons, visible focus outlines, ≥4.5:1 text contrast
-  (white text on the clay pills carries a dark stroke), `prefers-reduced-motion`
-  disables the floating numbers / pop / bob and freezes the title demo, state
-  changes are announced, nothing relies on colour alone.
+The simulation uses the shipped logic: 4 manual taps/s, immediate merges, and a
+repeated greedy affordable purchase decision every 10 seconds. Auto taps use
+expected crit income; manual crits and seed/relic choices use seeded RNG. At
+stage 10+, rebirth becomes worthwhile when the next stage ETA exceeds 60 seconds
+(or a boss plant requirement blocks it), checked after purchases. Coins are spent
+on weighted greedy relic purchases/upgrades, then draws. An acorn bought after a
+rebirth benefits the following run. This deterministic policy is a balance check,
+not a prediction of human behavior.
 
-## Persistence
+Actual `npm run test:sim` output (minutes rounded to one decimal):
 
-Saved to `localStorage` (key `tap-garden.save`, versioned + validated) every 5 s and
-on `visibilitychange` / `pagehide`. Language and mute are stored under their own
-namespaced keys. **Reset** (with a confirm dialog) clears the save. No network
-calls, analytics, external fonts or third-party scripts.
+| Run | to stage 10 (min) | rebirth at (min) | max stage | sun coins | speed-up to stage 10 |
+|---|---|---|---|---|---|
+| 1 | 10.7 | 10.8 | 10 | 30 | — |
+| 2 | 4.2 | 4.3 | 10 | 30 | 60% |
+| 3 | 2.3 | 4.0 | 12 | 91 | 45% |
+| 4 | 1.0 | 3.3 | 15 | 224 | 56% |
+| 5 | 0.3 | 3.2 | 18 | 517 | 73% |
 
-## Code map
+Upgrade levels at each rebirth:
 
-- `src/config/config.ts` — every tunable number (costs, income, caps, seed).
-- `src/game/logic.ts` — pure, deterministic game logic (tap/buy/merge/move/upgrade/
-  tick/offline) with a seedable RNG; no React/DOM.
-- `src/game/save.ts` — validated load/write/clear.
-- `src/game/useGarden.ts` — React binding: rAF income loop, sfx, events, autosave,
-  offline + celebration.
-- `src/game/{GardenScreen,TitleScreen,LoadingScreen}.tsx` and `src/game/components/*`
-  — UI. `src/platform/*`, `src/services/*`, `src/i18n/*` — reusable platform code.
+| Run | power | warmth | crit | critPower | auto | fert | merge | seed | plots |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 63 | 25 | 22 | 22 | 29 | 37 | 24 | 12 | 12 |
+| 2 | 64 | 25 | 22 | 23 | 30 | 38 | 19 | 11 | 12 |
+| 3 | 73 | 33 | 26 | 27 | 36 | 47 | 27 | 12 | 13 |
+| 4 | 90 | 41 | 35 | 38 | 40 | 58 | 39 | 12 | 14 |
+| 5 | 107 | 50 | 40 | 47 | 40 | 68 | 50 | 12 | 15 |
 
-## Known gaps
+Relic levels at each rebirth (bought with the coins of earlier runs):
 
-- Balance numbers are first-pass (≈15–25 min to the Golden World Tree) and need
-  human play-testing / tuning.
-- Audio is placeholder procedural synthesis awaiting a human ear pass (see
-  `AUDIO_NOTES.md`).
-- `icon_plant_6` ships with a small decorative dew pile baked into the source art;
-  it is used as-is (art is not redrawn).
+| Run | lens | sun | moon | bee | clover | thunder | trowel | cloud | lotus | ladybug | can | acorn |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 2 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 0 | 5 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 4 | 5 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| 5 | 7 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 1 | 0 | 5 |
+| after 5 | 9 | 9 | 0 | 0 | 0 | 0 | 0 | 0 | 6 | 3 | 1 | 7 |
+
+Assertions pass: first rebirth **10.8 min**; successive stage-10 speedups
+**60%, 45%, 56%** through run 4; run 4 reaches **stage 15**.
+
+## Layout, assets and saves
+
+Portrait, near-square and wide layouts update with viewport aspect without losing
+state. Four languages (English, 繁體中文, 简体中文, 日本語) share identical keys and
+switch live. Numbers share K/M/B/T/Qa/Qi/Sx/Sp/Oc/No/Dc, then scientific notation.
+Dialogs scroll internally on short displays; reduced motion disables ambient
+movement and effects. Art and all twelve audio files preload before Enter;
+missing art/audio have placeholders/silence. Fonts are local system fonts.
+
+The save remains at `tap-garden.save`, now **v2**. v1 dew, plant positions,
+collection and seed count migrate; v1 `tapLevel - 1` becomes Pot Power's zero-based
+level. Enough plots unlock to retain every old plant. Each field is validated;
+corrupt JSON or unknown versions reset safely. Autosaves occur every five seconds
+and on page hide. Reset clears all game progress, including coins and relics.
+Storage failures do not prevent play. The title bot uses real logic in memory
+without writing player saves. There is no analytics, tracking or external font.
+
+`src/game/{logic,upgrades,relics,stages,rebirth,save}.ts` implement the systems;
+`useGarden.ts` binds them to React. `src/platform`, `src/services`, `src/i18n` and
+`src/config/assets.ts` own loading, audio, layout, localization and asset paths.
+
+## Remaining human checks
+
+Procedural audio still needs listening review (`AUDIO_NOTES.md`). Balance needs
+human playtesting and physical-device checks. `icon_plant_6` includes a decorative
+dew pile in its supplied art and is used as provided. Nothing is deployed or pushed.

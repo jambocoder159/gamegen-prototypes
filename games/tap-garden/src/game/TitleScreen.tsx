@@ -8,7 +8,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import type { Layout } from '../platform/layout';
-import { newGame, tap, buySeed, merge, tick, canBuySeed, type GameState } from './logic';
+import { newGame, tap, buySeed, merge, tick, derive, hasEmptyPlot, type GameState } from './logic';
+import { buyUpgrade } from './upgrades';
+import { U } from './config';
 import { PlotGrid } from './components/PlotGrid';
 import { Mascot } from './components/Mascot';
 import { Button } from './components/Button';
@@ -31,11 +33,15 @@ function firstMergePair(plots: number[]): [number, number] | null {
   return null;
 }
 
-/** One bot decision: merge a pair, else buy a seed, else tap to earn dew. */
+/** One bot decision: merge a pair, buy a seed or pot power when affordable, else
+ * tap to earn dew. (The same v1 behaviours plus pot-power purchases.) */
 function botStep(s: GameState): GameState {
   const pair = firstMergePair(s.plots);
   if (pair) return merge(s, pair[0], pair[1]).state;
-  if (canBuySeed(s)) return buySeed(s).state;
+  const d = derive(s);
+  if (hasEmptyPlot(s) && s.dew >= d.seedCost) return buySeed(s).state;
+  const powerCost = d.upgrades[U.power].cost;
+  if (s.dew >= powerCost) return buyUpgrade(s, U.power, 'one').state;
   let st = s;
   for (let k = 0; k < 6; k++) st = tap(st).state;
   return st;
@@ -63,11 +69,11 @@ export function TitleScreen({
     const id = window.setInterval(() => {
       let s = stateRef.current;
       const elapsed = (Date.now() - startRef.current) / 1000;
-      if (s.maxLevel >= 5 || elapsed > 60) {
+      if (s.discovered >= 5 || elapsed > 60) {
         s = newGame(s.rng + 1); // vary the seed so each run differs
         startRef.current = Date.now();
       } else {
-        s = tick(botStep(s), DT);
+        s = tick(botStep(s), DT).state;
       }
       stateRef.current = s;
       setPlots(s.plots.slice());

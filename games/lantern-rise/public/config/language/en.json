@@ -1,5 +1,8 @@
 {
-  "lang": { "name": "English", "code": "en" },
+  "lang": {
+    "name": "English",
+    "code": "en"
+  },
   "title": "Lantern Rise",
   "tagline": "Hold to rise, release to fall",
   "loading": "Loading {pct}%",
@@ -26,5 +29,17 @@
     "play": "Play game",
     "fuel": "Fuel remaining",
     "playfield": "Play field. Hold to make the lantern rise."
+  },
+  "oil": "Oil",
+  "lowOil": "Low oil — collect sparks!",
+  "ready": "Get ready",
+  "continue": "Continue",
+  "newGame": "New game",
+  "coach": {
+    "open": "How to play",
+    "skip": "Skip tips",
+    "step1": "Hold the field or Space to rise.",
+    "step2": "Release to gently fall.",
+    "step3": "Follow star sparks to refill oil."
   }
 }

@@ -13,6 +13,8 @@ import { LoadingScreen } from '../ui/LoadingScreen';
 import { TitleScreen } from '../ui/TitleScreen';
 import { GameScreen } from '../ui/GameScreen';
 
+import { loadRun, clearRun } from '../platform/storage';
+
 type Screen = 'loading' | 'title' | 'game';
 
 function Background({ viewport }: { viewport: Viewport }) {
@@ -32,16 +34,20 @@ function Background({ viewport }: { viewport: Viewport }) {
 }
 
 function Stage({ viewport }: { viewport: Viewport }) {
+  const [savedRun, setSavedRun] = useState(() => loadRun());
+  const [resuming, setResuming] = useState(false);
   const [screen, setScreen] = useState<Screen>('loading');
   return (
-    <div className={`lr-root lr-mode-${viewport.mode}`}>
+    <main className={`lr-root lr-mode-${viewport.mode}`}>
       <Background viewport={viewport} />
       {screen === 'loading' && (
         <LoadingScreen progress={1} ready onEnter={() => setScreen('title')} />
       )}
-      {screen === 'title' && <TitleScreen viewport={viewport} onPlay={() => setScreen('game')} />}
-      {screen === 'game' && <GameScreen viewport={viewport} />}
-    </div>
+      {screen === 'title' && <TitleScreen viewport={viewport} hasSavedRun={!!savedRun}
+        onContinue={() => { setResuming(true); setScreen('game'); }}
+        onPlay={() => { clearRun(); setSavedRun(null); setResuming(false); setScreen('game'); }} />}
+      {screen === 'game' && <GameScreen viewport={viewport} initialSim={resuming ? savedRun : null} />}
+    </main>
   );
 }
 

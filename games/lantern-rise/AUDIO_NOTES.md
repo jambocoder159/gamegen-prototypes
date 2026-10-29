@@ -19,3 +19,5 @@ Notes:
 - The gentle looping "whoosh" mentioned as optional in the plan is intentionally **not** used.
 - Sound effects never play during the title demo; only BGM plays once the player has entered.
 - Mute is a persisted toggle (`icon_sound_on` / `icon_sound_off`). All playback reuses buffers decoded once during the preload gate.
+
+The low-oil threshold warning reuses `sfx_hit.mp3` once when oil falls below 25%; refuelling above the threshold rearms it. It follows the sound toggle and stays silent in the title demo.

@@ -11,6 +11,7 @@ function runGame(seed, delay, viewW, lanternXFrac, maxTime, forceCap = false, ce
   const sim = new GameSim(seed);
   sim.setView(viewW, lanternXFrac, ceilingY);
   sim.reset(seed);
+  sim.readyRemaining = 0; // Difficulty measurement excludes the ready countdown.
   if (forceCap) {
     // Pretend the whole difficulty ramp has already elapsed.
     sim.time = Math.max(

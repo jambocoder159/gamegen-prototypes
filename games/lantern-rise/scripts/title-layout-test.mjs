@@ -11,6 +11,7 @@ import { mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { GameSim } from '../src/game/logic.ts';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'lantern-rise';
@@ -36,6 +37,7 @@ const VIEWPORTS = [
   [844, 390],
   [667, 375],
   [390, 844],
+  [375, 812],
   [360, 640],
 ];
 // Tightest viewports are re-checked in every language for text fit.
@@ -157,20 +159,22 @@ async function settle(page) {
   await sleep(350);
 }
 
-async function runViewport(browser, w, h, lang) {
-  const tag = `${w}x${h}${lang === 'en' ? '' : ' ' + lang}`;
+async function runViewport(browser, w, h, lang, saved = false) {
+  const tag = `${w}x${h}${saved ? ' saved run' : ''}${lang === 'en' ? '' : ' ' + lang}`;
   const page = await browser.newPage();
   try {
     await page.evaluateOnNewDocument(
-      (key, value) => {
+      (key, value, snapshot) => {
         try {
           localStorage.setItem(key, value);
+          if (snapshot) localStorage.setItem('lantern-rise.run', JSON.stringify(snapshot));
         } catch {
           /* ignore */
         }
       },
       LANG_KEY,
       lang,
+      saved ? new GameSim(40).snapshot() : null,
     );
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
     await page.goto(BASE_URL, { waitUntil: 'networkidle0' });
@@ -189,7 +193,7 @@ async function runViewport(browser, w, h, lang) {
       check(`${tag} ${screen.id}: fits viewport`, problems.length === 0, problems.slice(0, 6).join(' | '));
       if (lang === 'en') {
         const suffix = screen.id === 'title' ? '' : `_${screen.id}`;
-        await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${suffix}.png`) });
+        await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${saved ? "_saved" : ""}${suffix}.png`) });
       }
       if (i < SCREENS.length - 1) await page.click(`${screen.root} ${screen.primary}`);
     }
@@ -225,8 +229,12 @@ async function main() {
       try {
         for (const [w, h] of VIEWPORTS) {
           await runViewport(browser, w, h, 'en');
+          await runViewport(browser, w, h, 'en', true);
           if (LANG_VIEWPORTS.includes(`${w}x${h}`)) {
-            for (const lang of LANGS.slice(1)) await runViewport(browser, w, h, lang);
+            for (const lang of LANGS.slice(1)) {
+              await runViewport(browser, w, h, lang);
+              await runViewport(browser, w, h, lang, true);
+            }
           }
         }
       } finally {

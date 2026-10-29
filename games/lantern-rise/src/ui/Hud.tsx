@@ -1,18 +1,15 @@
 // In-game HUD: fuel meter (panel_meter frame + a solid fill inside its measured
 // channel) and two info plates (distance, sparks) on panel_pill. The numeric
-// values and the fill width are mutated imperatively by GameCanvas via the
-// forwarded refs, so the HUD never re-renders during play.
+// distance/spark values and fill width use refs; the oil percentage and
+// threshold warning update through React so their accessible state stays in sync.
 
-import { useApp } from '../app/AppContext';
 import { useI18n } from '../i18n';
 import { METER_CHANNEL } from '../config/layout';
 import { AssetImg } from './atoms';
 import type { HudRefs } from './GameCanvas';
 
-export function Hud({ refs }: { refs: HudRefs }) {
+export function Hud({ refs, fuel }: { refs: HudRefs; fuel: number }) {
   const { t } = useI18n();
-  const { images } = useApp();
-  const meter = images.get('panel_meter');
 
   const ch = METER_CHANNEL;
   const channelStyle: React.CSSProperties = {
@@ -23,16 +20,18 @@ export function Hud({ refs }: { refs: HudRefs }) {
   };
 
   return (
-    <div className="lr-hud" aria-hidden="true">
-      <div className="lr-meter-wrap">
-        <div
-          className="lr-meter"
-          style={meter ? { aspectRatio: `${meter.naturalWidth} / ${meter.naturalHeight}` } : undefined}
-        >
+    <div className="lr-hud">
+      <div className={`lr-meter-wrap${fuel < 25 ? ' lr-oil-low' : ''}`}>
+        <div className="lr-oil-label"><span>{t('oil')}</span><strong>{fuel}%</strong></div>
+        <div className="lr-meter" role="progressbar" aria-label={t('a11y.fuel')}
+          aria-valuemin={0} aria-valuemax={100} aria-valuenow={fuel}>
           <AssetImg k="panel_meter" className="lr-meter-frame" />
           <div className="lr-meter-channel" style={channelStyle}>
             <div className="lr-meter-fill" ref={refs.fuelFill} />
           </div>
+        </div>
+        <div className="lr-oil-warning" role="status" aria-live="polite">
+          {fuel < 25 && <><span aria-hidden="true">⚠</span> {t('lowOil')}</>}
         </div>
       </div>
 
@@ -51,6 +50,7 @@ export function Hud({ refs }: { refs: HudRefs }) {
         <div className="lr-pill">
           <AssetImg k="panel_pill" className="lr-pill-bg" />
           <span className="lr-pill-content">
+            <span className="lr-sr-only">{t('sparks')}</span>
             <AssetImg k="icon_spark" className="lr-pill-icon" />
             <span className="lr-pill-value" ref={refs.sparks}>
               0

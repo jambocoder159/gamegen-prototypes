@@ -28,7 +28,6 @@ export function Hand({
             <Button
               className="card"
               dataCard={card.type}
-              ariaLabel={t('a11y.card', { key: i + 1, name, effect, n: card.count })}
               onClick={() => !disabled && onPlay(i)}
             >
               <span className="card__key" aria-hidden="true">
@@ -43,6 +42,7 @@ export function Hand({
               <span className="card__plate">
                 <span className="card__name">{name}</span>
                 <span className="card__effect">{effect}</span>
+                <span className="sr-only">{t('a11y.card', { key: i + 1, n: card.count })}</span>
               </span>
             </Button>
           </li>

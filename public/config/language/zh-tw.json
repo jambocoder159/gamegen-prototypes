@@ -71,7 +71,7 @@
     "tileSelected": "{name}牌，{state}，已選取",
     "tileFree": "可選",
     "tileCovered": "被壓住",
-    "card": "卡片欄 {key}：{name}，{effect}，持有 {n} 張",
+    "card": "欄位 {key}，持有 {n} 張",
     "rewardCard": "{name}：{effect}",
     "help": "點一張自由牌，再點另一張同款自由牌即可消除。配到不同的牌會失去一顆愛心。方向鍵在自由牌之間移動，Enter 或空白鍵選取，按 1 到 4 使用手牌，Z 使用復原，H 使用提示，S 使用洗牌。",
     "match": "配對成功，加 {n} 分。",

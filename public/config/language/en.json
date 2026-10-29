@@ -71,7 +71,7 @@
     "tileSelected": "{name} tile, {state}, selected",
     "tileFree": "free",
     "tileCovered": "covered",
-    "card": "Card slot {key}: {name}, {effect}, {n} held",
+    "card": "slot {key}, {n} held",
     "rewardCard": "{name}: {effect}",
     "help": "Tap a free tile then a second free tile of the same type to clear the pair. Matching a wrong tile loses a heart. Arrow keys move focus between free tiles, Enter or Space selects, keys 1 to 4 play your hand cards, Z plays Undo, H plays Hint, S plays Shuffle.",
     "match": "Matched, plus {n} points.",

@@ -71,7 +71,7 @@
     "tileSelected": "{name}牌，{state}，已选中",
     "tileFree": "可选",
     "tileCovered": "被压住",
-    "card": "卡片栏 {key}：{name}，{effect}，持有 {n} 张",
+    "card": "栏位 {key}，持有 {n} 张",
     "rewardCard": "{name}：{effect}",
     "help": "点一张自由牌，再点另一张同款自由牌即可消除。配到不同的牌会失去一颗爱心。方向键在自由牌之间移动，Enter 或空格键选中，按 1 到 4 使用手牌，Z 使用撤销，H 使用提示，S 使用洗牌。",
     "match": "配对成功，加 {n} 分。",

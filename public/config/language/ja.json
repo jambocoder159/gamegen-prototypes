@@ -71,7 +71,7 @@
     "tileSelected": "{name}牌、{state}、選択中",
     "tileFree": "選択可能",
     "tileCovered": "重なっている",
-    "card": "カード枠 {key}：{name}、{effect}、所持 {n} 枚",
+    "card": "枠 {key}、所持 {n} 枚",
     "rewardCard": "{name}：{effect}",
     "help": "空いた牌をタップし、同じ種類の空いた牌をもう1枚タップするとペアが消えます。違う牌を選ぶとハートを1つ失います。矢印キーで空いた牌の間を移動、Enterまたはスペースで選択、1〜4で手札を使用、Zでもどす、Hでヒント、Sでシャッフルを使います。",
     "match": "ペア成立、{n} 点加算。",

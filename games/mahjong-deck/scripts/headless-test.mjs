@@ -626,7 +626,7 @@ main().catch((e) => {
 
 async function auditAxe(page, label) {
   await page.evaluate(readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8'));
-  const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21aa','wcag22aa'] } })).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(',')}`));
+  const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'] } })).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(',')}`));
   check(`axe ${label}: zero WCAG violations`, violations.length === 0, violations.join(' | '));
 }
 async function gate(page) {
@@ -658,6 +658,20 @@ async function runFixes(browser) {
     await page.setViewport({width:375,height:812});
     await page.click('.btn--play');
     await page.waitForSelector('.coach');
+    // Audit stage-1 PLAY before either starting card is consumed. WCAG 2.1 A
+    // includes label-content-name-mismatch, which must cover the whole card text.
+    for (const lang of ['zh-tw','zh-cn','ja','en']) {
+      await page.click('.game__controls .lang .icon-btn');
+      await page.waitForSelector('.lang__menu');
+      await page.$$eval('.lang__menu .lang__item', (items, index) => items[index].click(), ['en','zh-tw','zh-cn','ja'].indexOf(lang));
+      for (const [width,height] of [[375,812],[1440,900]]) {
+        await page.setViewport({width,height});
+        await page.waitForSelector('.hand [data-card="hint"]', {visible:true});
+        await page.waitForSelector('.hand [data-card="shuffle"]', {visible:true});
+        await auditAxe(page, `${lang} stage-1 play ${width}x${height} with starting cards`);
+      }
+    }
+    await page.setViewport({width:375,height:812});
     check('first-run coach is visible, icon-led and non-blocking',await page.evaluate(() => {
       const coach=document.querySelector('.coach'),r=coach.getBoundingClientRect(), b=document.querySelector('.game__board').getBoundingClientRect();
       return !!coach.querySelector('img') && !!coach.querySelector('[aria-live="polite"]') && (r.bottom<=b.top || r.right<=b.left || r.left>=b.right);
@@ -709,7 +723,7 @@ async function runFixes(browser) {
     // Every locale at the narrowest width with a full four-type hand, including Heal.
     for (const lang of ['en','zh-tw','zh-cn','ja']) {
       const state=await savedState(page);
-      state.hand=[{type:'heal',count:1},{type:'wild',count:1},{type:'shuffle',count:1},{type:'combo',count:1}];state.hearts=2;
+      state.hand=[{type:'heal',count:1},{type:'wild',count:1},{type:'undo',count:1},{type:'combo',count:1}];state.hearts=2;
       await page.goto(BASE_URL,{waitUntil:'networkidle0'});
       await page.waitForSelector('.btn--enter');
       await page.evaluate(({lang,state})=>{localStorage.setItem('mahjong-deck.lang',lang);localStorage.setItem('mahjong-deck.run',JSON.stringify({version:1,state}));},{lang,state});
@@ -721,13 +735,18 @@ async function runFixes(browser) {
         hearts:[...document.querySelectorAll('.hearts__icon')].every(e=>e.getBoundingClientRect().width>=28),
         buttons:[...document.querySelectorAll('.game__controls button')].every(e=>e.getBoundingClientRect().width>=48 && e.getBoundingClientRect().height>=48),
         text:[...document.querySelectorAll('.pill__label,.pill__value,.card__effect,.card__name')].every(e=>e.scrollWidth<=e.clientWidth+1),
-        heal:(()=>{const b=document.querySelector('[data-card="heal"]');return b.title.includes('5') && b.getAttribute('aria-label').includes('5') && b.textContent.includes('5');})()
+        heal:(()=>{const b=document.querySelector('[data-card="heal"]');return b.title.includes('5') && (b.getAttribute('aria-label') ?? b.textContent).includes('5') && b.textContent.includes('5');})()
       }));
       check(`${lang}: HUD sizing, full hand fits 360x640, Heal explained in text/tooltip/aria`,Object.values(metrics).every(Boolean),JSON.stringify(metrics));
       const a=await auditLayout(page);check(`${lang}: full hand stays on screen without overlaps`,!a.clipped&&!a.overlap);
       for(const [width,height] of [[667,375],[844,390],[466,678],[1440,900]]){
         await page.setViewport({width,height});await sleep(80);
         const a=await auditLayout(page);check(`${lang}: full hand fits ${width}x${height}`,!a.clipped&&!a.overlap);
+      }
+      for(const [width,height] of [[375,812],[1440,900]]){
+        await page.setViewport({width,height});
+        await page.waitForSelector('.hand [data-card="heal"]', {visible:true});
+        await auditAxe(page, `${lang} stage-1 play ${width}x${height} with full hand`);
       }
       await page.setViewport({width:360,height:640});
       await page.click('[data-card="heal"]');await sleep(60);
@@ -759,7 +778,11 @@ async function runFixes(browser) {
       await page.waitForSelector('.btn--enter');
       await page.evaluate(({lang,state})=>{localStorage.setItem('mahjong-deck.lang',lang);localStorage.setItem('mahjong-deck.run',JSON.stringify({version:1,state}));},{lang,state});
       await page.reload({waitUntil:'networkidle0'});await gate(page);await page.click('.btn--continue');await page.waitForSelector('.card--reward[data-card="heal"]');
-      check(`${lang}: picker explains Heal cap and restoration`,await page.$eval('.card--reward[data-card="heal"]',b=>b.textContent.includes('5')&&b.getAttribute('aria-label').includes('5')));
+      check(`${lang}: picker explains Heal cap and restoration`,await page.$eval('.card--reward[data-card="heal"]',b=>b.textContent.includes('5')&&(b.getAttribute('aria-label') ?? b.textContent).includes('5')));
+      for(const [width,height] of [[375,812],[1440,900]]){
+        await page.setViewport({width,height});
+        await auditAxe(page, `${lang} reward ${width}x${height}`);
+      }
     }
     await page.click('.card--reward[data-card="heal"]');
     // Force ordinary mismatches through the public tile UI until defeat.

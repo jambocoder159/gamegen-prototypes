@@ -95,8 +95,6 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
     return () => window.removeEventListener('keydown', onKey);
   }, [moveFocus, overlayOpen, g]);
 
-  const buyLabel = t('buttons.buySeedAria', { cost: formatDew(g.seedCost, lang) });
-  const upLabel = t('buttons.upgradeAria', { cost: formatDew(g.upgradeCost, lang) });
 
   return (
     <div className={`garden garden--${layout}`} ref={rootRef}>
@@ -125,7 +123,7 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
       </div>
 
       <div className="garden__controls">
-        <Button className="btn btn--cost btn--buy" onClick={g.buy} dimmed={!g.canBuy} ariaLabel={buyLabel}>
+        <Button className="btn btn--cost btn--buy" onClick={g.buy} dimmed={!g.canBuy}>
           <Art imgKey="iconSeedbag" alt="" className="btn__icon" />
           <span className="btn__label">{t('buttons.buySeed')}</span>
           <span className="btn__cost">
@@ -138,7 +136,6 @@ export function GardenScreen({ layout, reduced }: { layout: Layout; reduced: boo
           className="btn btn--cost btn--upgrade"
           onClick={g.upgrade}
           dimmed={!g.canUpgrade}
-          ariaLabel={upLabel}
         >
           <Art imgKey="iconUpgrade" alt="" className="btn__icon" />
           <span className="btn__label">{t('buttons.upgrade')}</span>

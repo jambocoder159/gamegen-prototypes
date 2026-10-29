@@ -18,7 +18,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = 4173;
+const PORT = Number(process.env.PORT) || 4173;
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -156,7 +156,7 @@ async function main() {
   execSync('npm run build', { cwd: root, stdio: 'inherit' });
 
   console.log('Starting preview…');
-  const server = spawn('npm', ['run', 'preview'], { cwd: root, stdio: 'ignore' });
+  const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore' });
   const cleanup = () => {
     try {
       server.kill('SIGTERM');
@@ -249,6 +249,22 @@ async function runMain(browser) {
     const hasScore = (await page.$('.panel__stars')) !== null && (await page.$('.panel__score')) !== null;
     check('win overlay shows stars + score text', hasScore);
     await page.screenshot({ path: join(qa, 'result.png') });
+    for (const [width, height] of [[844, 390], [667, 375]]) {
+      await page.setViewport({ width, height, deviceScaleFactor: 1 });
+      await sleep(150);
+      const fits = await page.evaluate(() => {
+        const panel = document.querySelector('.panel--win');
+        return panel.scrollHeight <= panel.clientHeight + 1 &&
+          [...panel.querySelectorAll('button, .panel__clerk, h2, p')].every((el) => {
+            const r = el.getBoundingClientRect();
+            return r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
+          });
+      });
+      check(`win art and controls fit ${width}x${height} without scrolling`, fits);
+      await page.screenshot({ path: join(qa, `result-${width}x${height}.png`) });
+    }
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await sleep(150);
     // back to a live game for language/resize checks
     await page.click('.panel--win .btn');
     await page.waitForSelector('.game .board__grid .slot', { timeout: 10000 });

@@ -19,7 +19,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = 4174;
+const PORT = Number(process.env.PORT) || 4174;
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -185,7 +185,7 @@ async function main() {
   execSync('npm run build', { cwd: root, stdio: 'inherit' });
 
   console.log('Starting preview…');
-  const server = spawn('npm', ['run', 'preview'], { cwd: root, stdio: 'ignore' });
+  const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore' });
   const cleanup = () => {
     try {
       server.kill('SIGTERM');
@@ -320,6 +320,22 @@ async function runMain(browser) {
     const choices = await page.$$eval('.card--reward', (els) => els.length);
     check('reward screen offers three cards', choices === 3, `${choices} cards`);
     await page.screenshot({ path: join(qa, 'result.png') });
+    for (const [width, height] of [[844, 390], [667, 375]]) {
+      await page.setViewport({ width, height, deviceScaleFactor: 1 });
+      await sleep(150);
+      const fits = await page.evaluate(() => {
+        const panel = document.querySelector('.panel--reward');
+        return panel.scrollHeight <= panel.clientHeight + 1 &&
+          [...panel.querySelectorAll('button, .panel__dealer, h2, p')].every((el) => {
+            const r = el.getBoundingClientRect();
+            return r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
+          });
+      });
+      check(`reward art and controls fit ${width}x${height} without scrolling`, fits);
+      await page.screenshot({ path: join(qa, `reward-${width}x${height}.png`) });
+    }
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await sleep(150);
     // pick the first reward and confirm it appears in the hand on the next stage
     const picked = await page.$eval('.card--reward', (el) => el.getAttribute('data-card'));
     await page.click('.card--reward');

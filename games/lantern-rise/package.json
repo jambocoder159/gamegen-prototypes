@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "check:i18n": "node scripts/check-i18n.mjs",
+    "test:title": "node scripts/title-layout-test.mjs",
     "test:headless": "node scripts/headless-test.mjs",
     "pack": "node scripts/pack.mjs"
   },

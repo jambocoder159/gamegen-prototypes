@@ -16,7 +16,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = 4173;
+const PORT = Number(process.env.PORT) || 4173;
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -46,7 +46,7 @@ async function main() {
   execSync('npm run build', { cwd: root, stdio: 'inherit' });
 
   console.log('Starting preview…');
-  const server = spawn('npm', ['run', 'preview'], { cwd: root, stdio: 'ignore' });
+  const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore' });
   const cleanup = () => {
     try {
       server.kill('SIGTERM');

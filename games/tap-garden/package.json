@@ -10,6 +10,7 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "test:logic": "node scripts/test-logic.mjs",
     "test:sim": "node scripts/sim-economy.mjs",
+    "test:title": "node scripts/title-layout-test.mjs",
     "test:headless": "node scripts/headless-test.mjs",
     "pack": "node scripts/pack.mjs"
   },

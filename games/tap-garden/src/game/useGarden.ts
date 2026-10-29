@@ -1,86 +1,103 @@
-// React binding around the pure garden logic. Keeps the authoritative state in a
-// ref driven by a requestAnimationFrame passive-income loop, and mirrors it into
-// React state (throttled) so the UI re-renders smoothly without a render per
-// frame. Owns: selection/merge/move, sound effects, a per-second aria-live dew
-// value, pot "bloom" + floating-number cues, the once-only Golden World Tree
-// celebration, offline earnings on load, and autosave.
+// React binding around the pure v2 garden logic. Keeps the authoritative state in
+// a ref driven by a requestAnimationFrame passive-income + auto-tap loop, and
+// mirrors it into React state (throttled) so the UI re-renders smoothly without a
+// render per frame. Owns: selection/merge/move, pot taps + crits, all purchases
+// (upgrades, plots, relics, rebirth), sound effects, a per-second aria-live dew
+// value, pot bloom + crit cues, stage-clear toasts (chest + sfx_stage), the
+// once-only Golden World Tree celebration, offline earnings on load, and autosave.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   newGame,
+  derive,
   tap,
   buySeed,
   merge,
   move,
-  upgradeTap,
   tick,
-  offlineEarnings,
-  incomePerSec,
-  nextSeedCost,
-  nextUpgradeCost,
-  canBuySeed as canBuySeedFn,
-  canUpgrade as canUpgradeFn,
+  applyOffline,
   type GameState,
+  type Derived,
 } from './logic';
+import { buyUpgrade as buyUpgradeFn, buyPlot as buyPlotFn } from './upgrades';
+import { drawRelic as drawRelicFn, buyRelic as buyRelicFn, upgradeRelic as upgradeRelicFn } from './relics';
+import { applyRebirth } from './rebirth';
 import { loadSave, writeSave, clearSave } from './save';
-import { MAX_LEVEL, SAVE_INTERVAL_MS } from '../config/config';
+import { MAX_LEVEL, SAVE_INTERVAL_MS, OFFLINE_MIN_SEC, isPlotUnlocked } from './config';
 import type { AudioManager } from '../platform/audio';
 
 export type EventKind =
-  | 'selected'
-  | 'deselected'
-  | 'moved'
-  | 'merged'
-  | 'bought'
-  | 'upgraded'
-  | 'newMax'
-  | 'full'
-  | 'nothing';
+  | 'selected' | 'deselected' | 'moved' | 'merged' | 'bought'
+  | 'newMax' | 'full' | 'nothing' | 'freeSeed';
 
 export interface GameEvent {
   seq: number;
   kind: EventKind;
   level?: number;
-  plot?: number; // plot that changed (for the merge pop / particles)
+  plot?: number;
+}
+
+export interface StageToast {
+  seq: number;
+  stage: number;
+  chest: number;
+}
+
+export interface TapOutcome {
+  gained: number;
+  crit: boolean;
+}
+
+export interface UpgradeOutcome {
+  ok: boolean;
+  bought: number;
+}
+export interface DrawOutcome {
+  ok: boolean;
+  index: number;
+  newlyOwned: boolean;
+  level: number;
 }
 
 export interface UseGarden {
   snap: GameState;
+  d: Derived;
   selected: number | null;
-  seedCost: number;
-  upgradeCost: number;
-  canBuy: boolean;
-  canUpgrade: boolean;
-  rate: number; // dew per second
-  bloom: number; // increments on a merge / level-up (pot frame 4)
+  bloom: number;
   event: GameEvent | null;
-  liveDew: number; // floored dew, refreshed ~1×/sec for aria-live
-  offline: number | null; // offline earnings to greet with, or null
-  celebrate: boolean; // show the Golden World Tree celebration
-  tapPot: () => number; // returns dew gained (for the floating number)
+  stageToast: StageToast | null;
+  liveDew: number;
+  offline: number | null;
+  celebrate: boolean;
+  tapPot: () => TapOutcome;
   buy: () => void;
-  upgrade: () => void;
+  buyUpgrade: (index: number, mode: 'one' | 'max') => UpgradeOutcome;
+  buyPlot: () => boolean;
+  drawRelic: () => DrawOutcome;
+  buyRelic: (index: number) => boolean;
+  upgradeRelic: (index: number) => boolean;
+  rebirth: () => { ok: boolean; coins: number };
   tapPlot: (i: number) => void;
   dismissOffline: () => void;
   dismissCelebrate: () => void;
+  dismissStageToast: () => void;
   reset: () => void;
 }
 
-const COMMIT_MS = 120; // how often the passive-income loop refreshes the UI
+const COMMIT_MS = 120;
 
 export function useGarden(audio: AudioManager): UseGarden {
-  // Initialise from a save (applying offline earnings) or a fresh garden.
   const init = useMemo(() => {
     const saved = loadSave();
     if (!saved) return { state: newGame(), celebrated: false, offline: null as number | null };
     const elapsed = Math.max(0, (Date.now() - saved.savedAt) / 1000);
     let offline: number | null = null;
     let state = saved.state;
-    if (saved.savedAt > 0 && elapsed > 30) {
-      const earned = offlineEarnings(state, elapsed);
-      if (earned >= 1) {
-        offline = earned;
-        state = { ...state, dew: state.dew + earned };
+    if (saved.savedAt > 0 && elapsed > OFFLINE_MIN_SEC) {
+      const res = applyOffline(state, elapsed);
+      if (res.earned >= 1) {
+        offline = res.earned;
+        state = res.state;
       }
     }
     return { state, celebrated: saved.celebrated, offline };
@@ -93,16 +110,27 @@ export function useGarden(audio: AudioManager): UseGarden {
   const [selected, setSelected] = useState<number | null>(null);
   const [bloom, setBloom] = useState(0);
   const [event, setEvent] = useState<GameEvent | null>(null);
+  const [stageToast, setStageToast] = useState<StageToast | null>(null);
   const [liveDew, setLiveDew] = useState<number>(Math.floor(init.state.dew));
   const [offline, setOffline] = useState<number | null>(init.offline);
   const [celebrate, setCelebrate] = useState<boolean>(
-    init.state.maxLevel >= MAX_LEVEL && !init.celebrated,
+    init.state.discovered >= MAX_LEVEL && !init.celebrated,
   );
   const seqRef = useRef(0);
+  const stageSeqRef = useRef(0);
+  const pendingStageRef = useRef<StageToast | null>(null);
+  const shownStageSeqRef = useRef(0);
 
   const emit = useCallback((kind: EventKind, level?: number, plot?: number) => {
     seqRef.current += 1;
     setEvent({ seq: seqRef.current, kind, level, plot });
+  }, []);
+
+  const noteInfo = useCallback((info: { stageAdvanced: number; chestDew: number }, state: GameState) => {
+    if (info.stageAdvanced > 0) {
+      stageSeqRef.current += 1;
+      pendingStageRef.current = { seq: stageSeqRef.current, stage: state.stage, chest: info.chestDew };
+    }
   }, []);
 
   const commit = useCallback((next: GameState) => {
@@ -111,24 +139,32 @@ export function useGarden(audio: AudioManager): UseGarden {
   }, []);
 
   const maybeCelebrate = useCallback(() => {
-    if (gsRef.current.maxLevel >= MAX_LEVEL && !celebratedRef.current) {
-      setCelebrate(true);
-    }
+    if (gsRef.current.discovered >= MAX_LEVEL && !celebratedRef.current) setCelebrate(true);
   }, []);
 
-  // --- passive income loop (rAF, delta-timed, UI refresh throttled) -----------
+  // --- passive income + auto-tap loop -----------------------------------------
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const frame = (now: number) => {
       let dt = (now - last) / 1000;
       last = now;
-      if (dt > 0.25) dt = 0.25; // cap after a stall/background tab
-      gsRef.current = tick(gsRef.current, dt);
+      if (dt > 0.25) dt = 0.25;
+      const res = tick(gsRef.current, dt);
+      gsRef.current = res.state;
+      if (res.info.stageAdvanced > 0) noteInfo(res.info, res.state);
       raf = requestAnimationFrame(frame);
     };
-    // separate throttled committer so we don't setState every frame
-    const commitTimer = window.setInterval(() => setSnap(gsRef.current), COMMIT_MS);
+    const commitTimer = window.setInterval(() => {
+      setSnap(gsRef.current);
+      const pend = pendingStageRef.current;
+      if (pend && pend.seq !== shownStageSeqRef.current) {
+        shownStageSeqRef.current = pend.seq;
+        setStageToast(pend);
+        audio.playSfx('sfxStage');
+        maybeCelebrate();
+      }
+    }, COMMIT_MS);
     const liveTimer = window.setInterval(() => setLiveDew(Math.floor(gsRef.current.dew)), 1000);
     raf = requestAnimationFrame(frame);
     return () => {
@@ -136,7 +172,7 @@ export function useGarden(audio: AudioManager): UseGarden {
       window.clearInterval(commitTimer);
       window.clearInterval(liveTimer);
     };
-  }, []);
+  }, [audio, noteInfo, maybeCelebrate]);
 
   // --- autosave ---------------------------------------------------------------
   useEffect(() => {
@@ -156,13 +192,18 @@ export function useGarden(audio: AudioManager): UseGarden {
     };
   }, []);
 
-  // --- actions ----------------------------------------------------------------
-  const tapPot = useCallback((): number => {
+  // --- pot / plots ------------------------------------------------------------
+  const tapPot = useCallback((): TapOutcome => {
     const res = tap(gsRef.current);
     commit(res.state);
-    audio.playSfx('sfxTap');
-    return res.gained;
-  }, [audio, commit]);
+    noteInfo(res.info, res.state);
+    if (res.crit) {
+      audio.playSfx('sfxCrit');
+    } else {
+      audio.playSfx('sfxTap');
+    }
+    return { gained: res.gained, crit: res.crit };
+  }, [audio, commit, noteInfo]);
 
   const buy = useCallback(() => {
     const res = buySeed(gsRef.current);
@@ -172,23 +213,13 @@ export function useGarden(audio: AudioManager): UseGarden {
     }
     commit(res.state);
     audio.playSfx('sfxBuy');
-    emit('bought', 1);
-  }, [audio, commit, emit]);
-
-  const upgrade = useCallback(() => {
-    const res = upgradeTap(gsRef.current);
-    if (!res.ok) {
-      emit('nothing');
-      return;
-    }
-    commit(res.state);
-    audio.playSfx('sfxUpgrade');
-    emit('upgraded', res.state.tapLevel);
+    emit('bought', res.level);
   }, [audio, commit, emit]);
 
   const tapPlot = useCallback(
     (i: number) => {
       const s = gsRef.current;
+      if (!isPlotUnlocked(i, s.unlocked)) return;
       const level = s.plots[i];
       if (selected === null) {
         if (level > 0) {
@@ -206,7 +237,6 @@ export function useGarden(audio: AudioManager): UseGarden {
         return;
       }
       if (level === 0) {
-        // move the selected plant onto this empty plot
         const res = move(s, selected, i);
         setSelected(null);
         if (res.ok) {
@@ -217,7 +247,6 @@ export function useGarden(audio: AudioManager): UseGarden {
         return;
       }
       if (level === s.plots[selected]) {
-        // same level → merge
         const res = merge(s, selected, i);
         setSelected(null);
         if (!res.ok) {
@@ -225,6 +254,7 @@ export function useGarden(audio: AudioManager): UseGarden {
           return;
         }
         commit(res.state);
+        noteInfo(res.info, res.state);
         setBloom((b) => b + 1);
         if (res.isNewMax && res.newLevel >= 5) audio.playSfx('sfxBig');
         else audio.playSfx('sfxMerge');
@@ -234,17 +264,77 @@ export function useGarden(audio: AudioManager): UseGarden {
         } else {
           emit('merged', res.newLevel, res.plot);
         }
+        if (res.freeSeed) emit('freeSeed');
         return;
       }
-      // different plant → switch selection to it
       setSelected(i);
       audio.playSfx('sfxTap');
       emit('selected', level);
     },
-    [audio, commit, emit, maybeCelebrate, selected],
+    [audio, commit, emit, maybeCelebrate, noteInfo, selected],
   );
 
+  // --- purchases --------------------------------------------------------------
+  const buyUpgrade = useCallback(
+    (index: number, mode: 'one' | 'max'): UpgradeOutcome => {
+      const res = buyUpgradeFn(gsRef.current, index, mode);
+      if (res.bought === 0) return { ok: false, bought: 0 };
+      commit(res.state);
+      audio.playSfx('sfxUpgrade');
+      return { ok: true, bought: res.bought };
+    },
+    [audio, commit],
+  );
+
+  const buyPlot = useCallback((): boolean => {
+    const res = buyPlotFn(gsRef.current);
+    if (!res.ok) return false;
+    commit(res.state);
+    audio.playSfx('sfxUpgrade');
+    return true;
+  }, [audio, commit]);
+
+  const drawRelic = useCallback((): DrawOutcome => {
+    const res = drawRelicFn(gsRef.current);
+    if (!res.ok) return { ok: false, index: -1, newlyOwned: false, level: 0 };
+    commit(res.state);
+    audio.playSfx('sfxDraw');
+    return { ok: true, index: res.index, newlyOwned: res.newlyOwned, level: res.level };
+  }, [audio, commit]);
+
+  const buyRelic = useCallback(
+    (index: number): boolean => {
+      const res = buyRelicFn(gsRef.current, index);
+      if (!res.ok) return false;
+      commit(res.state);
+      audio.playSfx('sfxBuy');
+      return true;
+    },
+    [audio, commit],
+  );
+
+  const upgradeRelic = useCallback(
+    (index: number): boolean => {
+      const res = upgradeRelicFn(gsRef.current, index);
+      if (!res.ok) return false;
+      commit(res.state);
+      audio.playSfx('sfxUpgrade');
+      return true;
+    },
+    [audio, commit],
+  );
+
+  const rebirth = useCallback((): { ok: boolean; coins: number } => {
+    const res = applyRebirth(gsRef.current);
+    if (!res.ok) return { ok: false, coins: 0 };
+    commit(res.state);
+    setSelected(null);
+    audio.playSfx('sfxRebirth');
+    return { ok: true, coins: res.coins };
+  }, [audio, commit]);
+
   const dismissOffline = useCallback(() => setOffline(null), []);
+  const dismissStageToast = useCallback(() => setStageToast(null), []);
 
   const dismissCelebrate = useCallback(() => {
     celebratedRef.current = true;
@@ -261,33 +351,36 @@ export function useGarden(audio: AudioManager): UseGarden {
     setSelected(null);
     setCelebrate(false);
     setOffline(null);
+    setStageToast(null);
+    pendingStageRef.current = null;
     setLiveDew(0);
     emit('deselected');
   }, [emit]);
 
-  const rate = incomePerSec(snap);
-  const seedCost = nextSeedCost(snap);
-  const upgradeCost = nextUpgradeCost(snap);
+  const d = useMemo(() => derive(snap), [snap]);
 
   return {
     snap,
+    d,
     selected,
-    seedCost,
-    upgradeCost,
-    canBuy: canBuySeedFn(snap),
-    canUpgrade: canUpgradeFn(snap),
-    rate,
     bloom,
     event,
+    stageToast,
     liveDew,
     offline,
     celebrate,
     tapPot,
     buy,
-    upgrade,
+    buyUpgrade,
+    buyPlot,
+    drawRelic,
+    buyRelic,
+    upgradeRelic,
+    rebirth,
     tapPlot,
     dismissOffline,
     dismissCelebrate,
+    dismissStageToast,
     reset,
   };
 }

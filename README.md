@@ -10,7 +10,7 @@
 | 2 | **孔明燈升空** Lantern Rise | 按住上升、放開下沉，避開烏鴉與雷雨雲，吃星火補燈油，飛得越遠越高分。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/lantern-rise/) | [`games/lantern-rise`](games/lantern-rise) |
 | 3 | **夜市麵攤** Noodle Night | 依訂單泡泡點配料做麵、按鈴上餐，連續上對有連擊加成，上錯三次打烊。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/noodle-night/) | [`games/noodle-night`](games/noodle-night) |
 | 4 | **貨架理貨** Shelf Sort | 把亂擺的商品搬到空位，每層擺滿 3 件相同商品，12 關、無限復原。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/shelf-sort/) | [`games/shelf-sort`](games/shelf-sort) |
-| 5 | **芽芽花園** Tap Garden | 點花盆賺露珠、買種子、合成植物，點擊與放置混合，養出金色世界樹。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/tap-garden/) | [`games/tap-garden`](games/tap-garden) |
+| 5 | **芽芽花園** Tap Garden | 點花盆賺露珠，升級花盆、買種子合成、闖關打王；轉生換太陽幣，用 12 件寶物讓下一輪更快。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/tap-garden/) | [`games/tap-garden`](games/tap-garden) |
 | 6 | **麻將牌組** Mahjong Deck | 麻將接龍配對消除＋每關三選一能力卡，撐過五個牌堆。 | [開始玩](https://jambocoder159.github.io/gamegen-prototypes/mahjong-deck/) | [`games/mahjong-deck`](games/mahjong-deck) |
 
 > 這些是原型試玩版：音效為程式合成的佔位版、數值與難度仍在調整，尚未在實機（手機／摺疊機）逐一驗證。

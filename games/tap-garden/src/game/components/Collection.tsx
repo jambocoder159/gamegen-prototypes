@@ -5,7 +5,7 @@
 
 import { useI18n } from '../../i18n';
 import { plantImageKey } from '../../config/assets';
-import { MAX_LEVEL } from '../../config/config';
+import { MAX_LEVEL } from '../../game/config';
 import { Art } from './Art';
 
 export function Collection({ maxLevel }: { maxLevel: number }) {

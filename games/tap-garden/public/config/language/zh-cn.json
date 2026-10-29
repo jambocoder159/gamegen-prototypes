@@ -13,11 +13,14 @@
     "play": "开始游戏",
     "tapPot": "点击魔法花盆收集露珠",
     "buySeed": "买种子",
-    "upgrade": "点击力",
     "reset": "重置",
     "mute": "静音",
     "unmute": "开启音效",
-    "language": "切换语言"
+    "language": "切换语言",
+    "upgrades": "升级",
+    "relics": "宝物",
+    "rebirth": "转生",
+    "close": "关闭"
   },
   "hud": {
     "dew": "露珠",
@@ -52,13 +55,13 @@
   },
   "reset": {
     "title": "重置进度？",
-    "body": "这将清除你的花园、露珠与升级，且无法恢复。",
+    "body": "这会永久清除露珠、植物、升级、阳光币与宝物。",
     "confirm": "重置",
     "cancel": "取消"
   },
   "a11y": {
     "boardLabel": "花园，共 16 格",
-    "help": "点击花盆收集露珠。买下种子后，点选一棵植物再点另一棵相同的植物即可合成下一阶；点选植物后再点空地可以移动。按键：方向键在地块间移动，Enter 或空格键选取与操作，T 点花盆，B 买种子，U 升级点击力。",
+    "help": "点花盆、买种子，选两棵同阶植物即可合成。选植物再点空地可移动。方向键移动焦点，Enter／空格键操作，T 点花盆，B 买种子，G 升级，R 宝物，E 转生，Esc 关闭窗口。",
     "plot": "第 {n} 格：{name}，第 {level} 阶",
     "plotSelected": "第 {n} 格：{name}，第 {level} 阶，已选中",
     "plotEmpty": "第 {n} 格：空地",
@@ -68,10 +71,171 @@
     "merged": "合成为 {name}，第 {level} 阶。",
     "newMax": "发现新植物：{name}，第 {level} 阶！",
     "bought": "种子已种下。",
-    "upgraded": "点击力已升级至第 {level} 阶。",
     "full": "花园已满，或露珠不足。",
     "nothing": "没有任何变化。",
     "dewTotal": "{n} 露珠",
-    "titleDemo": "标题画面：花园正在自动演示。"
+    "titleDemo": "标题画面：花园正在自动演示。",
+    "plotLocked": "第 {n} 格：尚未解锁",
+    "freeSeed": "瓢虫送你一棵免费幼苗。"
+  },
+  "upgrade": {
+    "title": "花盆升级",
+    "amountLabel": "购买数量",
+    "buyOne": "×1",
+    "buyMax": "最大",
+    "level": "等级 {level}",
+    "maxed": "已达上限",
+    "buyCost": "购买{name}，花费 {value} 露珠",
+    "needMore": "还差 {value} 露珠",
+    "bought": "{name}已升至等级 {level}。",
+    "cantAfford": "露珠不足，无法购买{name}。",
+    "plotBought": "已解锁第 {n} 格。",
+    "power": {
+      "name": "花盆力量",
+      "effect": "每次点击 {value} 露珠"
+    },
+    "warmth": {
+      "name": "花盆暖意",
+      "effect": "每次点击加上每秒产量的 {value}"
+    },
+    "crit": {
+      "name": "暴击概率",
+      "effect": "暴击概率 {value}"
+    },
+    "critPower": {
+      "name": "暴击威力",
+      "effect": "暴击 ×{value}"
+    },
+    "auto": {
+      "name": "自动点击",
+      "effect": "每秒自动点击 {value} 次"
+    },
+    "fert": {
+      "name": "肥料",
+      "effect": "被动产量 ×{value}"
+    },
+    "merge": {
+      "name": "合成爆发",
+      "effect": "合成奖励 ×{value}"
+    },
+    "seed": {
+      "name": "种子品质",
+      "effect": "{value} 概率买到 2 阶幼苗"
+    },
+    "plots": {
+      "name": "扩张地块",
+      "effect": "解锁下一格，最多 16 格"
+    }
+  },
+  "stage": {
+    "label": "第 {n} 关",
+    "boss": "首领 · 第 {n} 关",
+    "bossReq": "拥有一棵 {level} 阶植物即可通过首领关。",
+    "reqLevel": "植物 ≥ {level} 阶",
+    "progress": "第 {n} 关：已赚 {earned}／{goal} 露珠",
+    "cleared": "第 {n} 关完成！"
+  },
+  "relic": {
+    "title": "永久宝物",
+    "coins": "阳光币",
+    "draw": "抽宝物",
+    "drawCost": "花 {value} 阳光币抽宝物",
+    "codex": "宝物图鉴",
+    "needCoins": "阳光币不足。",
+    "drewNew": "发现了{name}！",
+    "drewUp": "{name}升至等级 {level}！",
+    "unlocked": "已解锁{name}。",
+    "upgraded": "{name}已升至等级 {level}。",
+    "ownedCard": "{name}，等级 {level}",
+    "lockedCard": "{name}，尚未解锁，点击以购买。",
+    "pickHint": "点击宝物，查看效果或购买解锁。",
+    "level": "等级 {level}",
+    "notOwned": "尚未拥有 · 预览等级 1",
+    "unlock": "解锁 · {value} 币",
+    "upgradeTo": "升至 {level} 级 · {value} 币",
+    "maxed": "已达上限",
+    "lens": {
+      "name": "露珠透镜",
+      "desc": "让每次点击花盆更有力。",
+      "effect": "点击露珠 ×{value}"
+    },
+    "sun": {
+      "name": "太阳吊坠",
+      "desc": "让植物产出更多露珠。",
+      "effect": "被动露珠 ×{value}"
+    },
+    "moon": {
+      "name": "月光怀表",
+      "desc": "离开时，花园也能更久、更高效地产露珠。",
+      "effect": "离线比例 +{rate}；上限 +{cap} 分钟"
+    },
+    "bee": {
+      "name": "蜜蜂护符",
+      "desc": "增加合成植物的奖励。",
+      "effect": "合成奖励 ×{value}"
+    },
+    "clover": {
+      "name": "幸运四叶草",
+      "desc": "让花盆更容易暴击。",
+      "effect": "暴击概率 +{value}"
+    },
+    "thunder": {
+      "name": "雷霆种子",
+      "desc": "增加花盆的暴击威力。",
+      "effect": "暴击倍率 +{value}"
+    },
+    "trowel": {
+      "name": "金铲子",
+      "desc": "买种子更省露珠。",
+      "effect": "种子价格 −{value}"
+    },
+    "cloud": {
+      "name": "小雨云",
+      "desc": "帮你自动点花盆。",
+      "effect": "自动点击 +{value}/秒"
+    },
+    "lotus": {
+      "name": "转生莲花",
+      "desc": "每次转生可获得更多阳光币。",
+      "effect": "转生阳光币 ×{value}"
+    },
+    "ladybug": {
+      "name": "瓢虫",
+      "desc": "合成时有机会送你免费幼苗。",
+      "effect": "免费幼苗概率 {value}"
+    },
+    "can": {
+      "name": "喷壶",
+      "desc": "花盆升级更省露珠。",
+      "effect": "升级成本 −{value}"
+    },
+    "acorn": {
+      "name": "古老橡实",
+      "desc": "每轮开局就有露珠可用。",
+      "effect": "每轮开局获得 {value} 露珠"
+    },
+    "buyCard": "解锁{name} · {value} 币"
+  },
+  "rebirth": {
+    "title": "花园转生",
+    "coinsGained": "可获得阳光币",
+    "body": "带着永久加成，重新种一座花园。准备好后，按下方按钮确认转生。",
+    "keepTitle": "保留",
+    "resetTitle": "重置",
+    "confirm": "确认转生",
+    "need": "再前进 {n} 关即可转生。",
+    "keep": {
+      "coins": "阳光币与累计加成",
+      "relics": "宝物与等级",
+      "codex": "植物图鉴",
+      "bestStage": "最高关卡与设置"
+    },
+    "reset": {
+      "dew": "露珠余额",
+      "plants": "植物与种子价格",
+      "plots": "地块扩张",
+      "upgrades": "花盆升级",
+      "stage": "本轮关卡"
+    }
   }
 }

@@ -4,7 +4,7 @@
 // attribute so automated tests can read the raw value.
 
 import { useI18n } from '../../i18n';
-import { formatDew, formatRate } from '../format';
+import { formatNumber, formatRate } from '../format';
 import { Art } from './Art';
 import type { ImageKey } from '../../config/assets';
 
@@ -46,14 +46,14 @@ export function Stats({
   rate: number;
   className?: string;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   return (
     <div className={className ? `stats ${className}` : 'stats'}>
       <Pill
         plate="pillGold"
         icon="iconDew"
         label={t('hud.dew')}
-        value={formatDew(dew, lang)}
+        value={formatNumber(dew)}
         className="pill--dew"
         dataDew={Math.floor(dew)}
       />
@@ -61,7 +61,7 @@ export function Stats({
         plate="pillGreen"
         icon="iconDew"
         label={t('hud.rate')}
-        value={t('hud.perSec', { n: formatRate(rate, lang) })}
+        value={t('hud.perSec', { n: formatRate(rate) })}
         className="pill--rate"
       />
     </div>

@@ -2,7 +2,7 @@
 // announces the result of each action, and a separate polite region for the dew
 // total (refreshed at most once per second so it does not chatter).
 import { useI18n } from '../../i18n';
-import { formatDew } from '../format';
+import { formatNumber } from '../format';
 import type { GameEvent } from '../useGarden';
 
 export function Help() {
@@ -34,8 +34,8 @@ export function Announcer({ event }: { event: GameEvent | null }) {
       case 'bought':
         message = t('a11y.bought');
         break;
-      case 'upgraded':
-        message = t('a11y.upgraded', { level: event.level ?? 0 });
+      case 'freeSeed':
+        message = t('a11y.freeSeed');
         break;
       case 'full':
         message = t('a11y.full');
@@ -53,10 +53,10 @@ export function Announcer({ event }: { event: GameEvent | null }) {
 }
 
 export function DewLive({ dew }: { dew: number }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   return (
     <div className="sr-only" aria-live="polite" aria-atomic="true">
-      {t('a11y.dewTotal', { n: formatDew(dew, lang) })}
+      {t('a11y.dewTotal', { n: formatNumber(dew) })}
     </div>
   );
 }

@@ -30,10 +30,14 @@ export function TitleScreen({
   layout,
   reduced,
   onPlay,
+  onNewGame,
+  hasRun,
 }: {
   layout: Layout;
   reduced: boolean;
   onPlay: () => void;
+  onNewGame: () => void;
+  hasRun: boolean;
 }) {
   const { t } = useI18n();
   const seedRef = useRef(0x1a2b3c4d);
@@ -69,9 +73,10 @@ export function TitleScreen({
           <p className="title__tagline">{t('game.tagline')}</p>
         </div>
         <div className="title__actions">
-          <Button className="btn btn--primary btn--play" onClick={onPlay}>
-            {t('buttons.play')}
+          <Button className="btn btn--primary btn--play" autoFocus onClick={onPlay}>
+            {t(hasRun ? 'buttons.continue' : 'buttons.play')}
           </Button>
+          {hasRun && <Button className="btn btn--new" onClick={onNewGame}>{t('buttons.newGame')}</Button>}
           <div className="title__icons">
             <LanguageControl />
             <SoundControl />

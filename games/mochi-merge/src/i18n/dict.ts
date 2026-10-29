@@ -17,3 +17,15 @@ export type Dict = { [key: string]: string | Dict };
 export function isLangCode(x: unknown): x is LangCode {
   return typeof x === 'string' && (LANG_CODES as string[]).includes(x);
 }
+
+export function browserLang(languages: readonly string[]): LangCode {
+  for (const value of languages) {
+    const code = value.toLowerCase();
+    if (/^zh(?:-|$)/.test(code)) {
+      return /(?:^|-)(tw|hk|mo|hant)(?:-|$)/.test(code) ? 'zh-tw' : 'zh-cn';
+    }
+    if (/^ja(?:-|$)/.test(code)) return 'ja';
+    if (/^en(?:-|$)/.test(code)) return 'en';
+  }
+  return 'en';
+}

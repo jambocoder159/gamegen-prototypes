@@ -22,10 +22,6 @@
 | panel_cell.png | 584x585 | RGBA transparent |
 | panel_pill_mint.png | 848x205 | RGBA transparent |
 | panel_pill_pink.png | 848x206 | RGBA transparent |
-| seq_mochi_idle_1.png | 291x312 | animation frame (same canvas for all frames in the set); RGBA transparent |
-| seq_mochi_idle_2.png | 291x312 | animation frame (same canvas for all frames in the set); RGBA transparent |
-| seq_mochi_idle_3.png | 291x312 | animation frame (same canvas for all frames in the set); RGBA transparent |
-| seq_mochi_idle_4.png | 291x312 | animation frame (same canvas for all frames in the set); RGBA transparent |
 
 ## audio
 
@@ -35,7 +31,6 @@
 - sfx_merge.mp3 (13 KB)
 - sfx_move.mp3 (3 KB)
 - sfx_over.mp3 (35 KB)
-- sfx_spawn.mp3 (2 KB)
 - sfx_win.mp3 (44 KB)
 
 poster: public/poster.png (720x1280, platform cover, not preloaded)

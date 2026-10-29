@@ -6,8 +6,7 @@
     "tagline": "もちをスライドして合成しよう"
   },
   "loading": {
-    "progress": "読み込み中 {pct}%",
-    "enter": "ゲームを始める"
+    "progress": "読み込み中 {pct}%"
   },
   "buttons": {
     "play": "プレイ",
@@ -16,11 +15,14 @@
     "keepGoing": "つづける",
     "mute": "サウンドをミュート",
     "unmute": "サウンドをオン",
-    "language": "言語を切り替える"
+    "language": "言語を切り替える",
+    "continue": "つづきから"
   },
   "hud": {
     "score": "スコア",
-    "best": "ベスト"
+    "best": "ベスト",
+    "goal": "目標：金龍もち",
+    "progress": "レベル {highest} / {needed}"
   },
   "result": {
     "gameOver": "ゲームオーバー",
@@ -28,7 +30,8 @@
     "winBody": "ドラゴンもちを作りました。さらに高スコアを目指そう！",
     "newBest": "自己ベスト更新！",
     "finalScore": "スコア {score}",
-    "bestScore": "ベスト {best}"
+    "bestScore": "ベスト {best}",
+    "highest": "最高レベル：{name}・{number}"
   },
   "tiers": {
     "1": "しろもち",
@@ -51,5 +54,12 @@
     "boardSummary": "盤面、左上から右下へ：{cells}。",
     "help": "矢印キーまたは W A S D でもちをスライドします。タッチ操作では盤面をスワイプします。",
     "titleDemo": "タイトル画面：コンピューターがデモプレイ中です。"
+  },
+  "coach": {
+    "help": "遊び方",
+    "slide": "スワイプか矢印キー / WASD でもちを動かそう。",
+    "merge": "同じ数字のもちを合わせて、次のレベルへ。",
+    "skip": "ヒントを閉じる",
+    "step": "ヒント {step} / 2"
   }
 }

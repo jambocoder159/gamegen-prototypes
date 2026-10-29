@@ -18,6 +18,7 @@ function TileViewImpl({ tile }: { tile: Tile }) {
     <div
       className="tile"
       aria-hidden
+      data-tier={tile.tier}
       style={{
         width: `${c.w}%`,
         height: `${c.h}%`,
@@ -26,6 +27,7 @@ function TileViewImpl({ tile }: { tile: Tile }) {
     >
       <div className={innerCls}>
         <Art imgKey={tileImageKey(tile.tier) as ImageKey} alt="" className="tile__img" />
+        <span className="tile__number">{tile.tier}</span>
       </div>
     </div>
   );

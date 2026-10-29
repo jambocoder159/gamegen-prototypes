@@ -45,9 +45,9 @@ export function LanguageControl() {
         onClick={() => setOpen((o) => !o)}
       />
       {open && (
-        <ul className="lang__menu" role="menu">
+        <ul className="lang__menu" aria-label={t('buttons.language')}>
           {codes.map((c) => (
-            <li key={c} role="none">
+            <li key={c}>
               <Button
                 className={`lang__item${c === lang ? ' lang__item--active' : ''}`}
                 ariaPressed={c === lang}
@@ -66,14 +66,15 @@ export function LanguageControl() {
   );
 }
 
-/** The three in-game controls as a row/column group. */
-export function Controls({ onRestart, className }: { onRestart: () => void; className?: string }) {
+/** In-game controls. */
+export function Controls({ onRestart, onHelp, className }: { onRestart: () => void; onHelp: () => void; className?: string }) {
   const { t } = useI18n();
   return (
     <div className={className ? `controls ${className}` : 'controls'}>
       <IconButton imgKey="iconRestart" label={t('buttons.restart')} onClick={onRestart} />
       <SoundControl />
       <LanguageControl />
+      <Button className="icon-btn help-btn" ariaLabel={t('coach.help')} onClick={onHelp}>?</Button>
     </div>
   );
 }

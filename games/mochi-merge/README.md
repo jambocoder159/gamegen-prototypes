@@ -1,70 +1,64 @@
 # Mochi Merge (麻糬合成)
 
-Slide the whole 4×4 board; equal mochi collide and merge into the next of nine
-tiers (plain → sakura → matcha → bean → strawberry → mango → taro → star →
-dragon). Reach the golden Dragon mochi to win — then keep going for a higher
-score. Casual, one-handed, portrait-first. React 19 + TypeScript + Vite.
-
-## Run
+Slide the 4×4 board to combine matching numbered mochi. Reach tier 9, the
+Golden Dragon, then keep playing for a higher score. React 19 + TypeScript + Vite.
 
 ```bash
-npm install      # already done in this environment
-npm run dev      # dev server
-npm run build    # type-check (tsc) + production build into dist/
-npm run preview  # serve the production build on :4173
+npm install
+npm run dev -- --port 4221 --strictPort
+npm run build
+PORT=4221 npm run test:headless
+PORT=4221 npm run test:title
+npm run check:i18n
+npm run test:logic
+npm run pack
 ```
 
-The build works from any sub-path (Vite `base: './'`). Assets resolve per-asset
-in the order `?style=` → `commonPath` → `/common/` → local, and a single failed
-asset never breaks the game (image → placeholder, audio → silent, json →
-English).
+The package is `mochi-merge.zip`, with `index.html` and `poster.png` at its root.
+The build uses relative URLs and works below a subfolder; the headless test
+serves it at `/mochi-merge/`. No deployment or network services are required.
 
-## Checks
+After real media preloading, the title appears automatically. Its single Play
+button (click, Enter or Space) unlocks audio and starts the game. A saved run
+changes this to **Continue**, with **New game** alongside it. The title bot uses
+the same game logic, with art and title text in separate layout regions.
 
-```bash
-npm run check:i18n     # all 4 language files share the same non-empty keys
-npm run test:headless  # Puppeteer QA (builds, serves, plays, resizes); writes qa/
-npm run pack           # builds, then writes mochi-merge.zip (dist contents at root)
-```
+Use **arrows / WASD**, or **swipe** at least 24px on the board. Restart, sound,
+language and **?** help are available on screen. First-run coaching appears
+beside/below the board, advances after sliding and merging, and can be skipped
+or reopened with **?**. Every tile keeps its original art and has a high-contrast
+number. The HUD shows score, best and **Goal: Golden Dragon**, with the highest
+tier reached out of 9. Results show the highest tier's name, number and icon,
+final score and best score.
 
-`test:headless` verifies: zero console errors/warnings, zero failed requests,
-the loading gate + enter, a running title demo, real gameplay reaching a result
-screen, all four languages with no text overflow, resize mid-game without reload
-or state loss, and a blocked-image fallback. Screenshots land in `qa/`.
+Language defaults to the first supported entry in `navigator.languages`:
+`zh-TW`, `zh-HK`, `zh-MO` and `zh-Hant*` map to Traditional Chinese;
+`zh-CN`, `zh-SG`, `zh-Hans*` and plain `zh` map to Simplified Chinese;
+`ja*` maps to Japanese and `en*` to English. Unmatched lists fall back to
+English. A validated saved selection overrides the browser. All four languages
+have identical keys and switch live without resetting play.
 
-## Controls
+The versioned `mochi.run` save stores the board, score, best, tile IDs, RNG state,
+move count and keep-going flag after each changed move and on pagehide/visibility
+changes. Validation rejects malformed, oversized, duplicate or inconsistent data;
+storage denial or quota errors leave play usable. Game over and the win banner
+clear the old save; choosing Keep going saves the continued run. New game and
+Restart replace it with a fresh run. Best score and mute choice persist separately.
 
-- **Arrow keys** or **W A S D** — slide up / left / down / right.
-- **Swipe** on the board (touch/pointer), min 24px, dominant axis wins.
-- On-screen buttons: **restart**, **sound** (mute toggle, persisted),
-  **language** (en / 繁中 / 简中 / 日本語, live switch, persisted).
+All controls are keyboard accessible with visible focus outlines and targets
+at least 48px. HUD labels are at least 18px and numbers 28px. The board has a
+screen-reader summary and polite move announcements. Reduced motion stops the
+title demo and tile animations. Layout follows the viewport, respects safe areas,
+and wraps side controls on narrow tablet layouts.
 
-Accessibility: every control is a real focusable `<button>` with a localised
-name and a visible focus ring; moves are announced through an `aria-live`
-region and the board has a hidden text summary; `prefers-reduced-motion` turns
-off slides/pops and the title demo (state still changes visibly); touch targets
-≥ 44px; four languages drive `<html lang>` and the document title.
+QA covers coaching, reload/continuation, invalid saves, browser language defaults,
+all translations, input/audio unlocking, goal and result data, reduced motion,
+image fallback, zero console/request errors, and resize/state preservation.
+`test:title` checks art/text non-overlap and normal/Continue title layouts on
+portrait, landscape and desktop. Headless axe checks title, play, language menu,
+win and result at 375px and 1440px (zero violations required). Screenshots are
+written to `qa/` and `../_reports/fix_mochi-merge_*.png`.
 
-## Layout & art
-
-- **Portrait** (primary): score/best pills on top, board centred, buttons below.
-- **Near-square / wide**: board left-centre, pills + buttons stacked on the
-  right side (never on the vertical centre line).
-
-The board frame (`panel_board.png`) and its cell slots (`panel_cell.png`) are
-aligned using the frame's **measured** inner field — see
-`scripts/measure-board.py`, whose output is baked into `src/config/layout.ts`.
-
-## Scoring
-
-A merge that produces a tile of tier *n* awards `2^n` points (tier 2 = 4 … tier
-9 = 512). After any board-changing move, one tile spawns: tier 1 at 90%, tier 2
-at 10%. All of this lives in the pure, seedable `src/game/logic.ts`, shared by
-the UI, the title bot (`src/game/bot.ts`), and the headless test.
-
-## Known gaps / notes
-
-- Audio is procedural placeholder material awaiting human-ear selection
-  (`AUDIO_NOTES.md`). `sfx_spawn.mp3` was deleted (spawns are silent).
-- Best score persists in `localStorage` (validated); there is no undo, by design.
-- No network calls, analytics, third-party scripts, or external fonts.
+Scoring: merging into tier n gives `2^n` points. Each changed move spawns one
+mochi (90% tier 1, 10% tier 2). There is no undo. Audio remains original
+procedural placeholder material awaiting human listening (`AUDIO_NOTES.md`).

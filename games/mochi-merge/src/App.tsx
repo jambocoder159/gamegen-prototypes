@@ -1,7 +1,7 @@
-// Root: owns the AudioManager, runs the preload gate (languages first so the
+// Root: owns the AudioManager, runs preloading (languages first so the
 // loading screen is localised, then media), wires up the providers, and switches
 // between title and play. Resizing/reduced-motion are read live by child hooks.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AudioManager } from './platform/audio';
 import { AudioProvider } from './platform/AudioContext';
 import { ImagesProvider } from './platform/ImagesContext';
@@ -15,23 +15,30 @@ import { LoadingScreen } from './game/LoadingScreen';
 import { TitleScreen } from './game/TitleScreen';
 import { GameScreen } from './game/GameScreen';
 import { Art } from './game/components/Art';
-
-type Phase = 'loading' | 'ready';
+import { readRun, clearRun } from './game/storage';
+import { useAudio } from './platform/AudioContext';
 
 function GameRoot() {
   const vp = useViewport();
   const reduced = useReducedMotion();
+  const { manager } = useAudio();
+  const [savedRun, setSavedRun] = useState(readRun);
   const [screen, setScreen] = useState<'title' | 'play'>('title');
+  const start = (resume: boolean) => {
+    void manager.resume().then(() => { manager.startBgm(); manager.playSfx('sfxClick'); });
+    if (!resume) { clearRun(); setSavedRun(null); }
+    setScreen('play');
+  };
   const bgKey: ImageKey = vp.layout === 'portrait' ? 'bgPortrait' : 'bgBase';
   return (
-    <div className={`app app--${vp.layout}`}>
+    <main className={`app app--${vp.layout}`}>
       <Art imgKey={bgKey} alt="" className="app__bg" />
       {screen === 'title' ? (
-        <TitleScreen layout={vp.layout} reduced={reduced} onPlay={() => setScreen('play')} />
+        <TitleScreen layout={vp.layout} reduced={reduced} hasRun={!!savedRun} onPlay={() => start(!!savedRun)} onNewGame={() => start(false)} />
       ) : (
-        <GameScreen layout={vp.layout} reduced={reduced} />
+        <GameScreen layout={vp.layout} reduced={reduced} savedRun={savedRun} />
       )}
-    </div>
+    </main>
   );
 }
 
@@ -43,7 +50,6 @@ export function App() {
   const [langs, setLangs] = useState<Record<LangCode, Dict | null> | null>(null);
   const [images, setImages] = useState<Record<ImageKey, string | null> | null>(null);
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<Phase>('loading');
 
   // Step 1: languages (fast) so the loading screen can be localised.
   useEffect(() => {
@@ -70,26 +76,15 @@ export function App() {
 
   useEffect(() => () => audio.dispose(), [audio]);
 
-  const onEnter = async () => {
-    await audio.resume();
-    audio.startBgm();
-    setPhase('ready');
-  };
-
-  const fallbackLangs = useMemo(
-    () => ({ en: null, 'zh-tw': null, 'zh-cn': null, ja: null }) as Record<LangCode, Dict | null>,
-    [],
-  );
-
   if (!langs) {
     return <div className="boot" aria-hidden />;
   }
 
   return (
-    <I18nProvider dicts={langs ?? fallbackLangs}>
+    <I18nProvider dicts={langs}>
       <AudioProvider manager={audio}>
-        {phase === 'loading' || !images ? (
-          <LoadingScreen progress={progress} ready={!!images} onEnter={onEnter} />
+        {!images ? (
+          <LoadingScreen progress={progress} />
         ) : (
           <ImagesProvider images={images}>
             <GameRoot />

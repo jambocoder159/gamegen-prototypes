@@ -6,8 +6,7 @@
     "tagline": "滑動合成麻糬"
   },
   "loading": {
-    "progress": "載入中 {pct}%",
-    "enter": "進入遊戲"
+    "progress": "載入中 {pct}%"
   },
   "buttons": {
     "play": "開始遊戲",
@@ -16,11 +15,14 @@
     "keepGoing": "繼續遊戲",
     "mute": "靜音",
     "unmute": "開啟音效",
-    "language": "切換語言"
+    "language": "切換語言",
+    "continue": "繼續遊戲"
   },
   "hud": {
     "score": "分數",
-    "best": "最高分"
+    "best": "最高分",
+    "goal": "目標：金龍麻糬",
+    "progress": "階級 {highest} / {needed}"
   },
   "result": {
     "gameOver": "遊戲結束",
@@ -28,7 +30,8 @@
     "winBody": "你合成了龍麻糬！繼續挑戰更高分吧！",
     "newBest": "新紀錄！",
     "finalScore": "分數 {score}",
-    "bestScore": "最高分 {best}"
+    "bestScore": "最高分 {best}",
+    "highest": "最高階：{name}・第 {number} 階"
   },
   "tiers": {
     "1": "白麻糬",
@@ -51,5 +54,12 @@
     "boardSummary": "盤面，由左上到右下：{cells}。",
     "help": "使用方向鍵或 W A S D 滑動麻糬。觸控時在盤面上滑動。",
     "titleDemo": "標題畫面：電腦正在自動示範遊戲。"
+  },
+  "coach": {
+    "help": "遊戲說明",
+    "slide": "滑動棋盤，或按方向鍵 / WASD 移動麻糬。",
+    "merge": "讓相同數字的麻糬碰在一起，合成下一階。",
+    "skip": "略過提示",
+    "step": "提示 {step} / 2"
   }
 }

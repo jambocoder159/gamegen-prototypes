@@ -1,0 +1,30 @@
+{
+  "lang": { "name": "简体中文", "code": "zh-CN" },
+  "title": "升灯",
+  "tagline": "按住上升，松开下沉",
+  "loading": "加载中 {pct}%",
+  "enter": "进入游戏",
+  "play": "开始游戏",
+  "pause": "暂停",
+  "resume": "继续",
+  "restart": "重新开始",
+  "paused": "已暂停",
+  "gameOver": "游戏结束",
+  "newBest": "新纪录！",
+  "distance": "距离",
+  "sparks": "星火",
+  "best": "最佳",
+  "metres": "米",
+  "help": "按住屏幕任意处，或按空格键、W、向上键让天灯上升；松开则下沉。按 P 或 Esc 暂停。收集星火补充灯油。",
+  "a11y": {
+    "pause": "暂停游戏",
+    "resume": "继续游戏",
+    "restart": "重新开始游戏",
+    "mute": "静音",
+    "unmute": "开启音效",
+    "language": "切换语言",
+    "play": "开始游戏",
+    "fuel": "剩余灯油",
+    "playfield": "游戏区域。按住让天灯上升。"
+  }
+}

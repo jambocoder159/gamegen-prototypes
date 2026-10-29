@@ -1,0 +1,77 @@
+{
+  "lang": "en",
+  "documentTitle": "Tap Garden",
+  "game": {
+    "title": "Tap Garden",
+    "tagline": "Tap the pot, grow dew, merge your way to the Golden World Tree"
+  },
+  "loading": {
+    "progress": "Loading {pct}%",
+    "enter": "Enter game"
+  },
+  "buttons": {
+    "play": "Play",
+    "tapPot": "Tap the magic pot to collect dew",
+    "buySeed": "Buy seed",
+    "upgrade": "Tap power",
+    "reset": "Reset",
+    "mute": "Mute sound",
+    "unmute": "Unmute sound",
+    "language": "Change language"
+  },
+  "hud": {
+    "dew": "Dew",
+    "rate": "Per second",
+    "perSec": "{n}/s"
+  },
+  "plant": {
+    "1": "Seedling",
+    "2": "Clover",
+    "3": "Daisy",
+    "4": "Tulip",
+    "5": "Sunflower",
+    "6": "Toadstool",
+    "7": "Cactus Flower",
+    "8": "Bonsai",
+    "9": "Golden World Tree"
+  },
+  "dex": {
+    "title": "Plant collection",
+    "found": "{name}: discovered",
+    "missing": "{name}: not discovered yet"
+  },
+  "offline": {
+    "title": "Welcome back!",
+    "body": "Your garden kept dripping dew while you were away.",
+    "collect": "Collect"
+  },
+  "celebrate": {
+    "title": "Golden World Tree!",
+    "body": "You grew the legendary Golden World Tree. The garden keeps growing — enjoy!",
+    "continue": "Keep growing"
+  },
+  "reset": {
+    "title": "Reset progress?",
+    "body": "This clears your garden, dew and upgrades. It cannot be undone.",
+    "confirm": "Reset",
+    "cancel": "Cancel"
+  },
+  "a11y": {
+    "boardLabel": "Garden, 16 plots",
+    "help": "Tap the pot to collect dew. Buy seeds, then tap a plant to select it and tap a matching plant to merge them into the next level. Tap an empty plot to move a selected plant. Keys: arrow keys move between plots, Enter or Space select and act, T taps the pot, B buys a seed, U upgrades tap power.",
+    "plot": "Plot {n}: {name}, level {level}",
+    "plotSelected": "Plot {n}: {name}, level {level}, selected",
+    "plotEmpty": "Plot {n}: empty",
+    "selected": "Selected {name}, level {level}.",
+    "deselected": "Selection cleared.",
+    "moved": "Plant moved.",
+    "merged": "Merged into {name}, level {level}.",
+    "newMax": "New plant discovered: {name}, level {level}!",
+    "bought": "Seed planted.",
+    "upgraded": "Tap power upgraded to level {level}.",
+    "full": "The garden is full or you need more dew.",
+    "nothing": "Nothing happened.",
+    "dewTotal": "{n} dew",
+    "titleDemo": "Title screen: the garden is playing itself."
+  }
+}

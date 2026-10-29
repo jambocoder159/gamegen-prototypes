@@ -1,0 +1,81 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { initAssetRoots } from '../services/assets';
+import { preloadAll, loadLanguages } from '../platform/loader';
+import { initI18n } from '../i18n/index';
+import { audio } from '../platform/audio';
+import { AssetsContext, type ImageMap } from './assets-context';
+import { LoadingScreen } from './LoadingScreen';
+import { TitleScreen } from './TitleScreen';
+import { GameScreen } from './GameScreen';
+import { useImages, imgUrl } from './assets-context';
+import { useViewport } from '../platform/layout';
+
+type Phase = 'loading' | 'title' | 'game';
+
+function Background() {
+  const images = useImages();
+  const { mode } = useViewport();
+  const url = imgUrl(images, mode === 'portrait' ? 'bg_portrait' : 'bg_base');
+  return (
+    <div
+      className="bg"
+      aria-hidden="true"
+      style={url ? { backgroundImage: `url("${url}")` } : undefined}
+    />
+  );
+}
+
+export function App() {
+  const [phase, setPhase] = useState<Phase>('loading');
+  const [progress, setProgress] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [images, setImages] = useState<ImageMap>({});
+  const [seed, setSeed] = useState(1);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    (async () => {
+      await initAssetRoots();
+      initI18n(await loadLanguages());
+      const result = await preloadAll(setProgress);
+      await audio.prepare(result.audioData);
+      setImages(result.images);
+      setReady(true);
+    })().catch(() => {
+      // even on unexpected failure, let the player in (assets fall back individually)
+      setReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    const onVis = () => audio.setHidden(document.hidden);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  const enter = useCallback(() => {
+    void audio.resume();
+    audio.startBgm();
+    setPhase('title');
+  }, []);
+
+  const play = useCallback(() => {
+    setSeed((performance.now() * 1000) % 2147483647 | 0 || 1);
+    setPhase('game');
+  }, []);
+
+  return (
+    <AssetsContext.Provider value={images}>
+      <div className="app">
+        <Background />
+        {phase === 'loading' && (
+          <LoadingScreen progress={progress} ready={ready} onEnter={enter} />
+        )}
+        {phase === 'title' && <TitleScreen onPlay={play} />}
+        {phase === 'game' && <GameScreen seed={seed} />}
+      </div>
+    </AssetsContext.Provider>
+  );
+}

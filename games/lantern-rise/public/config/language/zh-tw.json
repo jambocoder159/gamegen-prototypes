@@ -1,0 +1,30 @@
+{
+  "lang": { "name": "繁體中文", "code": "zh-TW" },
+  "title": "升燈",
+  "tagline": "按住上升，放開下沉",
+  "loading": "載入中 {pct}%",
+  "enter": "進入遊戲",
+  "play": "開始遊戲",
+  "pause": "暫停",
+  "resume": "繼續",
+  "restart": "重新開始",
+  "paused": "已暫停",
+  "gameOver": "遊戲結束",
+  "newBest": "新紀錄！",
+  "distance": "距離",
+  "sparks": "星火",
+  "best": "最佳",
+  "metres": "公尺",
+  "help": "按住畫面任意處，或按空白鍵、W、向上鍵讓天燈上升；放開則下沉。按 P 或 Esc 暫停。收集星火補充燈油。",
+  "a11y": {
+    "pause": "暫停遊戲",
+    "resume": "繼續遊戲",
+    "restart": "重新開始遊戲",
+    "mute": "靜音",
+    "unmute": "開啟音效",
+    "language": "切換語言",
+    "play": "開始遊戲",
+    "fuel": "剩餘燈油",
+    "playfield": "遊戲區域。按住讓天燈上升。"
+  }
+}

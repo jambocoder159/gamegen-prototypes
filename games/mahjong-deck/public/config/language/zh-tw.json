@@ -1,0 +1,98 @@
+{
+  "lang": "zh-TW",
+  "documentTitle": "麻將牌組",
+  "game": {
+    "title": "麻將牌組",
+    "tagline": "配對消牌、每關選卡、清光五座牌堆"
+  },
+  "loading": {
+    "progress": "載入中 {pct}%",
+    "enter": "進入遊戲"
+  },
+  "buttons": {
+    "play": "開始遊戲",
+    "restart": "重新開始",
+    "playAgain": "再玩一次",
+    "retry": "再試一次",
+    "mute": "關閉音效",
+    "unmute": "開啟音效",
+    "language": "切換語言"
+  },
+  "hud": {
+    "stage": "關卡",
+    "score": "分數",
+    "hearts": "愛心：{n}",
+    "combo": "連擊 ×{n}",
+    "wild": "萬用就緒"
+  },
+  "tiles": {
+    "bamboo": "竹",
+    "dots": "餅",
+    "coin": "錢幣",
+    "koi": "錦鯉",
+    "peach": "蜜桃",
+    "plum": "梅花",
+    "orchid": "蘭花",
+    "lantern": "燈籠",
+    "fan": "扇子",
+    "crane": "仙鶴",
+    "pagoda": "寶塔",
+    "moon": "月亮",
+    "sun": "太陽",
+    "tea": "茶",
+    "dragon": "龍",
+    "cat": "貓"
+  },
+  "cards": {
+    "hint": { "name": "提示", "effect": "顯示一組可消的牌" },
+    "shuffle": { "name": "洗牌", "effect": "重新洗牌" },
+    "undo": { "name": "復原", "effect": "放回上一對牌" },
+    "wild": { "name": "萬用", "effect": "下次可配任意兩張" },
+    "heal": { "name": "治癒", "effect": "回復一顆愛心" },
+    "combo": { "name": "連擊", "effect": "接下來三次得分 ×2" }
+  },
+  "reward": {
+    "title": "過關！",
+    "pick": "選一張卡加入手牌"
+  },
+  "notice": {
+    "covered": "這張牌被蓋住了",
+    "side": "左右兩側都被擋住了"
+  },
+  "victory": {
+    "title": "全數通關！",
+    "score": "最終分數 {n}",
+    "best": "最佳 {n}"
+  },
+  "defeat": {
+    "title": "愛心用盡",
+    "retry": "再試一次"
+  },
+  "a11y": {
+    "boardLabel": "牌堆",
+    "handLabel": "能力卡",
+    "tile": "{name}牌，{state}",
+    "tileSelected": "{name}牌，{state}，已選取",
+    "tileFree": "可選",
+    "tileCovered": "被壓住",
+    "tileBlocked": "左右都被擋住",
+    "card": "欄位 {key}，持有 {n} 張",
+    "rewardCard": "{name}：{effect}",
+    "help": "上方沒被蓋住，且左邊或右邊至少一側沒有緊貼的牌，才能點。點一張可點的牌，再點另一張同款可點的牌即可消除。點到被擋住的牌不會有任何損失。配到兩張不同的牌才會失去一顆愛心。方向鍵在可點的牌之間移動，Enter 或空白鍵選取，按 1 到 4 使用手牌，Z 使用復原，H 使用提示，S 使用洗牌。",
+    "match": "配對成功，加 {n} 分。",
+    "mismatch": "配對錯誤，剩 {n} 顆愛心。",
+    "stageClear": "過關，獎勵 {n} 分，請選一張卡。",
+    "reshuffleCard": "沒有可配的牌，洗牌卡已重新洗牌。",
+    "reshuffleHeart": "沒有可配的牌，已重新洗牌，剩 {n} 顆愛心。",
+    "noPair": "未使用卡片。",
+    "cardHint": "提示：已標示一組可配的牌。",
+    "cardShuffle": "已重新洗牌。",
+    "cardUndo": "已放回上一對牌。",
+    "cardWild": "萬用就緒：下次配對可選任意兩張。",
+    "cardCombo": "連擊卡：接下來三次配對分數加倍。",
+    "heal": "已回復，{n} 顆愛心。",
+    "victory": "你清光了全部五座牌堆。",
+    "defeat": "愛心用盡，遊戲結束。",
+    "titleDemo": "標題畫面：遊戲正在自動示範。"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "lang": "ja",
+  "documentTitle": "麻雀デッキ",
+  "game": {
+    "title": "麻雀デッキ",
+    "tagline": "ペアを消し、カードを選び、5つの山を崩そう"
+  },
+  "loading": {
+    "progress": "読み込み中 {pct}%",
+    "enter": "ゲームを始める"
+  },
+  "buttons": {
+    "play": "プレイ",
+    "restart": "やり直す",
+    "playAgain": "もう一度遊ぶ",
+    "retry": "再挑戦",
+    "mute": "音を消す",
+    "unmute": "音を出す",
+    "language": "言語を変更"
+  },
+  "hud": {
+    "stage": "ステージ",
+    "score": "スコア",
+    "hearts": "ハート：{n}",
+    "combo": "コンボ ×{n}",
+    "wild": "ワイルド準備完了"
+  },
+  "tiles": {
+    "bamboo": "竹",
+    "dots": "筒",
+    "coin": "コイン",
+    "koi": "鯉",
+    "peach": "桃",
+    "plum": "梅",
+    "orchid": "蘭",
+    "lantern": "提灯",
+    "fan": "扇",
+    "crane": "鶴",
+    "pagoda": "塔",
+    "moon": "月",
+    "sun": "太陽",
+    "tea": "茶",
+    "dragon": "龍",
+    "cat": "猫"
+  },
+  "cards": {
+    "hint": { "name": "ヒント", "effect": "揃うペアを表示" },
+    "shuffle": { "name": "シャッフル", "effect": "牌をシャッフル" },
+    "undo": { "name": "もどす", "effect": "直前のペアを戻す" },
+    "wild": { "name": "ワイルド", "effect": "次は任意の2枚" },
+    "heal": { "name": "回復", "effect": "ハートを1つ回復" },
+    "combo": { "name": "コンボ", "effect": "次の3回 得点×2" }
+  },
+  "reward": {
+    "title": "ステージクリア！",
+    "pick": "手札に加えるカードを選ぼう"
+  },
+  "notice": {
+    "covered": "この牌は上に重なられています",
+    "side": "左右の両側がふさがっています"
+  },
+  "victory": {
+    "title": "全ステージ制覇！",
+    "score": "最終スコア {n}",
+    "best": "ベスト {n}"
+  },
+  "defeat": {
+    "title": "ハートが尽きた",
+    "retry": "再挑戦"
+  },
+  "a11y": {
+    "boardLabel": "牌の山",
+    "handLabel": "能力カード",
+    "tile": "{name}牌、{state}",
+    "tileSelected": "{name}牌、{state}、選択中",
+    "tileFree": "選択可能",
+    "tileCovered": "重なっている",
+    "tileBlocked": "左右がふさがっている",
+    "card": "枠 {key}、所持 {n} 枚",
+    "rewardCard": "{name}：{effect}",
+    "help": "上に牌が重なっておらず、左か右の少なくとも一方に接する牌がなければ選べます。選べる牌をタップし、同じ種類の選べる牌をもう1枚タップするとペアが消えます。ふさがった牌をタップしても損はしません。違う牌を2枚選ぶとハートを1つ失います。矢印キーで選べる牌の間を移動、Enterまたはスペースで選択、1〜4で手札を使用、Zでもどす、Hでヒント、Sでシャッフルを使います。",
+    "match": "ペア成立、{n} 点加算。",
+    "mismatch": "ペア失敗、残りハート {n}。",
+    "stageClear": "ステージクリア、ボーナス {n} 点。カードを選んでください。",
+    "reshuffleCard": "手がありません。シャッフルカードで並べ直しました。",
+    "reshuffleHeart": "手がありません。並べ直し、残りハート {n}。",
+    "noPair": "カードは使われませんでした。",
+    "cardHint": "ヒント：揃うペアを表示しました。",
+    "cardShuffle": "牌を並べ直しました。",
+    "cardUndo": "直前のペアを戻しました。",
+    "cardWild": "ワイルド準備完了：次のペアは任意の2枚で成立します。",
+    "cardCombo": "コンボカード：次の3回のペアは得点が2倍。",
+    "heal": "回復、ハート {n}。",
+    "victory": "5つの山をすべて崩しました。",
+    "defeat": "ハートが尽きました。ゲームオーバー。",
+    "titleDemo": "タイトル画面：ゲームが自動で進行しています。"
+  }
+}

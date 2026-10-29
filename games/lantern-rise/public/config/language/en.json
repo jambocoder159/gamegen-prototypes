@@ -1,0 +1,30 @@
+{
+  "lang": { "name": "English", "code": "en" },
+  "title": "Lantern Rise",
+  "tagline": "Hold to rise, release to fall",
+  "loading": "Loading {pct}%",
+  "enter": "Enter game",
+  "play": "Play",
+  "pause": "Pause",
+  "resume": "Resume",
+  "restart": "Restart",
+  "paused": "Paused",
+  "gameOver": "Game Over",
+  "newBest": "New Best!",
+  "distance": "Distance",
+  "sparks": "Sparks",
+  "best": "Best",
+  "metres": "m",
+  "help": "Hold anywhere, or press Space, W or Up Arrow to rise. Release to fall. Press P or Esc to pause. Collect sparks to refuel.",
+  "a11y": {
+    "pause": "Pause game",
+    "resume": "Resume game",
+    "restart": "Restart game",
+    "mute": "Mute sound",
+    "unmute": "Unmute sound",
+    "language": "Change language",
+    "play": "Play game",
+    "fuel": "Fuel remaining",
+    "playfield": "Play field. Hold to make the lantern rise."
+  }
+}

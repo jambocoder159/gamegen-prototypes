@@ -1,0 +1,10 @@
+{
+  "name": "gamegen-prototypes",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GameGen prototype catalog: six playable HTML5 games",
+  "scripts": {
+    "test:catalog": "node scripts/test-catalog.mjs"
+  },
+  "devDependencies": { "axe-core": "^4.10.0", "puppeteer-core": "^24.0.0" }
+}

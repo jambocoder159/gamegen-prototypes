@@ -1,0 +1,98 @@
+{
+  "lang": "en",
+  "documentTitle": "Mahjong Deck",
+  "game": {
+    "title": "Mahjong Deck",
+    "tagline": "Match pairs, pick a card, clear five stacks"
+  },
+  "loading": {
+    "progress": "Loading {pct}%",
+    "enter": "Enter game"
+  },
+  "buttons": {
+    "play": "Play",
+    "restart": "Restart",
+    "playAgain": "Play again",
+    "retry": "Try again",
+    "mute": "Mute sound",
+    "unmute": "Unmute sound",
+    "language": "Change language"
+  },
+  "hud": {
+    "stage": "Stage",
+    "score": "Score",
+    "hearts": "Hearts: {n}",
+    "combo": "Combo ×{n}",
+    "wild": "Wild ready"
+  },
+  "tiles": {
+    "bamboo": "Bamboo",
+    "dots": "Dots",
+    "coin": "Coin",
+    "koi": "Koi",
+    "peach": "Peach",
+    "plum": "Plum",
+    "orchid": "Orchid",
+    "lantern": "Lantern",
+    "fan": "Fan",
+    "crane": "Crane",
+    "pagoda": "Pagoda",
+    "moon": "Moon",
+    "sun": "Sun",
+    "tea": "Tea",
+    "dragon": "Dragon",
+    "cat": "Cat"
+  },
+  "cards": {
+    "hint": { "name": "Hint", "effect": "Show a matching pair" },
+    "shuffle": { "name": "Shuffle", "effect": "Reshuffle the tiles" },
+    "undo": { "name": "Undo", "effect": "Restore the last pair" },
+    "wild": { "name": "Wild", "effect": "Match any two tiles once" },
+    "heal": { "name": "Heal", "effect": "Gain one heart" },
+    "combo": { "name": "Combo", "effect": "Next 3 matches ×2" }
+  },
+  "reward": {
+    "title": "Stage cleared!",
+    "pick": "Choose a card to add to your hand"
+  },
+  "notice": {
+    "covered": "This tile is covered",
+    "side": "Both sides are blocked"
+  },
+  "victory": {
+    "title": "All stacks cleared!",
+    "score": "Final score {n}",
+    "best": "Best {n}"
+  },
+  "defeat": {
+    "title": "Out of hearts",
+    "retry": "Try again"
+  },
+  "a11y": {
+    "boardLabel": "Tile stack",
+    "handLabel": "Ability cards",
+    "tile": "{name} tile, {state}",
+    "tileSelected": "{name} tile, {state}, selected",
+    "tileFree": "free",
+    "tileCovered": "covered",
+    "tileBlocked": "blocked on both sides",
+    "card": "slot {key}, {n} held",
+    "rewardCard": "{name}: {effect}",
+    "help": "A tile is playable when nothing covers it from above and at least one side, left or right, has no tile touching it. Tap a playable tile then a second playable tile of the same type to clear the pair. Tapping a blocked tile costs nothing. Matching two different tiles loses a heart. Arrow keys move focus between playable tiles, Enter or Space selects, keys 1 to 4 play your hand cards, Z plays Undo, H plays Hint, S plays Shuffle.",
+    "match": "Matched, plus {n} points.",
+    "mismatch": "Wrong pair, {n} hearts left.",
+    "stageClear": "Stage cleared, bonus {n} points. Choose a card.",
+    "reshuffleCard": "No moves left. A shuffle card reshuffled the tiles.",
+    "reshuffleHeart": "No moves left. Tiles reshuffled, {n} hearts left.",
+    "noPair": "No card played.",
+    "cardHint": "Hint: a matching pair is highlighted.",
+    "cardShuffle": "Tiles reshuffled.",
+    "cardUndo": "Last pair restored.",
+    "cardWild": "Wild ready: your next match can be any two tiles.",
+    "cardCombo": "Combo card: the next three matches score double.",
+    "heal": "Healed, {n} hearts.",
+    "victory": "You cleared all five stacks.",
+    "defeat": "Out of hearts. Game over.",
+    "titleDemo": "Title screen: the game is playing itself."
+  }
+}

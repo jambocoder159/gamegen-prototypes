@@ -14,11 +14,11 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'noodle-night';
-const DEFAULT_PORT = 4183;
+const DEFAULT_PORT = 4223;
 const LANG_KEY = 'noodle_night_lang';
 const SCREENS = [
   { id: 'gate', root: '.loading-screen', primary: '.enter-btn', art: ['.loading-logo img', '.loading-logo .logo-fallback'], text: ['.loading-screen .game-title', '.enter-btn'] },
-  { id: 'title', root: '.title-screen', demo: '.demo-field', primary: '.play-btn', art: ['.title-logo', '.title-brand .logo-fallback'], text: ['.title-screen .game-title', '.game-tagline', '.play-btn'] },
+  { id: 'title', root: '.title-screen', demo: '.demo-field', primary: '.play-btn', art: ['.title-logo', '.title-brand .logo-fallback'], text: ['.title-screen .game-title', '.game-tagline', '.title-best', '.play-btn'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -133,6 +133,14 @@ function measure(screen) {
       if (!inside(r)) problems.push(`text ${sel} outside viewport ${fmt(r)}`);
     }
   }
+  if (screen.id === 'title') {
+    const art = document.querySelector('.title-logo, .title-brand .logo-fallback')?.getBoundingClientRect();
+    for (const text of document.querySelectorAll('.title-copy > *')) {
+      const r = text.getBoundingClientRect();
+      if (art && r.left < art.right && r.right > art.left && r.top < art.bottom && r.bottom > art.top)
+        problems.push('title copy overlaps title art');
+    }
+  }
   // Independently positioned artwork and copy must not collide even if each
   // rectangle fits inside the viewport.
   const foreground = [...new Set([...screen.art, ...screen.text].flatMap((sel) => [...document.querySelectorAll(sel)]))].filter(visible);
@@ -197,6 +205,18 @@ async function runViewport(browser, w, h, lang, fallback = false) {
         await page.screenshot({ path: join(reports, `title_${GAME}_${w}x${h}${suffix}${fallback ? '_fallback' : ''}.png`) });
       }
       if (i < SCREENS.length - 1) await page.click(`${screen.root} ${screen.primary}`);
+    }
+    if (!fallback) {
+      await page.click('.play-btn');
+      await page.waitForSelector('.game-screen');
+      await page.keyboard.press('1');
+      await page.reload();
+      await page.waitForSelector('.enter-btn');
+      await page.click('.enter-btn');
+      await page.waitForSelector('.continue-btn');
+      await settle(page);
+      const problems = await page.evaluate(measure, SCREENS[1]);
+      check(`${tag} title with Continue: fits viewport`, problems.length === 0, problems.slice(0, 6).join(' | '));
     }
   } finally {
     await page.close();

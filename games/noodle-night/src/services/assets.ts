@@ -49,9 +49,13 @@ export async function initAssetRoots(): Promise<void> {
   try {
     const res = await fetch(base + 'config/generalConfiguration.json', { cache: 'no-cache' });
     if (res.ok) {
-      const cfg = (await res.json()) as { commonPath?: unknown };
+      const cfg = (await res.json()) as { commonPath?: unknown; isLocal?: unknown };
       if (cfg && typeof cfg.commonPath === 'string' && cfg.commonPath) {
-        list.push(withSlash(cfg.commonPath));
+        // Local configuration paths belong to this game's base, including when
+        // the ZIP is hosted below /noodle-night/. Remote/shared roots stay intact.
+        const common = cfg.isLocal === true && !/^(https?:)?\/\//i.test(cfg.commonPath)
+          ? base + cfg.commonPath.replace(/^\/+/, '') : cfg.commonPath;
+        list.push(withSlash(common));
       }
     }
   } catch {

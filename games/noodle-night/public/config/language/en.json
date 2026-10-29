@@ -32,7 +32,7 @@
     "bowl": "Bowl, tap to empty it",
     "bowlEmpty": "Bowl is empty",
     "bowlHas": "Bowl contains {list}",
-    "selectCustomer": "Serve this customer",
+    "selectCustomer": "Select customer",
     "order": "Order: {list}",
     "liveServed": "Correct order. Plus {coins} coins. Combo {combo}.",
     "liveWrong": "Wrong order. Lost a life.",
@@ -42,6 +42,16 @@
   },
   "help": {
     "title": "How to play",
-    "body": "Read each customer's order bubble, tap toppings to build the bowl, then Serve. Keys: 1-6 toggle toppings, Enter or Space to serve, C or Backspace to clear, Left/Right to pick a customer, Tab to move between buttons."
-  }
+    "order": "Tap the order bubble",
+    "build": "Add matching toppings",
+    "serve": "Tap {serve}",
+    "skip": "Skip",
+    "pause": "Pause / How to play",
+    "resume": "Resume",
+    "keys": "1–6: toppings · Enter/Space: {serve} · C/Backspace: clear · ←/→: customer · Tab: next button"
+  },
+  "continue": "Continue",
+  "newGame": "New game",
+  "emptyBowl": "Bowl is empty — add the ordered toppings.",
+  "incompleteBowl": "Almost ready — add the missing toppings."
 }

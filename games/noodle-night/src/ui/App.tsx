@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { initAssetRoots } from '../services/assets';
 import { preloadAll, loadLanguages } from '../platform/loader';
 import { initI18n } from '../i18n/index';
+import { clearRun, loadRun } from '../game/storage';
+import type { GameState } from '../game/logic';
 import { audio } from '../platform/audio';
 import { AssetsContext, type ImageMap } from './assets-context';
 import { LoadingScreen } from './LoadingScreen';
@@ -30,6 +32,8 @@ export function App() {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [images, setImages] = useState<ImageMap>({});
+  const [saved, setSaved] = useState<GameState | null>(loadRun);
+  const [initial, setInitial] = useState<GameState | null>(null);
   const [seed, setSeed] = useState(1);
   const started = useRef(false);
 
@@ -62,20 +66,23 @@ export function App() {
   }, []);
 
   const play = useCallback(() => {
+    clearRun();
+    setSaved(null);
+    setInitial(null);
     setSeed((performance.now() * 1000) % 2147483647 | 0 || 1);
     setPhase('game');
   }, []);
 
   return (
     <AssetsContext.Provider value={images}>
-      <div className="app">
+      <main className="app">
         <Background />
         {phase === 'loading' && (
           <LoadingScreen progress={progress} ready={ready} onEnter={enter} />
         )}
-        {phase === 'title' && <TitleScreen onPlay={play} />}
-        {phase === 'game' && <GameScreen seed={seed} />}
-      </div>
+        {phase === 'title' && <TitleScreen onPlay={play} canContinue={!!saved} onContinue={() => { setInitial(saved); setPhase('game'); }} />}
+        {phase === 'game' && <GameScreen seed={seed} initialState={initial} />}
+      </main>
     </AssetsContext.Provider>
   );
 }

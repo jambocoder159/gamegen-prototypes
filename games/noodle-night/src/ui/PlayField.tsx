@@ -40,17 +40,31 @@ export function PlayField({
 
   return (
     <div className={`play-field mode-${mode}`}>
-      <div className="toppings" role="group" aria-label={t('serve')}>
-        {TOPPINGS.map((tp, i) => (
-          <ToppingButton
-            key={tp}
-            topping={tp}
-            index={i}
-            inBowl={state.bowl.includes(tp)}
-            interactive={interactive}
-            onToggle={onToggle}
-          />
-        ))}
+      <div className="prep-controls">
+        <div className="toppings" role="group" aria-label={t('help.build')}>
+          {TOPPINGS.map((tp, i) => (
+            <ToppingButton
+              key={tp}
+              topping={tp}
+              index={i}
+              inBowl={state.bowl.includes(tp)}
+              interactive={interactive}
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
+        <div className="actions">
+          <PlateButton
+            className="serve-btn"
+            aria-label={t('serve')}
+            onClick={onServe}
+            disabled={!interactive || !hasTarget}
+            silent={!interactive}
+            tabIndex={interactive ? 0 : -1}
+          >
+            {t('serve')}
+          </PlateButton>
+        </div>
       </div>
 
       <div className="center">
@@ -74,18 +88,6 @@ export function PlayField({
         <div className="bowl-wrap">
           <Bowl bowl={state.bowl} onClear={onClear} reducedMotion={reducedMotion} interactive={interactive} />
         </div>
-      </div>
-
-      <div className="actions">
-        <PlateButton
-          className="serve-btn"
-          onClick={onServe}
-          disabled={!interactive || !hasTarget}
-          silent={!interactive}
-          tabIndex={interactive ? 0 : -1}
-        >
-          {t('serve')}
-        </PlateButton>
       </div>
     </div>
   );

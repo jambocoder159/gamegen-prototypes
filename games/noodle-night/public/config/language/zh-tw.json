@@ -32,7 +32,7 @@
     "bowl": "麵碗，點一下可清空",
     "bowlEmpty": "麵碗是空的",
     "bowlHas": "麵碗裡有 {list}",
-    "selectCustomer": "服務這位客人",
+    "selectCustomer": "選擇客人",
     "order": "訂單：{list}",
     "liveServed": "點對了，獲得 {coins} 金幣，連擊 {combo}。",
     "liveWrong": "點錯了，失去一顆愛心。",
@@ -42,6 +42,16 @@
   },
   "help": {
     "title": "玩法說明",
-    "body": "看懂每位客人的訂單泡泡，點配料把麵碗做好，再按上餐。按鍵：1-6 切換配料、Enter 或空白鍵上餐、C 或退格鍵清空、左右鍵選擇客人、Tab 切換按鈕。"
-  }
+    "order": "點客人的訂單泡泡",
+    "build": "加入相同配料",
+    "serve": "按「{serve}」",
+    "skip": "略過",
+    "pause": "暫停／玩法說明",
+    "resume": "繼續",
+    "keys": "1–6：配料 · Enter／空白鍵：{serve} · C／退格鍵：清空 · ←／→：客人 · Tab：下一個按鈕"
+  },
+  "continue": "繼續遊戲",
+  "newGame": "新遊戲",
+  "emptyBowl": "麵碗還是空的，先加入訂單配料。",
+  "incompleteBowl": "快完成了，再加入缺少的配料。"
 }

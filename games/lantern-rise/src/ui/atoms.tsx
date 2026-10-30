@@ -5,6 +5,21 @@
 import { useApp } from '../app/AppContext';
 import { audio } from '../platform/audio';
 import type { ImageKey } from '../config/assets';
+import { useI18n } from '../i18n';
+import { loadRun, saveRun } from '../platform/storage';
+
+export function CatalogLink({ onSave }: { onSave?: () => void }) {
+  const { t } = useI18n();
+  const leave = () => {
+    if (onSave) onSave();
+    else {
+      const saved = loadRun();
+      if (saved) saveRun(saved);
+    }
+    audio.setHidden(true);
+  };
+  return <a href="../" className="lr-textbtn lr-catalog" {...withSfx(leave)}>{t('backToCatalog')}</a>;
+}
 
 export function AssetImg({
   k,

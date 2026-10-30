@@ -43,6 +43,7 @@ interface Props {
   hud?: HudRefs;
   onOver?: (result: GameResult) => void;
   onTogglePause?: () => void;
+  saveBeforeLeave?: RefObject<(() => void) | null>;
 }
 
 const SFX: Record<GameEvent, AudioKey | null> = {
@@ -70,6 +71,7 @@ export function GameCanvas({
   hud,
   onOver,
   onTogglePause,
+  saveBeforeLeave,
 }: Props) {
   const callbacks = useRef({ onStatus, onAction, onTogglePause, onOver });
   callbacks.current = { onStatus, onAction, onTogglePause, onOver };
@@ -144,7 +146,7 @@ export function GameCanvas({
         return;
       }
       if (MOVE_KEYS.has(e.key)) {
-        if (e.target instanceof HTMLElement && e.target.closest('button')) return;
+        if (e.target instanceof HTMLElement && e.target.closest('button, a')) return;
         heldKeys.add(e.key);
         e.preventDefault();
       }
@@ -156,6 +158,7 @@ export function GameCanvas({
     };
     const clearKeys = () => { heldKeys.clear(); pointers.clear(); };
     const persist = () => { if (mode === 'play') saveRun(sim); };
+    if (saveBeforeLeave) saveBeforeLeave.current = () => { persist(); clearKeys(); };
     const onVisibility = () => { if (document.hidden) { persist(); clearKeys(); } };
 
     if (mode === 'play') {
@@ -268,6 +271,7 @@ export function GameCanvas({
 
     return () => {
       cancelAnimationFrame(raf);
+      if (saveBeforeLeave) saveBeforeLeave.current = null;
       if (mode === 'play') {
         root.removeEventListener('pointerdown', onPointerDown);
         root.removeEventListener('pointerup', onPointerUp);

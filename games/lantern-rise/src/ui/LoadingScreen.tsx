@@ -5,6 +5,7 @@
 
 import { useI18n } from '../i18n';
 import { audio } from '../platform/audio';
+import { CatalogLink } from './atoms';
 
 export function LoadingScreen({
   progress,
@@ -50,6 +51,7 @@ export function LoadingScreen({
             </span>
           )}
         </div>
+        <CatalogLink />
       </div>
     </div>
   );

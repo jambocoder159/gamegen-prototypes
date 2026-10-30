@@ -190,9 +190,22 @@ body,
   font-size: clamp(18px, 5.5vmin, 26px);
 }
 
-button:focus-visible {
+button:focus-visible, .lr-catalog:focus-visible {
   outline: 4px solid var(--focus);
   outline-offset: 3px;
+}
+
+.lr-catalog {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  max-width: 100%;
+  background: var(--navy);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ------------------------------------------------------------------ Corners */

@@ -6,7 +6,7 @@ import { useApp } from '../app/AppContext';
 import { useI18n } from '../i18n';
 import type { Viewport } from '../platform/viewport';
 import { GameCanvas } from './GameCanvas';
-import { AssetImg, TextButton } from './atoms';
+import { AssetImg, CatalogLink, TextButton } from './atoms';
 import { LanguageButton, SoundButton } from './Controls';
 
 export function TitleScreen({ viewport, onPlay, hasSavedRun, onContinue }: { viewport: Viewport; onPlay: () => void; hasSavedRun: boolean; onContinue: () => void }) {
@@ -42,6 +42,7 @@ export function TitleScreen({ viewport, onPlay, hasSavedRun, onContinue }: { vie
             {t(hasSavedRun ? 'newGame' : 'play')}
           </TextButton>
         </div>
+        <CatalogLink />
         <p className="lr-help">{t('help')}</p>
       </div>
     </div>

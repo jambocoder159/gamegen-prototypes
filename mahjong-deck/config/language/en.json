@@ -18,7 +18,9 @@
     "unmute": "Unmute sound",
     "language": "Change language",
     "continue": "Continue",
-    "newGame": "New game"
+    "newGame": "New game",
+    "backToCatalog": "Back to catalog",
+    "close": "Close"
   },
   "hud": {
     "stage": "Stage",

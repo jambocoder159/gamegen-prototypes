@@ -17,8 +17,8 @@ const GAME = 'mahjong-deck';
 const DEFAULT_PORT = 4226;
 const LANG_KEY = 'mahjong-deck.lang';
 const SCREENS = [
-  { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },
-  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo', '.title__dealer'], text: ['.title__name', '.title__tagline', '.btn--play'] },
+  { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter', '.catalog-link'] },
+  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo', '.title__dealer'], text: ['.title__name', '.title__tagline', '.btn--play', '.btn--continue', '.catalog-link', '.title__icons .icon-btn'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ function measure(screen) {
     if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  for (const b of rootEl.querySelectorAll('button, a')) {
     if (!visible(b) || (screen.demo && b.closest(screen.demo))) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
@@ -190,7 +190,7 @@ async function runViewport(browser, w, h, lang) {
       if (screen.id === 'title') {
         const separate = await page.evaluate(() => {
           const art = [...document.querySelectorAll('.title__logo,.title__dealer')].map(e=>e.getBoundingClientRect());
-          const text = [...document.querySelectorAll('.title__name,.title__tagline')].map(e=>e.getBoundingClientRect());
+          const text = [...document.querySelectorAll('.title__name,.title__tagline,.catalog-link')].map(e=>e.getBoundingClientRect());
           return art.every(a=>text.every(b=>a.right<=b.left || a.left>=b.right || a.bottom<=b.top || a.top>=b.bottom));
         });
         check(`${tag} title: title/tagline never intersect art`, separate);

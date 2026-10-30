@@ -18,7 +18,9 @@
     "unmute": "音を出す",
     "language": "言語を変更",
     "continue": "続きから",
-    "newGame": "はじめから"
+    "newGame": "はじめから",
+    "backToCatalog": "カタログに戻る",
+    "close": "閉じる"
   },
   "hud": {
     "stage": "ステージ",

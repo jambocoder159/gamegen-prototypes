@@ -12,7 +12,7 @@ import { useGame } from './useGame';
 import { BoardView } from './components/BoardView';
 import { Hud, ComboPill } from './components/Hud';
 import { Hand } from './components/Hand';
-import { Coach, useCoach } from './components/Coach';
+import { Coach, HelpDialog, useCoach } from './components/Coach';
 import { Button } from './components/Button';
 import { IconButton } from './components/Button';
 import { SoundControl, LanguageControl } from './components/Controls';
@@ -74,6 +74,7 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector('dialog[open]')) return;
       if (phase !== 'playing') return;
       switch (e.key) {
         case 'ArrowLeft':
@@ -159,7 +160,8 @@ export function GameScreen({ layout, reduced }: { layout: Layout; reduced: boole
         <BoardNotice notice={game.notice} />
       </div>
 
-      {interactive && <Coach step={coach.step} onSkip={coach.finish} />}
+      {interactive && !coach.helpOpen && <Coach step={coach.step} onSkip={coach.finish} />}
+      {coach.helpOpen && <HelpDialog onClose={coach.finish} onLeave={game.flush} />}
 
       <div className="game__hand">
         <Hand hand={hand} onPlay={(i) => hand[i] && playCard(hand[i].type)} disabled={!interactive} />

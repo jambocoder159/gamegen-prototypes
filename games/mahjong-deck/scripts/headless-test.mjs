@@ -10,12 +10,14 @@
 // fallback. Also runs the node logic test. Screenshots go to qa/. Prints PASS/FAIL.
 
 import { spawn, execSync } from 'node:child_process';
-import { mkdirSync, readFileSync, copyFileSync } from 'node:fs';
+import { mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 import { selectionChecks } from './selection-checks.mjs';
 import { isDeepStrictEqual } from 'node:util';
+import { catalogChecks } from './catalog-checks.mjs';
+import { axeSource } from './axe-source.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
@@ -215,6 +217,7 @@ async function main() {
       // Release decoded art/audio before the long locale and axe matrix.
       await browser.close();
       browser = await launchBrowser();
+      await catalogChecks(browser, root, PORT + 1, check, auditAxe);
       await runFixes(browser);
     } finally {
       await browser.close();
@@ -631,7 +634,7 @@ main().catch((e) => {
 });
 
 async function auditAxe(page, label) {
-  await page.evaluate(readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8'));
+  await page.evaluate(axeSource);
   const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'] } })).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(',')}`));
   check(`axe ${label}: zero WCAG violations`, violations.length === 0, violations.join(' | '));
 }

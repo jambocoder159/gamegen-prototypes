@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import puppeteer from 'puppeteer-core';
+import { selectionChecks } from './selection-checks.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 const reports = join(root, '..', '_reports');
@@ -68,6 +69,7 @@ let fatal=false;
 try {
   for(let i=0;i<80;i++){if(server.exitCode!==null)throw Error('preview exited '+serverError);try{if((await fetch(BASE)).ok)break;}catch{}await wait(200);}
   browser=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',headless:'new',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--mute-audio']});
+  await selectionChecks(browser, BASE, check);
   const page=await browser.newPage(); await page.setViewport({width:375,height:812});
   const consoleIssues=[],failedReq=[];
   page.on('console',m=>{if(['error','warning'].includes(m.type()))consoleIssues.push(m.text());});

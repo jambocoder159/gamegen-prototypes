@@ -20,7 +20,7 @@ export function LoadingScreen({
     <div className="screen loading-screen">
       <div className="loading-logo">
         {logo ? (
-          <img src={logo} alt={t('title')} className="logo-img" />
+          <img draggable={false} src={logo} alt={t('title')} className="logo-img" />
         ) : (
           <div className="logo-fallback" aria-hidden="true" />
         )}

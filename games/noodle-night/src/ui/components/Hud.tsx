@@ -16,14 +16,14 @@ export function Hud({ state }: { state: GameState }) {
           const alive = i < state.hearts;
           return (
             <span key={i} className={`heart${alive ? '' : ' lost'}`} aria-hidden="true">
-              {heart ? <img src={heart} alt="" /> : <span className="img-fallback heart-fb" />}
+              {heart ? <img draggable={false} src={heart} alt="" /> : <span className="img-fallback heart-fb" />}
             </span>
           );
         })}
       </div>
 
       <div className="hud-coins" aria-label={`${t('coins')}: ${state.coins}`}>
-        {coin ? <img src={coin} alt="" aria-hidden="true" /> : <span className="img-fallback coin-fb" />}
+        {coin ? <img draggable={false} src={coin} alt="" aria-hidden="true" /> : <span className="img-fallback coin-fb" />}
         <span className="hud-coins-num">{state.coins}</span>
       </div>
 

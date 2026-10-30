@@ -1,6 +1,6 @@
-import { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-import type { ImageKey } from '../config/assets';
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
+import type { ImageKey } from "../config/assets";
 
 const Ctx = createContext<Record<ImageKey, string | null> | null>(null);
 
@@ -18,4 +18,10 @@ export function ImagesProvider({
 export function useImage(key: ImageKey): string | null {
   const m = useContext(Ctx);
   return m ? m[key] : null;
+}
+
+export function useImages() {
+  const images = useContext(Ctx);
+  if (!images) throw new Error("ImagesProvider missing");
+  return images;
 }

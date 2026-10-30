@@ -1,66 +1,63 @@
-# Match Hero Tower · 消消勇者塔
+# Match Hero Tower v2 · 消消勇者塔
 
-A pixel-art match-3 idle battler built with React 19, TypeScript and Vite. Your hero attacks, earns gold and builds SP automatically. Matching gems accelerates the climb; every fifth floor is a boss.
+React 19 + TypeScript + Vite pixel match-3 idle battler. Match gems, upgrade the hero, watch enemy charge warnings, and rebirth from floor 10 to unlock permanent relics.
 
 ```sh
 npm install
-npm run dev                  # http://localhost:4227
-npm run build                # strict TypeScript + production build
+npm run dev
+npm run build
 npm run check:i18n
 npm run test:logic
 npm run test:sim
+npm run test:sprites
+PORT=4251 npm run test:title
+PORT=4251 npm run test:hud
+PORT=4251 npm run test:enemy
 PORT=4251 npm run test:headless
-PORT=4251 npm run test:title  # run browser suites sequentially on the same port
-PORT=4251 npm run test:hud    # standalone HUD geometry matrix (also in test:headless)
-npm run pack                 # match-hero.zip, dist contents at ZIP root
+PORT=4251 npm run performance
+PORT=4251 npm run capture-v2
+npm run pack
 ```
 
-Browser tests require `/usr/bin/google-chrome`, puppeteer-core and axe-core at `/workspace/deploy/node_modules/axe-core/axe.min.js`. Build before browser tests. `PORT` defaults to 4227; use an available port without stopping another game's server. Reports and screenshots go to `/workspace/gamegen-games/_reports/`.
+Build before browser tests, keep the bundle unchanged while they run, and run suites sequentially on a given port. Each owns and stops its preview process; never kill other projects' servers. Chrome is `/usr/bin/google-chrome`; axe is installed locally as the `axe-core` dev dependency. Reports go to `/workspace/gamegen-games/_reports/`.
 
 ## Play
 
-- Tap two adjacent gems, or swipe/drag between them, to make a line of three. Invalid swaps cost nothing. Four in a line creates a star; swapping a star blasts a 3×3 area. Cascades increase the combo multiplier; an unplayable board reshuffles automatically.
-- Sword and flame gems deal damage (flame also burns); crystal gives SP, heart heals, coin earns gold. Every cleared gem also deals damage and gives SP.
-- Spend SP on Fireball (30 SP, 6× ATK), Heal (40 SP, 40% HP), or Haste (25 SP, double attack speed for eight seconds). Buttons show energy/cooldown reasons.
-- Open the arrow icon to buy permanent ATK, speed, crit, HP, match power, gold find and focus upgrades. Choose ×1 or Max.
-- Defeat retreats to the start of the current five-floor section and restores HP. Gold and upgrades survive. Continue from the retreat dialog.
-- Arrow keys move board focus; Enter/Space selects and swaps; Escape cancels selection or closes a dialog; 1/2/3 casts skills; P pauses. Dialogs contain keyboard focus and restore it when closed.
+Tap adjacent gems or swipe to match three. Four in a line creates a star with a 3×3 blast. Sword/flame deal damage, crystals give SP, hearts heal, coins earn gold. Fireball costs 30 SP, Heal 40, Haste 25. Arrow keys move focus, Enter/Space selects/swaps, 1/2/3 casts skills, P pauses, Escape closes dialogs.
 
-The coach appears for the first 30 seconds, advances with actions and can be skipped or reopened with Help. Both hero and match stats remain visible. Settings control sound, language and floating damage numbers; reduced-motion preferences disable animations.
+Gold upgrades last until rebirth. ×1/Max previews current and resulting stats using the same production formulas as the HUD. Retreat preserves upgrades and gold, returning to the first floor of the five-floor section.
 
-## Battle layout
+At a run best of floor 10, confirm rebirth to reset the run and receive `floor(.6 × (best−5)^1.35 × (1+.1×crownLevel))` shards (minimum 1). Shards, 11 relics, all-time best, rebirth count and settings survive. Relic costs and limits are centralized in `src/game/config.ts`. Starting Boots apply on the next rebirth and are capped at half the previous run best. Each lifetime earned shard permanently adds 2% to all damage and gold, capped at 100% after 50 shards; spending shards retains this passive. The confirmation dialog, relic panel and statistics show the bonus in all four languages. Heirloom Sword gives +20% damage per level.
 
-The battlefield contains three normal-flow rows: enemy name/HP, a dedicated `.battle__stage`, and hero HP. Only sprites, backgrounds and transient combat effects live inside the stage. Sprites use contained images, stage-relative heights and a shared floor line; bosses receive larger height/width limits without escaping the stage. Pause status stays in the enemy header.
+## Combat and layout
 
-Portrait keeps toolbar, battlefield, stats, skills, board and coach in flow; short phones use a smaller square board to preserve sprite space. At heights ≤520px or aspect ratios >1.3, the board, skills and coach occupy the right column while the battlefield and stats occupy the left. The stage measures 172px at 667×375 (45.9% of viewport height) and 187px at 844×390 (47.9%). Desktop content stays centered within 1400px.
+One enemy exists at a time: 400ms entry → active → 450ms death → 60ms empty stage → next enemy. Entry and death are immune and do not accumulate attacks. Normal enemies attack every 2.7 seconds; bosses every 2.2, with each third strike taking 3.3 seconds and dealing double damage. The last 30% of charge shows an icon and stronger windup.
 
-`test:hud` checks transformed sprite rectangles against every visible HUD group and descendant, stage containment (1px tolerance), board containment and document scroll. It covers seven viewports (390×844, 360×640, 844×390, 667×375, 1280×720, 1440×900, 1920×1080), debug floors 1/3/5/10, plus ghost and golem waves restored through validated saves: 42 cases, 252 assertions. Floor 3 still uses the first enemy tier; ghost/golem coverage uses floor 6 wave 2 and floor 11 wave 2. Measurements and visually reviewed `after_hud_match-hero_*.png` captures are in the reports directory.
+Characters face each other using the original images, with no horizontal flipping. Feet align at 84% of the stage across all three backgrounds. Portrait uses a vertical layout; landscape/desktop put the board on the right. Relics/upgrades dock below the battlefield on phones and to the right on wide screens. They retain keyboard focus, scroll and restore focus on close.
 
-## Saves and languages
+Decorative effects use a bounded fixed overlay and actual DOM coordinates, with at most 24 nodes. Reduced motion keeps feedback but removes travel, lunges and shaking. Settings independently disable damage numbers and screen shake. The existing gesture guards prevent selection/tap-blue while preserving native form controls and selectable prose.
 
-Versioned, size-limited, validated localStorage saves retain the board, gold, upgrades, floor/wave, enemy and hero HP, SP, cooldowns and best floor. Runs save after actions, approximately once per second and on page hide. The title offers Continue/New adventure. Invalid data resets safely; unavailable storage does not stop play. Sound, coach completion, numbers and selected language are stored separately.
+## Persistence and languages
 
-The browser language list selects Traditional Chinese for zh-TW/HK/MO/Hant, Simplified Chinese for zh-CN/SG/Hans/plain zh, Japanese for ja, and English otherwise. A saved explicit choice takes priority. All four languages can be selected during play.
+`match-hero.save.v2` automatically reads a v1 save if v2 does not exist, retaining all original progress and defaulting permanent fields. The v1 key is not deleted. Old enemy HP is retained even when greater than the newly balanced maximum. Invalid data resets safely; unavailable storage does not stop play.
 
-`?floor=N` accepts integer floors 1–100 for an isolated debug run (for example `?floor=5` for the dragon). Debug runs never write the real run save. Remove the parameter to return to the saved adventure.
+Traditional Chinese, Simplified Chinese, English and Japanese have 130 matching keys. Browser language sets the initial choice; explicit choices persist separately from the run.
 
-## Balance
+`?floor=N` (1–100) creates an isolated debug run and never overwrites a real save. `?qa=1` exposes `window.__mh` for browser tests with persisted fixtures. Ordinary play has no debug hook.
 
-The deterministic simulation uses the production rules and seed 42. Auto-only buys upgrades but never matches or casts skills. The standard matcher clears an average 3.2 gems every three seconds, buys upgrades and uses skills. Times are minutes to enter each floor; damage shares and gold/min cover the run through entry to floor 20.
+## Validation status
 
-| Player | Floor 5 | Floor 10 | Floor 15 | Floor 20 | Auto / match damage | Gold/min | Retreats |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Auto only | 7.06 | 20.31 | 42.78 | 95.22 | 100% / 0% | 341.7 | 1 |
-| Standard matcher | 2.66 | 6.24 | 10.98 | 18.64 | 57.1% / 42.9% | 5172.9 | 0 |
+- Logic: 19 checks, including v1 fixtures, lifecycle, charge, heavy strikes, relics, rebirth and lifetime shard multipliers across every damage/gold source.
+- HUD: 556 checks, including statistics content bounds, 4 languages × 7 sizes, axe, passive labels, preview, keyboard and real purchases/reset.
+- Enemy swap: 72 checks, including 100 samples at 50ms, four kills including a boss, and eight sprites × seven sizes. The wider bat has a separate 36%-wide, 52%-high contain box.
+- Title: 112 layout checks. Full headless also covers input, saves, skills, accessibility, selection, fallback, subpath hosting and a bounded-effect performance sample (~60fps on desktop Chrome, not a mobile device guarantee).
+- **Balance 8/8:** standard reaches floor 10 in 6.21 minutes, auto-only 19.97; standard has 0 retreats through floor 20, auto 5. Second-run floor 10 is 4.50 minutes, 27.4% faster. Average boss damage is 59.9% / 44.8% for the standard first / second runs.
+- **Sprites remain 27/43:** the current workspace still has the older textures and whole-image pink checker (bat 288×223, whereas the task describes 359×225). The supplied textures and checker remain unchanged as instructed; the existing test exits nonzero. Updated-material verification is pending. See `sprite_check_match-hero.txt`.
 
-All balance targets pass: standard floor 10 in 6–10 minutes, auto floor 10 at least 40% slower, standard floor 20 within 30 minutes, and both players advance. Constants and rationale are in PLAN §3 and `src/game/config.ts`.
+Full constants, simulation table and limitations: `PLAN.md`. Final measured results: `_reports/mh2_completion.md`.
 
-## Implementation and assets
+## Assets and package
 
-`src/game/logic.ts` contains deterministic board, combat, skills, upgrades, formatting and save validation. The sim and logic tests import that same module. `src/game/` owns the game UI; `src/platform/`, `src/services/`, `src/i18n/` and the JSON configuration retain the reusable loading, audio, layout and asset-resolution layer. Assets resolve relative to the hosted page and support per-asset style overrides/fallbacks.
+Individual `icon_*`, `logo_base` and `fx_*` PNGs replace the deleted atlas; there are no atlas crop coordinates. All art uses pixelated rendering. Raw art and processing provenance are documented in `assets/MANIFEST.md`; this implementation does not edit the supplied textures.
 
-Art uses the supplied final pixel sprites without repainting. The supplied UI atlas contains the logo and icons rather than separate `logo_base.png`/`icon_*.png` files; CSS displays those unchanged regions. `public/poster.png` is a 9:16 capture of the title. Audio is original procedural chiptune awaiting human listening review; see AUDIO_NOTES.md.
-
-## Verified checks
-
-Production build, four-language key validation (78 keys each), 10/10 logic checks, all balance targets, 328/328 browser checks (including 252 HUD assertions), 112/112 title/loading/resume layout checks, and packaging passed. Axe reported zero violations for title, play, upgrades and defeat at both 375px and 1440px. Browser coverage includes saved-run restoration, coach progression/reopen/skip, both input gestures and keyboard swaps, skills, upgrades, retreat, boss progression, debug-save isolation, missing-image fallback and a subdirectory mount. Portrait, small-phone, landscape, desktop, coach and upgrades captures were visually reviewed. The ZIP contains index.html and poster.png at its root.
+`public/poster.png` is an actual 432×768 fight capture. `scripts/capture-v2.mjs` recreates it and the nine requested v2 screenshots, including a frozen real combat frame with slash, flying sword gems and damage numbers. `npm run pack` rebuilds `match-hero.zip` with `index.html` and `poster.png` at the ZIP root. No commit or push is performed.

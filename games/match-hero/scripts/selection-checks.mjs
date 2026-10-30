@@ -134,7 +134,7 @@ export async function selectionChecks(browser, base, check, phase = 'after') {
       await page.click('.modal-close');
     }
     if (phase === 'after') {
-      const axeSource=readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js','utf8');
+      const axeSource=readFileSync(new URL('../node_modules/axe-core/axe.min.js', import.meta.url).pathname,'utf8');
       for(const width of [375,1440]) {
         await page.setViewport({width,height:width===375?812:900});
         // Reload to get a title screen, then start a fresh play screen.

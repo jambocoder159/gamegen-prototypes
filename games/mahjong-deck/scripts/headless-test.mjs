@@ -14,6 +14,7 @@ import { mkdirSync, readFileSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { selectionChecks } from './selection-checks.mjs';
 import { isDeepStrictEqual } from 'node:util';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -200,15 +201,20 @@ async function main() {
     check('preview server is up', up);
     if (!up) return;
 
-    const browser = await puppeteer.launch({
+    const launchBrowser = () => puppeteer.launch({
       executablePath: CHROME,
       headless: 'new',
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
+    let browser = await launchBrowser();
     try {
+      await selectionChecks(browser, BASE_URL, check);
       await runMain(browser);
       await runStages(browser);
       await runFallback(browser);
+      // Release decoded art/audio before the long locale and axe matrix.
+      await browser.close();
+      browser = await launchBrowser();
       await runFixes(browser);
     } finally {
       await browser.close();

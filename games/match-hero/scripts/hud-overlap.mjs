@@ -18,7 +18,9 @@ function geometry(){
  const escaped=sprites.filter(s=>!inside(s.rect,stage,1));
  const viewport={x:0,y:0,right:innerWidth,bottom:innerHeight};
  const board=box(document.querySelector('.board'));
- return{stage,sprites,hudCount:hud.length,collisions,escaped,board,boardFits:inside(board,viewport),noScroll:document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth&&document.body.scrollHeight<=innerHeight&&document.body.scrollWidth<=innerWidth&&scrollX===0&&scrollY===0,landscape:document.querySelector('.game').classList.contains('game--landscape'),height:innerHeight};
+ const stats=box(document.querySelector('.stats')), skills=box(document.querySelector('.skills'));
+ const statsFit=[...document.querySelectorAll('.hero-stats,.match-stats')].every(e=>inside(box(e),stats,1)) && !intersects(stats,skills);
+ return{statsFit,stage,sprites,hudCount:hud.length,collisions,escaped,board,boardFits:inside(board,viewport),noScroll:document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth&&document.body.scrollHeight<=innerHeight&&document.body.scrollWidth<=innerWidth&&scrollX===0&&scrollY===0,landscape:document.querySelector('.game').classList.contains('game--landscape'),height:innerHeight};
 }
 
 export async function verifyHud(browser,url){
@@ -49,6 +51,7 @@ export async function verifyHud(browser,url){
     measurements.push({width,height,floor,wave,...g});
     check(`${name}: all HUD boxes separate (${g.hudCount})`,g.collisions.length===0,JSON.stringify(g.collisions));
     check(`${name}: both sprites inside stage`,g.sprites.length===2&&g.escaped.length===0,JSON.stringify(g.escaped));
+    check(`${name}: statistics contents fit without touching skills`,g.statsFit);
     check(`${name}: board inside viewport`,g.boardFits);
     check(`${name}: no document scroll`,g.noScroll);
     check(`${name}: stage has height${g.landscape?' ≥45% viewport':''}`,g.stage.height>0&&(!g.landscape||g.stage.height>=height*.45),`${g.stage.height.toFixed(1)}px`);

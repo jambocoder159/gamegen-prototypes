@@ -14,7 +14,7 @@ export const selectionConfig = {
 };
 
 // A fresh context keeps gesture QA independent of the gameplay/save tests.
-export async function selectionChecks(browser, base, check, phase = 'after') {
+export async function selectionChecks(browser, base, check, phase = 'after', axePath = '/workspace/deploy/node_modules/axe-core/axe.min.js') {
   mkdirSync(reports, { recursive: true });
   const c = selectionConfig;
   const context = await browser.createBrowserContext();
@@ -109,7 +109,7 @@ export async function selectionChecks(browser, base, check, phase = 'after') {
       assert('reading content remains selectable',reading.select==='text'&&!reading.prevented,JSON.stringify(reading));
     }
     if (phase === 'after') {
-      const axeSource=readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js','utf8');
+      const axeSource=readFileSync(axePath,'utf8');
       for(const width of [375,1440]) {
         await page.setViewport({width,height:width===375?812:900});
         // Reload to get a title screen, then start a fresh play screen.

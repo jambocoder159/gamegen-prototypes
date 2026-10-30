@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 import { selectionChecks } from './selection-checks.mjs';
 import { createServer } from 'node:http';
+import { catalogChecks } from './catalog-checks.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
@@ -24,6 +25,9 @@ mkdirSync(qa, { recursive: true });
 const PORT = Number(process.env.PORT ?? 4226);
 const BASE_URL = `http://localhost:${PORT}/`;
 const CHROME = '/usr/bin/google-chrome';
+const AXE_PATH = existsSync('/workspace/deploy/node_modules/axe-core/axe.min.js')
+  ? '/workspace/deploy/node_modules/axe-core/axe.min.js'
+  : join(root, 'node_modules/axe-core/axe.min.js');
 
 const results = [];
 function check(name, ok, detail = '') {
@@ -124,14 +128,14 @@ async function main() {
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
     try {
-      await selectionChecks(browser, BASE_URL, check);
+      await selectionChecks(browser, BASE_URL, check, 'after', AXE_PATH);
+      await runSubpath(browser);
       await runMain(browser);
       await runGrownGarden(browser);
       await runV2(browser);
       await runFixes(browser);
       await runFallback(browser);
       await run404Probe();
-      await runSubpath(browser);
     } finally {
       await browser.close();
     }
@@ -510,7 +514,7 @@ async function runV2(browser) {
   await page.click('.rdetail__action');
   check('targeted buy unlocks another relic', await page.$$eval('.codex__lvl',els=>els.length)===2);
   await page.keyboard.press('Escape');
-  const axePath='/workspace/deploy/node_modules/axe-core/axe.min.js';
+  const axePath=AXE_PATH;
   if (!existsSync(axePath)) console.log('SKIP — axe-core unavailable at '+axePath);
   for (const [width,height] of [[375,812],[1440,900]]) {
     await page.setViewport({width,height}); await sleep(180);
@@ -602,6 +606,7 @@ async function runSubpath(browser) {
     await page.goto(`http://127.0.0.1:${server.address().port}${mount}`,{waitUntil:'networkidle0'});
     await enterAndPlay(page); await page.click('.pot');
     check('ZIP works from an isolated sub-path with no root assets',await readDew(page)===1 && issues.length===0,issues.join(' | '));
+    await catalogChecks(browser, `http://127.0.0.1:${server.address().port}${mount}`, check, AXE_PATH);
   } finally { await page.close(); await new Promise(resolve=>server.close(resolve)); }
 }
 
@@ -625,7 +630,7 @@ async function runFixes(browser) {
   }
   async function play(){ await page.click('.btn--play'); await page.waitForSelector('.garden .plot'); }
   async function axe(name) {
-    const path='/workspace/deploy/node_modules/axe-core/axe.min.js';
+    const path=AXE_PATH;
     if(!existsSync(path)) throw new Error('Required axe-core is missing');
     await page.addScriptTag({path});
     const v=await page.evaluate(async()=> (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));

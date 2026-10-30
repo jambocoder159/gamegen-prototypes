@@ -18,7 +18,7 @@ const DEFAULT_PORT = 4226;
 const LANG_KEY = 'tap-garden.lang';
 const SCREENS = [
   { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },
-  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo'], text: ['.title__name', '.title__tagline', '.btn--play'] },
+  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo'], text: ['.title__name', '.title__tagline', '.btn--play', '.catalog-link'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -38,8 +38,8 @@ const VIEWPORTS = [
   [390, 844],
   [360, 640],
 ];
-// Tightest viewports are re-checked in every language for text fit.
-const LANG_VIEWPORTS = ['844x390', '667x375', '360x640'];
+// Every viewport is checked in every language for text fit.
+const LANG_VIEWPORTS = VIEWPORTS.map(([w, h]) => `${w}x${h}`);
 const LANGS = ['en', 'zh-tw', 'zh-cn', 'ja'];
 
 const results = [];
@@ -93,11 +93,13 @@ function measure(screen) {
     if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  if (screen.id === 'title' && !rootEl.querySelector('.catalog-link[href="../"]')) problems.push('catalog link missing');
+  for (const b of rootEl.querySelectorAll('button, a[href]')) {
     if (!visible(b) || (screen.demo && b.closest(screen.demo))) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
     if (r.width < 44 || r.height < 44) problems.push(`button ${desc(b)} smaller than 44px ${fmt(r)}`);
+    if (b.matches('.catalog-link') && r.height < 48) problems.push('catalog link shorter than 48px');
   }
 
   for (const el of rootEl.querySelectorAll('img, .art, [class*="art--fallback"]')) {

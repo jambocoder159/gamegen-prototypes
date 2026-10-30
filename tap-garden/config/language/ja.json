@@ -20,7 +20,8 @@
     "upgrades": "強化",
     "relics": "宝物",
     "rebirth": "転生",
-    "close": "閉じる"
+    "close": "閉じる",
+    "backToCatalog": "カタログに戻る"
   },
   "hud": {
     "dew": "露",

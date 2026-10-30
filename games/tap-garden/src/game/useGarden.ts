@@ -88,6 +88,7 @@ export interface UseGarden {
   dismissCelebrate: () => void;
   dismissStageToast: () => void;
   reset: () => void;
+  saveNow: () => void;
 }
 
 const COMMIT_MS = 120;
@@ -188,8 +189,9 @@ export function useGarden(audio: AudioManager): UseGarden {
   }, [audio, noteInfo, maybeCelebrate, emit]);
 
   // --- autosave ---------------------------------------------------------------
+  const saveNow = useCallback(() => writeSave(gsRef.current, celebratedRef.current, Date.now()), []);
   useEffect(() => {
-    const save = () => writeSave(gsRef.current, celebratedRef.current, Date.now());
+    const save = saveNow;
     const timer = window.setInterval(save, SAVE_INTERVAL_MS);
     const onHide = () => save();
     const onVis = () => {
@@ -203,7 +205,7 @@ export function useGarden(audio: AudioManager): UseGarden {
       window.removeEventListener('pagehide', onHide);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, []);
+  }, [saveNow]);
 
   // --- pot / plots ------------------------------------------------------------
   const tapPot = useCallback((): TapOutcome => {
@@ -411,5 +413,6 @@ export function useGarden(audio: AudioManager): UseGarden {
     dismissCelebrate,
     dismissStageToast,
     reset,
+    saveNow,
   };
 }

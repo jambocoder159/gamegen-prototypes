@@ -9,8 +9,9 @@ npm run build                # strict TypeScript + production build
 npm run check:i18n
 npm run test:logic
 npm run test:sim
-PORT=4228 npm run test:headless
-PORT=4228 npm run test:title  # run browser suites sequentially on the same port
+PORT=4251 npm run test:headless
+PORT=4251 npm run test:title  # run browser suites sequentially on the same port
+PORT=4251 npm run test:hud    # standalone HUD geometry matrix (also in test:headless)
 npm run pack                 # match-hero.zip, dist contents at ZIP root
 ```
 
@@ -26,6 +27,14 @@ Browser tests require `/usr/bin/google-chrome`, puppeteer-core and axe-core at `
 - Arrow keys move board focus; Enter/Space selects and swaps; Escape cancels selection or closes a dialog; 1/2/3 casts skills; P pauses. Dialogs contain keyboard focus and restore it when closed.
 
 The coach appears for the first 30 seconds, advances with actions and can be skipped or reopened with Help. Both hero and match stats remain visible. Settings control sound, language and floating damage numbers; reduced-motion preferences disable animations.
+
+## Battle layout
+
+The battlefield contains three normal-flow rows: enemy name/HP, a dedicated `.battle__stage`, and hero HP. Only sprites, backgrounds and transient combat effects live inside the stage. Sprites use contained images, stage-relative heights and a shared floor line; bosses receive larger height/width limits without escaping the stage. Pause status stays in the enemy header.
+
+Portrait keeps toolbar, battlefield, stats, skills, board and coach in flow; short phones use a smaller square board to preserve sprite space. At heights ≤520px or aspect ratios >1.3, the board, skills and coach occupy the right column while the battlefield and stats occupy the left. The stage measures 172px at 667×375 (45.9% of viewport height) and 187px at 844×390 (47.9%). Desktop content stays centered within 1400px.
+
+`test:hud` checks transformed sprite rectangles against every visible HUD group and descendant, stage containment (1px tolerance), board containment and document scroll. It covers seven viewports (390×844, 360×640, 844×390, 667×375, 1280×720, 1440×900, 1920×1080), debug floors 1/3/5/10, plus ghost and golem waves restored through validated saves: 42 cases, 252 assertions. Floor 3 still uses the first enemy tier; ghost/golem coverage uses floor 6 wave 2 and floor 11 wave 2. Measurements and visually reviewed `after_hud_match-hero_*.png` captures are in the reports directory.
 
 ## Saves and languages
 
@@ -54,4 +63,4 @@ Art uses the supplied final pixel sprites without repainting. The supplied UI at
 
 ## Verified checks
 
-Production build, four-language key validation (78 keys each), 10/10 logic checks, all balance targets, 76/76 browser checks, 112/112 title/loading/resume layout checks, and packaging passed. Axe reported zero violations for title, play, upgrades and defeat at both 375px and 1440px. Browser coverage includes saved-run restoration, coach progression/reopen/skip, both input gestures and keyboard swaps, skills, upgrades, retreat, boss progression, debug-save isolation, missing-image fallback and a subdirectory mount. Portrait, small-phone, landscape, desktop, coach and upgrades captures were visually reviewed. The ZIP contains index.html and poster.png at its root.
+Production build, four-language key validation (78 keys each), 10/10 logic checks, all balance targets, 328/328 browser checks (including 252 HUD assertions), 112/112 title/loading/resume layout checks, and packaging passed. Axe reported zero violations for title, play, upgrades and defeat at both 375px and 1440px. Browser coverage includes saved-run restoration, coach progression/reopen/skip, both input gestures and keyboard swaps, skills, upgrades, retreat, boss progression, debug-save isolation, missing-image fallback and a subdirectory mount. Portrait, small-phone, landscape, desktop, coach and upgrades captures were visually reviewed. The ZIP contains index.html and poster.png at its root.

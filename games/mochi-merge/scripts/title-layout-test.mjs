@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'mochi-merge';
-const DEFAULT_PORT = 4221;
+const DEFAULT_PORT = 4311;
 const LANG_KEY = 'mochi.lang';
 const SCREENS = [
   {
@@ -22,7 +22,7 @@ const SCREENS = [
     root: '.title',
     primary: '.btn--play',
     art: ['.title__logo'],
-    text: ['.title__name', '.title__tagline', '.btn--play', '.btn--new'],
+    text: ['.title__name', '.title__tagline', '.btn--play', '.btn--new', '.catalog-link'],
   },
 ];
 // ------------------------------------------------------------------------------
@@ -99,11 +99,19 @@ function measure(screen) {
     if (primaryRect.height < 48 || primaryRect.width < 48) problems.push(`primary smaller than 48px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  if (!rootEl.querySelector('a.catalog-link[href="../"]')) problems.push('catalog link missing');
+  for (const b of rootEl.querySelectorAll('button, a[href]')) {
     if (!visible(b)) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
     if (r.width < 48 || r.height < 48) problems.push(`button ${desc(b)} smaller than 48px ${fmt(r)}`);
+  }
+
+  const link = rootEl.querySelector('.catalog-link')?.getBoundingClientRect();
+  if (link) for (const el of rootEl.querySelectorAll('.title__name, .title__tagline, button')) {
+    const r = el.getBoundingClientRect();
+    if (link.left < r.right && link.right > r.left && link.top < r.bottom && link.bottom > r.top)
+      problems.push(`catalog link overlaps ${desc(el)}`);
   }
 
   for (const el of rootEl.querySelectorAll('img, .art, [class*="art--fallback"]')) {

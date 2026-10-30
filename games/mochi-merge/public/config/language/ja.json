@@ -16,7 +16,9 @@
     "mute": "サウンドをミュート",
     "unmute": "サウンドをオン",
     "language": "言語を切り替える",
-    "continue": "つづきから"
+    "continue": "つづきから",
+    "backToCatalog": "カタログに戻る",
+    "close": "閉じる"
   },
   "hud": {
     "score": "スコア",

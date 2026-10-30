@@ -10,6 +10,7 @@ import { Board } from './components/Board';
 import { Button } from './components/Button';
 import { LanguageControl, SoundControl } from './components/Controls';
 import { Art } from './components/Art';
+import { CatalogLink } from './components/CatalogLink';
 
 const MOVE_MS = 450;
 
@@ -32,12 +33,14 @@ export function TitleScreen({
   onPlay,
   onNewGame,
   hasRun,
+  onBeforeLeave,
 }: {
   layout: Layout;
   reduced: boolean;
   onPlay: () => void;
   onNewGame: () => void;
   hasRun: boolean;
+  onBeforeLeave: () => void;
 }) {
   const { t } = useI18n();
   const seedRef = useRef(0x1a2b3c4d);
@@ -77,6 +80,7 @@ export function TitleScreen({
             {t(hasRun ? 'buttons.continue' : 'buttons.play')}
           </Button>
           {hasRun && <Button className="btn btn--new" onClick={onNewGame}>{t('buttons.newGame')}</Button>}
+          <CatalogLink onBeforeLeave={onBeforeLeave} />
           <div className="title__icons">
             <LanguageControl />
             <SoundControl />

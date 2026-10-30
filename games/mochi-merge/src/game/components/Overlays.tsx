@@ -3,6 +3,55 @@ import { useI18n } from '../../i18n';
 import { Button } from './Button';
 import { Art } from './Art';
 import { tileImageKey } from '../../config/assets';
+import { useEffect, useRef } from 'react';
+import { CatalogLink } from './CatalogLink';
+
+/** The existing ? control opens help without adding anything to the HUD. */
+export function HelpDialog({ onClose, onBeforeLeave, returnFocus }: {
+  onClose: () => void; onBeforeLeave: () => void; returnFocus: HTMLElement | null;
+}) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const panel = ref.current;
+    panel?.querySelector<HTMLElement>('button')?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      } else if (event.key === 'Tab') {
+        const controls = panel?.querySelectorAll<HTMLElement>('button, a[href]');
+        if (!controls?.length) return;
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      returnFocus?.focus();
+    };
+  }, [onClose, returnFocus]);
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('coach.help')} ref={ref}>
+      <div className="panel panel--help">
+        <h2 className="panel__title">{t('coach.help')}</h2>
+        <p className="panel__body">{t('a11y.help')}</p>
+        <p className="panel__body">{t('coach.merge')}</p>
+        <div className="panel__actions">
+          <Button className="btn" onClick={onClose}>{t('buttons.close')}</Button>
+          <CatalogLink onBeforeLeave={onBeforeLeave} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function WinBanner({
   onKeepGoing,

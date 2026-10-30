@@ -16,7 +16,9 @@
     "mute": "Mute sound",
     "unmute": "Unmute sound",
     "language": "Change language",
-    "continue": "Continue"
+    "continue": "Continue",
+    "backToCatalog": "Back to catalog",
+    "close": "Close"
   },
   "hud": {
     "score": "Score",

@@ -15,7 +15,7 @@ import { LoadingScreen } from './game/LoadingScreen';
 import { TitleScreen } from './game/TitleScreen';
 import { GameScreen } from './game/GameScreen';
 import { Art } from './game/components/Art';
-import { readRun, clearRun } from './game/storage';
+import { readRun, clearRun, saveRun } from './game/storage';
 import { useAudio } from './platform/AudioContext';
 
 function GameRoot() {
@@ -34,7 +34,8 @@ function GameRoot() {
     <main className={`app app--${vp.layout}`}>
       <Art imgKey={bgKey} alt="" className="app__bg" />
       {screen === 'title' ? (
-        <TitleScreen layout={vp.layout} reduced={reduced} hasRun={!!savedRun} onPlay={() => start(!!savedRun)} onNewGame={() => start(false)} />
+        <TitleScreen layout={vp.layout} reduced={reduced} hasRun={!!savedRun} onPlay={() => start(!!savedRun)} onNewGame={() => start(false)}
+          onBeforeLeave={() => { if (savedRun) saveRun(savedRun.state, savedRun.best, savedRun.newBest); }} />
       ) : (
         <GameScreen layout={vp.layout} reduced={reduced} savedRun={savedRun} />
       )}

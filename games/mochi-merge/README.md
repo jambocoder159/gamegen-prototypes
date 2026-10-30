@@ -5,10 +5,10 @@ Golden Dragon, then keep playing for a higher score. React 19 + TypeScript + Vit
 
 ```bash
 npm install
-npm run dev -- --port 4221 --strictPort
+npm run dev -- --port 4311 --strictPort
 npm run build
-PORT=4221 npm run test:headless
-PORT=4221 npm run test:title
+PORT=4311 npm run test:headless
+PORT=4311 npm run test:title
 npm run check:i18n
 npm run test:logic
 npm run pack
@@ -30,6 +30,13 @@ or reopened with **?**. Every tile keeps its original art and has a high-contras
 number. The HUD shows score, best and **Goal: Golden Dragon**, with the highest
 tier reached out of 9. Results show the highest tier's name, number and icon,
 final score and best score.
+
+**Back to catalog** appears on the title (including Continue) and in the help
+dialog opened with the existing **?** button. Its native `../` link synchronously
+flushes the current run and best score using the pagehide save routine before
+navigation, then suspends audio. The title preserves a saved run; finished runs
+are never saved. Help traps Tab, closes with Escape or Close, and restores focus
+to **?**. The link is translated in all four languages and is absent from the HUD.
 
 Language defaults to the first supported entry in `navigator.languages`:
 `zh-TW`, `zh-HK`, `zh-MO` and `zh-Hant*` map to Traditional Chinese;
@@ -54,10 +61,14 @@ and wraps side controls on narrow tablet layouts.
 QA covers coaching, reload/continuation, invalid saves, browser language defaults,
 all translations, input/audio unlocking, goal and result data, reduced motion,
 image fallback, zero console/request errors, and resize/state preservation.
-`test:title` checks art/text non-overlap and normal/Continue title layouts on
+`test:title` checks art/text/link non-overlap and normal/Continue title layouts on
 portrait, landscape and desktop. Headless axe checks title, play, language menu,
 win and result at 375px and 1440px (zero violations required). Screenshots are
 written to `qa/` and `../_reports/fix_mochi-merge_*.png`.
+Catalog QA also checks native pointer/Enter navigation, saves before navigation,
+all four accessible names and focus rings, help focus trapping/restoration, and
+axe on help at both widths. Catalog screenshots are
+`../_reports/back_mochi-merge_title.png` and `back_mochi-merge_pause.png`.
 
 Scoring: merging into tier n gives `2^n` points. Each changed move spawns one
 mochi (90% tier 1, 10% tier 2). There is no undo. Audio remains original

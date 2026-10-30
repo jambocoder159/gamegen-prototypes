@@ -16,7 +16,9 @@
     "mute": "静音",
     "unmute": "开启音效",
     "language": "切换语言",
-    "continue": "继续游戏"
+    "continue": "继续游戏",
+    "backToCatalog": "返回目录",
+    "close": "关闭"
   },
   "hud": {
     "score": "分数",

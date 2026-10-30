@@ -12,7 +12,8 @@
     "test:headless": "node scripts/headless-test.mjs",
     "pack": "node scripts/pack.mjs",
     "test:logic": "node scripts/test-logic.mjs",
-    "test:sim": "node scripts/sim-balance.mjs"
+    "test:sim": "node scripts/sim-balance.mjs",
+    "test:hud": "node scripts/hud-overlap-test.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",

@@ -76,7 +76,7 @@ export async function touchControls({browser,menu,duel,open,snap,shot,geometry,f
  // Actual live language switches validate controls and coach labels, not only dictionaries.
  for(let i=0;i<4;i++){const lang=await p.$eval('html',e=>e.lang);for(const [w,h]of[[844,390],[667,375],[568,320]]){await p.setViewport({width:w,height:h,hasTouch:true,isMobile:true});await sleep(80);check(`touch live labels fit ${lang} ${w}x${h}`,(await p.evaluate(overflow)).length===0&&await p.$$eval('.plate,.play-top button,.timer',es=>es.every(e=>e.getBoundingClientRect().bottom<=64)));}await p.setViewport({width:844,height:390,hasTouch:true,isMobile:true});await sleep(80);await p.click('.toolbar button:nth-child(3)');await sleep(100);}
  await p.click('.fullscreen-toggle');check('touch fullscreen toggle exits fullscreen',await p.evaluate(()=>!document.fullscreenElement));await p.click('.fullscreen-toggle');check('touch fullscreen toggle enters fullscreen',await p.evaluate(()=>!!document.fullscreenElement));
- await p.click('button[aria-label="Pause"]');await p.click('.dialog-actions button:last-child');check('return to menu releases fullscreen',await p.evaluate(()=>!document.fullscreenElement));
+ await p.click('button[aria-label="Pause"]');await p.click('.dialog-actions button:last-of-type');check('return to menu releases fullscreen',await p.evaluate(()=>!document.fullscreenElement));
  check('touch application has no console errors or failed requests',errors.length===0,errors.join(';'));faults.push(...errors);await cdp.detach();await ctx.close();
  // APIs may be absent, denied, or WebKit-only; all are silent and gameplay remains available.
  for(const mode of['missing','rejecting','webkit']){

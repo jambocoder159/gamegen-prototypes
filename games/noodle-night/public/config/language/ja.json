@@ -53,5 +53,6 @@
   "continue": "つづきから",
   "newGame": "はじめから",
   "emptyBowl": "どんぶりは空です。注文の具材を入れよう。",
-  "incompleteBowl": "あと少し。足りない具材を入れよう。"
+  "incompleteBowl": "あと少し。足りない具材を入れよう。",
+  "backToCatalog": "カタログに戻る"
 }

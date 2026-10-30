@@ -53,5 +53,6 @@
   "continue": "繼續遊戲",
   "newGame": "新遊戲",
   "emptyBowl": "麵碗還是空的，先加入訂單配料。",
-  "incompleteBowl": "快完成了，再加入缺少的配料。"
+  "incompleteBowl": "快完成了，再加入缺少的配料。",
+  "backToCatalog": "返回目錄"
 }

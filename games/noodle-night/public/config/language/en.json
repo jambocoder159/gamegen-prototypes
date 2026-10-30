@@ -53,5 +53,6 @@
   "continue": "Continue",
   "newGame": "New game",
   "emptyBowl": "Bowl is empty — add the ordered toppings.",
-  "incompleteBowl": "Almost ready — add the missing toppings."
+  "incompleteBowl": "Almost ready — add the missing toppings.",
+  "backToCatalog": "Back to catalog"
 }

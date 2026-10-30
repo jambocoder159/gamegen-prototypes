@@ -53,5 +53,6 @@
   "continue": "继续游戏",
   "newGame": "新游戏",
   "emptyBowl": "面碗还是空的，先加入订单配料。",
-  "incompleteBowl": "快完成了，再加入缺少的配料。"
+  "incompleteBowl": "快完成了，再加入缺少的配料。",
+  "backToCatalog": "返回目录"
 }

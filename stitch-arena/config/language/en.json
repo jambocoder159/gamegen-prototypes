@@ -95,5 +95,16 @@
   "trophy": "Patch Cup champion",
   "trophyDesc": "Six victories, stitched together. The cup is yours!",
   "debug": "Practice test · Saves disabled",
-  "choose": "Selected"
+  "choose": "Selected",
+  "rotateTitle": "Please rotate your phone",
+  "rotateBody": "Turn your device sideways to play. Your match is paused and will resume here.",
+  "fullscreen": "Enter fullscreen",
+  "exitFullscreen": "Exit fullscreen",
+  "joystick": "Movement joystick: left or right to move, down to drop, up to aim. Jump uses the Jump button.",
+  "touchHelp": "Touch: play sideways. Drag the left joystick to move; down drops through platforms, up aims without jumping. Use Jump (twice for double jump), Punch, Spell and Hook on the right. Hold multiple controls together.",
+  "touchCoach0": "Joystick: move",
+  "touchCoach1": "Jump button: twice",
+  "touchCoach2": "Punch up close",
+  "touchCoach3": "Spell: aim with stick",
+  "touchCoach4": "Hook: pull or rescue"
 }

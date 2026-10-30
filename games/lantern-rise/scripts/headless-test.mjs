@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import { fixChecks } from './fix-checks.mjs';
+import { selectionChecks } from './selection-checks.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..');
@@ -88,6 +89,7 @@ async function main() {
     });
 
     await fixChecks(browser, BASE, check);
+    await selectionChecks(browser, BASE, check);
 
     // ---------- Main session ----------
     const page = await browser.newPage();

@@ -1,6 +1,33 @@
 /* Lantern Rise styles. Layout, text, hit areas, and simple transforms/opacity
    only — all game art comes from the supplied PNG/WebP assets. */
 
+/* Browser gestures must not select the game/HUD or flash a tap overlay. */
+:where(.lr-game, .lr-game *, .lr-overlay, .lr-overlay *, button, button *, canvas, img) {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:where(.lr-game, .lr-overlay, button, [role="button"]) { touch-action: manipulation; }
+img { -webkit-user-drag: none; }
+/* Help/dialog prose stays readable/selectable; scrolling and zoom stay native. */
+:where([role="dialog"], [role="dialog"] *, .lr-coach-message, .lr-coach-message *) {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+:where(button, button *, [role="button"], [role="button"] *, img, canvas) {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:where(input, textarea, select, [contenteditable="true"]) {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: auto;
+}
+
 :root {
   --ink: #231a52;
   --cream: #f3e4c4;

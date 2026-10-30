@@ -1,0 +1,10 @@
+import {L,A,CHARS,STAGES} from './load-logic.mjs';
+import {writeFileSync} from 'node:fs';
+let matches=0,totalTime=0,timeouts=0;const stats=Object.fromEntries(CHARS.map(c=>[c,{wins:0,games:0}]));
+function run(a,b,stage,seed,level=4,novice=false){const s=L.createMatch(seed,a,b,stage);s.countdown=0;while(s.winner===null&&s.time<160)L.step(s,[A.aiInput(s,0,novice?3:level,novice),A.aiInput(s,1,level)]);return s;}
+for(let a=0;a<4;a++)for(let b=a+1;b<4;b++)for(const stage of STAGES)for(let n=0;n<16;n++){const reverse=n%2;const pair=reverse?[CHARS[b],CHARS[a]]:[CHARS[a],CHARS[b]];const s=run(...pair,stage,1000+a*400+b*80+STAGES.indexOf(stage)*20+n);matches++;totalTime+=s.time;if(s.time>=120)timeouts++;for(const c of pair)stats[c].games++;if(s.winner!==null)stats[pair[s.winner]].wins++;}
+const rates=Object.fromEntries(CHARS.map(c=>[c,Number((stats[c].wins/stats[c].games*100).toFixed(2))]));console.table(CHARS.map(c=>({character:c,...stats[c],winPercent:rates[c]})));
+const novice=[];for(let level=1;level<=6;level++){let wins=0;const games=96;for(let n=0;n<games;n++){const a=CHARS[n%4],b=CHARS[(n%4+1+Math.floor(n/4)%3)%4],stage=STAGES[n%3];const s=run(a,b,stage,7000+n,level,true);if(s.winner===0)wins++;}novice.push({level,wins,games,winPercent:Number((wins/games*100).toFixed(2))});}console.table(novice);
+const summary={matches,rates,averageSeconds:Number((totalTime/matches).toFixed(2)),timeoutPercent:Number((timeouts/matches*100).toFixed(2)),novice};
+const checks={characterBalance:Object.values(rates).every(r=>r>=38&&r<=62),duration:summary.averageSeconds>=40&&summary.averageSeconds<=110,timeouts:summary.timeoutPercent<15,noviceMonotonic:novice.every((n,i)=>i===0||n.winPercent<=novice[i-1].winPercent),noviceL1:novice[0].winPercent>=65,noviceL6:novice[5].winPercent<=35};
+console.log(JSON.stringify({summary,checks},null,2));writeFileSync('/workspace/gamegen-games/_reports/stitch-arena_balance.json',JSON.stringify({summary,checks},null,2)+'\n');if(!Object.values(checks).every(Boolean))process.exitCode=1;

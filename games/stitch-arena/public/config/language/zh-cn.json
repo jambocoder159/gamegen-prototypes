@@ -95,5 +95,16 @@
   "trophy": "补丁杯冠军",
   "trophyDesc": "六场胜利，一针一线缝成冠军！",
   "debug": "测试练习・不保存进度",
-  "choose": "已选择"
+  "choose": "已选择",
+  "rotateTitle": "请将手机转为横向",
+  "rotateBody": "横拿设备即可游玩。对战已暂停，转向后将从原处继续。",
+  "fullscreen": "进入全屏",
+  "exitFullscreen": "退出全屏",
+  "joystick": "移动摇杆：左右移动、向下穿过平台、向上瞄准。跳跃请按跳跃键。",
+  "touchHelp": "触控：请横拿设备。拖动左侧摇杆移动，向下穿过平台，向上只瞄准、不跳跃。右侧有跳跃（按两次可二段跳）、出拳、法术、缝线钩，可多指同时按住。",
+  "touchCoach0": "摇杆左右移动",
+  "touchCoach1": "跳跃键可二段跳",
+  "touchCoach2": "靠近后按出拳",
+  "touchCoach3": "摇杆瞄准再施法",
+  "touchCoach4": "缝线钩拉人或回场"
 }

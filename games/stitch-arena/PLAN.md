@@ -19,7 +19,7 @@
 | 道具 | 未見公開描述 | **線軸 Spool**：隨機掉落，撿到得到「針線護盾」吸收下一擊並補滿技能冷卻 |
 | 場地機關 | 環境機關 | 縫花草原：會左右移動的小平台；燈籠夜市：巨大剪刀預警後落下剪人；冰霜斷崖：地面更滑＋60 秒後「拆線」使主平台從兩側縮短（突然死亡） |
 | 進程 | 一場接一場 | **補丁盃 Patch Cup**：6 場連戰（AI 等級 1→6、場地輪替、對手輪替），贏得第 2、4 場分別解鎖風鴉、符熊；另有自選的「快速對決」。可中途存檔、可續戰 |
-| 操作 | WASD/方向鍵＋X Y Z／滑鼠 | 方向鍵或 WASD 移動，**Z/J＝出拳、X/K＝法術、C/L＝縫線鉤**，滑鼠左鍵＝出拳、右鍵＝法術；手機有螢幕按鈕；↑/↓ 可改變法術角度（斜上／斜下） |
+| 操作 | WASD/方向鍵＋X Y Z／滑鼠 | 方向鍵或 WASD 移動，**Z/J＝出拳、X/K＝法術、C/L＝縫線鉤**，滑鼠左鍵＝出拳、右鍵＝法術；手機橫向使用左搖桿＋右側四顆動作鈕；↑/↓ 可改變法術角度（斜上／斜下） |
 | 文字／音效 | — | 全部原創：四語 UI 文字、程式合成的毛線／木琴／卡林巴風格音效與 BGM（`_tools/audio_gen.py` game8） |
 
 ## 2. 核心循環
@@ -62,17 +62,18 @@
 ## 4. 操作
 - 鍵盤：移動 A/D／←→；跳 W／↑／Space；穿下平台 S／↓；出拳 Z／J；法術 X／K；縫線鉤 C／L；暫停 P／Esc。↑/↓ 與法術同按＝改角度。
 - 滑鼠：左鍵＝出拳、右鍵＝法術（關閉 contextmenu），面向由移動方向決定；
-- 觸控：左側 ◀ ▶ 與 ⤒ 跳（≥56px 的真 `<button>`，pointerdown 按住有效、pointerup/cancel 放開，多點觸控同時有效）、右側三顆技能鈕（拳／法術／鉤；顯示冷卻環與冷卻秒數文字）。
+- 觸控：**橫向遊玩**。左側浮動搖桿有可見待機底座，≥140px 觸控區；第一指捕捉指標、移動起點在區內浮動，18% 水平死區，左右移動、下推穿過平台並向下瞄準、上推只向上瞄準（不跳）。右側四顆真 `<button>` 排成菱形：上方法術、左出拳、右縫線鉤、下方最大跳躍；一般 72px、跳躍 80px，間距 ≥10px。各指分開捕捉，pointerup/cancel/lostcapture 解除；冷卻環＋秒數／就緒文字、可用時 8ms 震動、按住縮至 94%。使用既有毛氈圖示及半透明米色／青綠縫線底座，沒有新插畫。
+- 方向／全螢幕：coarse pointer 或 maxTouchPoints 啟用觸控模式；直式對戰顯示四語旋轉提示，完全停止模擬，橫向自動續戰。桌面視窗變窄不受影響。Play／Start／Continue／Restart 的使用者手勢要求 fullscreen（navigationUI hide，WebKit 備援）再嘗試 landscape lock；拒絕／缺少 API 靜默回退，iOS Safari 通常不支援 HTML 元素全螢幕。觸控工具列有 ≥48px 全螢幕切換，離開對戰解除方向鎖並退出全螢幕。
 - 無障礙：全部可鍵盤操作；畫面按鈕也是 `<button>`，Enter／Space 可觸發；鍵位在說明對話框列出。
 
 ## 5. 畫面與版面（HUD 不可遮角色）
 - 結構：`HUD 區`（頂列＋兩個玩家牌）／`橫幅區`（倒數、FIGHT、KO、回合提示，保留固定高度，**不蓋舞台**）／`舞台 canvas`（只畫世界：背景、平台、角色、投射物、特效、傷害百分比小跳字、畫外箭頭）／`控制區`（觸控按鈕）。除 canvas 內的世界物件外，**任何 DOM 元件不得與舞台矩形相交**（`test:hud` 以 7 種視窗逐一量測）。
 - 鏡頭：跟隨兩位角色的 AABB，保留邊距，可視寬度在 900–1600 u 之間，隨舞台長寬比調整；舞台縮放後角色高度 ≥ 舞台高度的 14%（在 360×640 也成立）；角色離開畫面時在舞台邊緣畫小箭頭＋距離。
-- 直式（高/寬 ≥ 1.15）：頂列＋玩家牌（兩欄）→ 橫幅 → 舞台（寬滿、高約 40% 視窗）→ 控制區（左方向、右技能）。橫式（短邊小）：左右為控制欄，中間依序為 HUD、舞台。桌面：置中、最大寬 1400，顯示鍵位提示列，不顯示觸控鈕（`pointer: fine` 且寬 ≥ 900）；仍可用小視窗與觸控裝置。
+- 觸控橫式：頂部同列放雙方玩家牌、計時與 5 顆工具鈕（說明／音效／語言／全螢幕／暫停，≥48px）；中央上方 64px 橫幅，中央下方舞台，左右專用欄為 140px 搖桿與 164px 動作鈕區。HUD 字 ≥18px，舞台在 844×390 高 250px、667×375 高 235px、568×320 高 180px（皆 ≥45% 螢幕高）；攝影機及模擬不變，控制不疊舞台。四邊各自使用 safe-area inset，對戰防止 overscroll，控制 touch-action:none。直式對戰只顯示旋轉提示；選單、選角、結算與可捲動對話框支援兩種方向。桌面：置中、最大寬 1400，保留鍵盤提示與直式響應，不顯示搖桿／觸控鈕。
 - HUD：玩家牌（頭像＝角色 idle 圖縮圖、名稱、綻線 % ≥ 20px、鈕扣 ×3 ≥ 28px）、計時、暫停／說明／音效／語言（≥ 48px）。字 ≥ 18px，關鍵數字 ≥ 20px，4 語不溢出。
 - 開始頁：`logo_base.png`（限高）、標題文字（真文字，與 logo 不重疊）、Play、語言／音效；背後是 AI 對 AI 的實際對戰（無音效，Play 後才有 BGM）。`test:title` 7 視窗。
 - 補丁盃進度頁、選角頁（4 角色卡，鎖定者顯示 icon_lock＋解鎖條件文字）、結算（勝/敗、統計：擊飛次數、最高綻線、時間）。
-- 首次 30 秒教學（橫幅區內、非阻擋、可略過、「?」重開、自動前進）：①移動 ②跳 ③出拳 ④法術 ⑤縫線鉤（出界救援提示）。
+- 首次 30 秒教學（橫幅區內、非阻擋、可略過、「?」重開、自動前進）：①搖桿移動 ②跳躍鈕 ③出拳 ④法術與搖桿瞄準 ⑤縫線鉤（拉人／回場提示）；觸控與桌面各用對應四語文字，說明對話框同時列出鍵盤和觸控方法。
 
 ## 6. 動畫（單張姿勢＋程式動畫，沒有骨架）
 - 每個角色 8 張（`<id>_idle1/idle2/run/jump/punch/cast/hurt/tumble`，同畫布、腳底置中）：站立每 0.5 秒換 idle1/idle2；移動用 run（左右翻轉）；空中 jump；出拳 punch（0.2 秒）；法術 cast（0.3 秒）；受擊 hurt；強擊飛 tumble 並依速度旋轉。
@@ -148,6 +149,8 @@ Browser QA flags are isolated and documented in README. They accelerate ordinary
 One Play gesture opens the main menu and starts music; there is no separate Enter gate. The title exhibition starts simulating immediately and has no combat SFX (before Play, WebAudio remains suspended). All ordinary HUD controls, coach and banners occupy layout cells outside the canvas. Modal dialogs hide the canvas, make the game surface inert, and trap/restore focus; visible dialog controls therefore never intersect a world canvas. Snapshots save once per simulated second and on page hide, and preserve the RNG and AI decisions.
 
 
-### Final QA evidence
+### Touch revision QA evidence
 
-Build and i18n validation (97 keys × four languages) pass. Logic: 25/25. Browser: 133/133, including zero axe violations for title, menu, settings, select, touch play, pause, help and result at 375px and 1440px (16 combinations). Title/loading: 84/84 across seven viewports and all four languages. Real reload restores fighters, Fray, buttons, timer and RNG exactly; Cup QA completes all six simulation matches and both unlocks; isolated debug runs leave real saves intact. Normal runs have zero console errors/warnings/failed requests. Reports, complete test logs and visually inspected captures are under `/workspace/gamegen-games/_reports/stitch-arena_*` and `title_stitch-arena_*`. Package verification checks index.html and poster.png at ZIP root, no dist/ directory or sourcemaps. Human playtesting and audio listening review remain outstanding.
+Production simulation, camera and balance constants are unchanged. The deterministic suite remains 25/25 logic checks and six balance targets across 288 round-robin plus 576 novice matches. Four dictionaries now contain 108 matching non-empty keys. The dedicated touch controls browser section verifies geometry, minimum sizes, stage/fighter scale, pointer capture, simultaneous multi-touch, cooldown text/rings, portrait pause and automatic resume, fullscreen requests/denials/WebKit fallback, localisation, axe accessibility, and desktop behavior. Final build and pack PASS. Browser **191/191** (including **61 dedicated touch checks**); title/loading **84/84** across seven viewports and four languages. Axe: **20/20 audits, zero violations**, covering touch portrait menus, landscape play/pause/help/result, desktop surfaces and the rotate overlay. Console errors/warnings/failed requests: zero in the normal desktop and touch runs. ZIP: **90 entries**, index.html and poster.png at root; all **5 independent archive checks** pass (both root files, no dist wrapper, no sourcemaps, CRC integrity).
+
+Final logs: `/workspace/gamegen-games/_reports/stitch-arena_touch_{build,i18n,logic,sim,headless,title,pack}.log`; summary: `stitch-arena_touch_validation.json`. All five required screenshots were generated and visually inspected: `stitch-arena_touch_844x390.png`, `stitch-arena_touch_667x375.png`, `stitch-arena_touch_932x430.png`, `stitch-arena_rotate_overlay.png`, `stitch-arena_touch_coach.png`. A separate 568×320 Japanese capture exposed and verified the fix for wrapped HUD labels. Touch tests include a fine-pointer touch laptop, three simultaneous fingers, pointer cancellation, full state equality while paused by rotation, and live translated HUD/control labels at 844×390, 667×375 and 568×320. Physical-device feel and human audio listening remain untested. No git add/commit or deployment was performed.

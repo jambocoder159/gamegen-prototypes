@@ -128,5 +128,6 @@
   "relic_flame": "火焰之心",
   "relicDesc_flame": "每級火焰灼燒傷害 +15%。",
   "shardPassive": "累計印記：{n} · 全傷害 +{p}%、金幣 +{p}%。每枚已獲印記各加 2%，上限 100%；花費不減少加成。",
-  "shardPassiveNext": "轉生後：全傷害 +{p}%、金幣 +{p}%。"
+  "shardPassiveNext": "轉生後：全傷害 +{p}%、金幣 +{p}%。",
+  "backToCatalog": "返回目錄"
 }

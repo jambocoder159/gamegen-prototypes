@@ -1,3 +1,4 @@
+import { catalogChecks } from './catalog-checks.mjs';
 import { performanceChecks } from "./performance-test.mjs";
 import { panelChecks } from "./panels-test.mjs";
 import { enemySwapChecks } from "./enemy-swap-test.mjs";
@@ -477,6 +478,7 @@ try {
     escaped.join(";"),
   );
   await sub.close();
+  await catalogChecks(browser, url);
   await verifyHud(browser, url);
   await enemySwapChecks(browser, url);
   await panelChecks(browser, url);

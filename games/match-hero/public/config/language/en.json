@@ -128,5 +128,6 @@
   "relic_flame": "Flame Heart",
   "relicDesc_flame": "Burn damage +15% per level.",
   "shardPassive": "Lifetime shards: {n} · All damage +{p}%, gold +{p}%. Each earned shard adds 2%, up to 100%; spending shards keeps the bonus.",
-  "shardPassiveNext": "After rebirth: all damage +{p}%, gold +{p}%."
+  "shardPassiveNext": "After rebirth: all damage +{p}%, gold +{p}%.",
+  "backToCatalog": "Back to catalog"
 }

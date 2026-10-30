@@ -41,18 +41,24 @@ Decorative effects use a bounded fixed overlay and actual DOM coordinates, with 
 
 `match-hero.save.v2` automatically reads a v1 save if v2 does not exist, retaining all original progress and defaulting permanent fields. The v1 key is not deleted. Old enemy HP is retained even when greater than the newly balanced maximum. Invalid data resets safely; unavailable storage does not stop play.
 
-Traditional Chinese, Simplified Chinese, English and Japanese have 130 matching keys. Browser language sets the initial choice; explicit choices persist separately from the run.
+Traditional Chinese, Simplified Chinese, English and Japanese have 131 matching keys. Browser language sets the initial choice; explicit choices persist separately from the run.
 
 `?floor=N` (1–100) creates an isolated debug run and never overwrites a real save. `?qa=1` exposes `window.__mh` for browser tests with persisted fixtures. Ordinary play has no debug hook.
+
+## Back to catalog
+
+The title screen and in-game Settings dialog have a four-language “Back to catalog” link (`href="../"`), styled as a 48px secondary button with keyboard focus and existing button sounds. Activation synchronously saves the real run through the pagehide/visibilitychange persistence function, bypasses the autosave interval, and stops BGM before navigation. The title never saves its bot demo; debug adventures preserve real saves. The link participates in the dialog focus trap and never appears in the play HUD.
+
+`test:headless` covers navigation, immediate saves, accessibility and keyboard behavior; `test:title` includes the link in all seven viewport checks. Screenshots are `back_match-hero_title.png` and `back_match-hero_pause.png` in the shared reports directory. The task's external axe path is unavailable, so audits use the existing local `axe-core` dependency.
 
 ## Validation status
 
 - Logic: 19 checks, including v1 fixtures, lifecycle, charge, heavy strikes, relics, rebirth and lifetime shard multipliers across every damage/gold source.
 - HUD: 556 checks, including statistics content bounds, 4 languages × 7 sizes, axe, passive labels, preview, keyboard and real purchases/reset.
 - Enemy swap: 72 checks, including 100 samples at 50ms, four kills including a boss, and eight sprites × seven sizes. The wider bat has a separate 36%-wide, 52%-high contain box.
-- Title: 112 layout checks. Full headless also covers input, saves, skills, accessibility, selection, fallback, subpath hosting and a bounded-effect performance sample (~60fps on desktop Chrome, not a mobile device guarantee).
+- Title: 112 layout checks with the catalog link. Full headless: 853/853 checks, including 125 catalog checks and 18 axe audits with zero violations. It also covers input, saves, skills, selection, fallback, subpath hosting and a bounded-effect performance sample (~60fps on desktop Chrome, not a mobile device guarantee).
 - **Balance 8/8:** standard reaches floor 10 in 6.21 minutes, auto-only 19.97; standard has 0 retreats through floor 20, auto 5. Second-run floor 10 is 4.50 minutes, 27.4% faster. Average boss damage is 59.9% / 44.8% for the standard first / second runs.
-- **Sprites remain 27/43:** the current workspace still has the older textures and whole-image pink checker (bat 288×223, whereas the task describes 359×225). The supplied textures and checker remain unchanged as instructed; the existing test exits nonzero. Updated-material verification is pending. See `sprite_check_match-hero.txt`.
+- Sprites: 43/43 pass in the current workspace (including the 359×225 bat). The catalog change leaves the supplied textures and checker unchanged. See `sprite_check_match-hero.txt`.
 
 Full constants, simulation table and limitations: `PLAN.md`. Final measured results: `_reports/mh2_completion.md`.
 

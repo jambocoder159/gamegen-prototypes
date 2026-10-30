@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { useAudio } from "../platform/AudioContext";
 import { Art, Icon } from "./Art";
+import { CatalogLink } from "./CatalogLink";
+import { persistRun } from "./persistence";
 import {
   newRun,
   seeded,
@@ -75,6 +77,13 @@ export function TitleScreen({ onPlay }: { onPlay: (fresh: boolean) => void }) {
               {t(muted ? "soundOff" : "soundOn")}
             </button>
           </div>
+          <CatalogLink onSave={() => {
+            // Read the real save again; never persist the title's bot demo.
+            try {
+              const run = loadSave((key) => localStorage.getItem(key));
+              if (run && !run.defeated) persistRun(run);
+            } catch { /* Storage may be unavailable. */ }
+          }} />
         </div>
       </div>
     </main>

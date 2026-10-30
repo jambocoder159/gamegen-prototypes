@@ -19,6 +19,7 @@ export function GameScreen({ viewport, initialSim }: { viewport: Viewport; initi
   const { t } = useI18n();
 
   const [gameKey, setGameKey] = useState(0);
+  const saveBeforeLeave = useRef<(() => void) | null>(null);
   const [paused, setPaused] = useState(!!initialSim);
   const [result, setResult] = useState<GameResult | null>(null);
   const [best, setBest] = useState<number>(() => loadBest());
@@ -114,6 +115,7 @@ export function GameScreen({ viewport, initialSim }: { viewport: Viewport; initi
         hud={hudRefs}
         onOver={onOver}
         onTogglePause={togglePause}
+        saveBeforeLeave={saveBeforeLeave}
       />
 
       <Hud refs={hudRefs} fuel={status.fuel} />
@@ -130,7 +132,7 @@ export function GameScreen({ viewport, initialSim }: { viewport: Viewport; initi
         <TextButton className="lr-coach-skip" onClick={closeCoach}>{t('coach.skip')}</TextButton>
       </aside>}
 
-      {paused && !result && <PauseOverlay onResume={togglePause} />}
+      {paused && !result && <PauseOverlay onResume={togglePause} onSave={() => saveBeforeLeave.current?.()} />}
       {result && (
         <ResultPanel result={result} best={best} isNewBest={isNewBest} onRestart={restart} />
       )}

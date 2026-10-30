@@ -1,11 +1,11 @@
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { GameSim, CorridorBot, FIXED_DT, CONFIG } from '../src/game/logic.ts';
 import { hudCeilingWorldY } from '../src/config/layout.ts';
+import { axeSource } from './axe-source.mjs';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const reports = '/workspace/gamegen-games/_reports';
-const axeSource = readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8');
 
 export async function fixChecks(browser, base, check) {
   mkdirSync(reports, { recursive: true });

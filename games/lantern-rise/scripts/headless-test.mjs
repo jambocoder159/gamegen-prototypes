@@ -12,12 +12,16 @@ import { dirname, join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import { fixChecks } from './fix-checks.mjs';
 import { selectionChecks } from './selection-checks.mjs';
+import { catalogChecks } from './catalog-checks.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..');
 const qa = join(repo, 'qa');
 const PORT = Number(process.env.PORT) || 4173;
-const BASE = `http://localhost:${PORT}/`;
+const GAME_PATH = '/gamegen-prototypes/lantern-rise/';
+// Use the supported relative style root so this isolated subpath server does
+// not probe the optional shared /common/ directory at the host root.
+const BASE = `http://localhost:${PORT}${GAME_PATH}?style=./common/`;
 const CHROME = '/usr/bin/google-chrome';
 
 const results = [];
@@ -73,7 +77,7 @@ async function main() {
   execSync('npm run build', { cwd: repo, stdio: 'inherit' });
 
   console.log('Starting preview…');
-  const server = spawn(process.execPath, [join(repo, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], {
+  const server = spawn(process.execPath, [join(repo, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort', '--base', GAME_PATH], {
     cwd: repo,
     stdio: 'ignore',
   });
@@ -88,6 +92,7 @@ async function main() {
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
 
+    await catalogChecks(browser, BASE, check);
     await fixChecks(browser, BASE, check);
     await selectionChecks(browser, BASE, check);
 

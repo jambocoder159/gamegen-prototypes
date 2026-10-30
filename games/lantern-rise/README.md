@@ -18,8 +18,8 @@ npm run dev        # http://localhost:5173
 npm run build          # tsc --noEmit + vite build  -> dist/ (index.html + poster.png at root)
 npm run check:i18n     # verify the 4 language files share keys and have no empty values
 npm run test:logic     # countdown, oil endurance, validated deterministic saves, spark bounds, 4-minute bots
-PORT=4222 npm run test:title  # title/art non-overlap across desktop and phone viewports
-PORT=4222 npm run test:headless  # build, serve, drive a real browser, assert QA, write screenshots to qa/
+PORT=4321 npm run test:title  # title/art/link non-overlap across desktop and phone viewports
+PORT=4322 npm run test:headless  # build, serve at catalog subpath, browser QA, screenshots to qa/
 npm run pack           # build then write lantern-rise.zip (contents of dist/ at the zip root)
 ```
 
@@ -63,7 +63,9 @@ The first run shows three icon-led tips at the bottom: hold to rise, release to 
 
 An active run is saved at most once per simulation second and on pagehide/tab hide. The versioned `lantern-rise.run` snapshot includes oil, movement, distance, entities, countdown and random-generator state. Continue on the title restores it paused; New game, restart and game over discard the previous run. Every restored field is type/range checked, entity arrays and JSON size are capped, and corrupt/unknown data safely resets. Storage failures do not prevent play.
 
-Headless QA includes actual reload recovery, browser language and saved choice, onboarding actions, oil warning audio, reduced motion, all-language HUD fit, and axe checks on title, play, onboarding, pause and results at 375px and 1440px. Final fix screenshots are written to `../_reports/fix_lantern-rise_*.png`. The tests use port 4222 via `PORT=4222`; title tests also accept `PORT=4222`. Axe is loaded locally from `/workspace/deploy/node_modules/axe-core/axe.min.js`.
+**Back to catalog** appears on the initial Enter screen, title menu and pause dialog in all four languages. These keyboard-accessible links use `href="../"`. Activation synchronously saves the current run through the pagehide save function (bypassing the one-second throttle), clears held input and suspends audio before the browser navigates. Start/title links preserve any saved run; finished runs are never saved. The pause dialog traps Tab and restores focus when resumed. No catalog control appears in the play HUD.
+
+Headless QA includes actual reload recovery, browser language and saved choice, onboarding actions, oil warning audio, reduced motion, all-language HUD/link fit, catalog navigation and synchronous saving, modal focus, and axe checks at 375px and 1440px. It serves `/gamegen-prototypes/lantern-rise/` with the supported `?style=./common/` asset override. Final fix screenshots are written to `../_reports/fix_lantern-rise_*.png`; catalog screenshots are `../_reports/back_lantern-rise_title.png` and `back_lantern-rise_pause.png`. Tests accept `PORT`. Axe uses `/workspace/deploy/node_modules/axe-core/axe.min.js` when available, otherwise the local dev dependency.
 
 ### Tuning tools
 

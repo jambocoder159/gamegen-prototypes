@@ -18,8 +18,8 @@ const GAME = 'lantern-rise';
 const DEFAULT_PORT = 4182;
 const LANG_KEY = 'lantern-rise.lang';
 const SCREENS = [
-  { id: 'gate', root: '.lr-loading', primary: '.lr-enter', art: [], text: ['.lr-loading .lr-title-text', '.lr-loading .lr-tagline', '.lr-enter'] },
-  { id: 'title', root: '.lr-title', demo: '.lr-playfield', primary: '.lr-play', art: ['.lr-logo'], text: ['.lr-title .lr-title-text', '.lr-title .lr-tagline', '.lr-play', '.lr-help'] },
+  { id: 'gate', root: '.lr-loading', primary: '.lr-enter', art: [], text: ['.lr-loading .lr-title-text', '.lr-loading .lr-tagline', '.lr-enter', '.lr-loading .lr-catalog'] },
+  { id: 'title', root: '.lr-title', demo: '.lr-playfield', primary: '.lr-play', art: ['.lr-logo'], text: ['.lr-title .lr-title-text', '.lr-title .lr-tagline', '.lr-play', '.lr-continue', '.lr-catalog', '.lr-help'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -85,6 +85,9 @@ function measure(screen) {
 
   const rootEl = document.querySelector(screen.root);
   if (!rootEl) return [`screen root ${screen.root} missing`];
+  const catalog = rootEl.querySelector('.lr-catalog');
+  if (!catalog || catalog.getAttribute('href') !== '../') problems.push('catalog link missing or incorrect');
+  else if (catalog.getBoundingClientRect().height < 48) problems.push('catalog link smaller than 48px');
 
   const primary = document.querySelector(screen.primary);
   let primaryRect = null;
@@ -95,7 +98,7 @@ function measure(screen) {
     if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  for (const b of rootEl.querySelectorAll('button, a[href]')) {
     if (!visible(b)) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);

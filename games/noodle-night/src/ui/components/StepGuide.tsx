@@ -17,8 +17,8 @@ export function StepGuide({ active, onSkip }: { active?: number; onSkip?: () => 
           <li key={i} data-step={i}>
             <span className="step-number" aria-hidden="true">{i + 1}</span>
             <span className="step-art" aria-hidden="true">
-              {imgUrl(images, step.icon) ? <img src={imgUrl(images, step.icon)} alt="" /> : <span className="img-fallback" />}
-              {i === 0 && imgUrl(images, 'egg') && <img className="guide-order-icon" src={imgUrl(images, 'egg')} alt="" />}
+              {imgUrl(images, step.icon) ? <img draggable={false} src={imgUrl(images, step.icon)} alt="" /> : <span className="img-fallback" />}
+              {i === 0 && imgUrl(images, 'egg') && <img draggable={false} className="guide-order-icon" src={imgUrl(images, 'egg')} alt="" />}
             </span>
             <span>{step.text}</span>
           </li>

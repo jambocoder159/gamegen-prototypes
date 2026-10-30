@@ -12,12 +12,14 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 import { selectionChecks } from './selection-checks.mjs';
+import { catalogChecks } from './catalog-checks.mjs';
+import { axeSource } from './axe-source.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 
-const PORT = Number(process.env.PORT) || 4221;
+const PORT = Number(process.env.PORT) || 4311;
 const BASE_URL = `http://localhost:${PORT}/mochi-merge/`;
 const CHROME = '/usr/bin/google-chrome';
 
@@ -69,6 +71,7 @@ async function main() {
 
     try {
       await selectionChecks(browser, BASE_URL, check);
+      await catalogChecks(browser, BASE_URL, check);
       await runMain(browser);
       await runFallback(browser);
       await runScenarios(browser);
@@ -143,6 +146,7 @@ async function runMain(browser) {
   check('coach completes after player merges', await page.$('.coach__text') === null && await page.evaluate(()=>localStorage.getItem('mochi.coach')==='done'));
   await page.click('.help-btn');
   check('help reopens coach', await page.$('.coach__text') !== null);
+  await page.keyboard.press('Escape');
   await page.click('.coach__skip');
   check('coach can be skipped', await page.$('.coach__text') === null);
   const savedBefore=await snapshot(page);
@@ -217,6 +221,7 @@ async function runMain(browser) {
   let overflowOk = true;
   await page.setViewport({width:360,height:640});
   await page.click('.help-btn');
+  await page.keyboard.press('Escape');
   for (const item of ['en', 'zh-tw', 'zh-cn', 'ja']) {
     await page.click('.game__controls .lang .icon-btn');
     await page.waitForSelector('.lang__menu', { timeout: 5000 });
@@ -373,7 +378,7 @@ async function auditPair(page, name) {
   const before=page.viewport();
   for(const width of [375,1440]) {
     await page.setViewport({width,height:width===375?812:900,deviceScaleFactor:1});
-    await page.evaluate(readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js','utf8'));
+    await page.evaluate(axeSource);
     const issues=await page.evaluate(async()=> (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa','best-practice']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target.join(' '))})));
     check(`axe ${name} ${width}: zero violations`,issues.length===0,JSON.stringify(issues));
   }

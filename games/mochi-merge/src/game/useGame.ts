@@ -43,8 +43,12 @@ export function useGame(audio: AudioManager, savedRun: SavedRun | null) {
     writeBest(next.best);
     saveRun(next.state, next.best, next.newBest);
   }, []);
+  const flush = useCallback(() => {
+    const r = current.current;
+    writeBest(r.best);
+    saveRun(r.state, r.best, r.newBest);
+  }, []);
   useEffect(() => {
-    const flush = () => { const r = current.current; saveRun(r.state, r.best, r.newBest); };
     flush();
     window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', flush);
@@ -52,7 +56,7 @@ export function useGame(audio: AudioManager, savedRun: SavedRun | null) {
       window.removeEventListener('pagehide', flush);
       document.removeEventListener('visibilitychange', flush);
     };
-  }, []);
+  }, [flush]);
   const doMove = useCallback((dir: Dir): boolean => {
     const prev = current.current;
     if (prev.state.over || (prev.state.won && !prev.state.keepGoing)) return false;
@@ -74,5 +78,5 @@ export function useGame(audio: AudioManager, savedRun: SavedRun | null) {
     if (keepPlaying) commit({ ...current.current, state: { ...current.current.state, keepGoing: true } });
     else restart();
   }, [commit, restart]);
-  return { ...run, showWin: run.state.won && !run.state.keepGoing, doMove, restart, dismissWin };
+  return { ...run, showWin: run.state.won && !run.state.keepGoing, doMove, restart, dismissWin, flush };
 }

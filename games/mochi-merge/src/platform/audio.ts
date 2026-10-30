@@ -107,10 +107,15 @@ export class AudioManager {
     }
   }
 
+  /** Also used before catalog navigation; suspension does not discard buffers. */
+  pause(): void {
+    if (this.ctx?.state === 'running') this.ctx.suspend().catch(() => {});
+  }
+
   private onVisibility = () => {
     if (!this.ctx) return;
     if (document.hidden) {
-      if (this.ctx.state === 'running') this.ctx.suspend().catch(() => {});
+      this.pause();
     } else {
       if (this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});

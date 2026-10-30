@@ -1,11 +1,11 @@
 /* Browser gestures must not select the game/HUD or flash a tap overlay. */
-:where(.game, .game *, .overlay, .overlay *, button, button *, [role="button"], [role="button"] *, canvas, img) {
+:where(.game, .game *, .overlay, .overlay *, button, button *, .catalog-link, [role="button"], [role="button"] *, canvas, img) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
-:where(.game, .overlay, button, [role="button"]) { touch-action: manipulation; }
+:where(.game, .overlay, button, .catalog-link, [role="button"]) { touch-action: manipulation; }
 img { -webkit-user-drag: none; }
 /* Keep help/dialog prose selectable and preserve native scrolling and zoom. */
 :where([role="dialog"], [role="dialog"] *, .coach__text, .coach__text *) {
@@ -13,7 +13,7 @@ img { -webkit-user-drag: none; }
   -webkit-user-select: text;
   -webkit-touch-callout: default;
 }
-:where(button, button *, [role="button"], [role="button"] *, img, canvas) {
+:where(button, button *, .catalog-link, [role="button"], [role="button"] *, img, canvas) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -158,6 +158,14 @@ img.art {
 }
 .btn:hover {
   background: #ffe7f0;
+}
+.catalog-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+  max-width: 100%;
 }
 .btn--primary {
   background: #ff9ec4;
@@ -441,7 +449,7 @@ img.art {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: min(52dvh, calc(100dvh - 280px));
+  max-height: min(52dvh, calc(100dvh - 344px));
   min-height: 0;
   flex: 0 1 auto;
 }
@@ -467,7 +475,8 @@ img.art {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
+  max-width: 100%;
 }
 .title__icons {
   display: flex;

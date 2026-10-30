@@ -14,6 +14,7 @@ import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { selectionChecks } from './selection-checks.mjs';
 import { createServer } from 'node:http';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -123,6 +124,7 @@ async function main() {
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
     try {
+      await selectionChecks(browser, BASE_URL, check);
       await runMain(browser);
       await runGrownGarden(browser);
       await runV2(browser);
@@ -174,7 +176,10 @@ async function runMain(browser) {
   await page.waitForSelector('.title__content', { timeout: 10000 });
   await page.waitForSelector('.title__demo .plots__grid', { timeout: 10000 });
   const snap1 = await page.$eval('.title__demo .plots__grid', (el) => el.innerHTML);
-  await sleep(1600);
+  // The bot can spend its first decisions earning dew or buying pot power.
+  // Observe an actual plot change instead of assuming it happens in 1.6 seconds.
+  await page.waitForFunction(before => document.querySelector('.title__demo .plots__grid')?.innerHTML !== before,
+    { timeout: 8000 }, snap1).catch(error => { if (error.name !== 'TimeoutError') throw error; });
   const snap2 = await page.$eval('.title__demo .plots__grid', (el) => el.innerHTML);
   check('title demo is running (garden changes over time)', snap1 !== snap2);
   await page.screenshot({ path: join(qa, 'title.png') });

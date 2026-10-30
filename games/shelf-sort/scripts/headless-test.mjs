@@ -13,6 +13,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { selectionChecks } from './selection-checks.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
@@ -179,6 +180,7 @@ async function main() {
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
     try {
+      await selectionChecks(browser, BASE_URL, check);
       await runMain(browser);
       await runManyShelves(browser);
       await runFallback(browser);

@@ -13,6 +13,7 @@ import { loadProgress } from './progress';
 import { clearRun, loadRun, type SavedRun } from './run';
 import { BoardView } from './components/BoardView';
 import { Button } from './components/Button';
+import { CatalogLink } from './components/CatalogLink';
 import { LanguageControl, SoundControl } from './components/Controls';
 import { Art } from './components/Art';
 import type { ClearFx } from './useGame';
@@ -123,6 +124,7 @@ export function TitleScreen({
           {savedRun && <Button className="btn btn--new" onClick={() => { clearRun(); onPlay(1); }}>
             {t('buttons.newGame')}
           </Button>}
+          <CatalogLink />
           <div className="title__icons">
             <LanguageControl />
             <SoundControl />

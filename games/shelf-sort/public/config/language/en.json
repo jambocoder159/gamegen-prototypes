@@ -23,7 +23,8 @@
     "language": "Change language",
     "newGame": "New game",
     "help": "How to play",
-    "skip": "Skip"
+    "skip": "Skip",
+    "catalog": "Back to catalog"
   },
   "hud": {
     "level": "Level",

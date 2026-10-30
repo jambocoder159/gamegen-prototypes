@@ -18,7 +18,7 @@ const DEFAULT_PORT = 4224;
 const LANG_KEY = 'shelf-sort.lang';
 const SCREENS = [
   { id: 'gate', root: '.loading', primary: '.btn--enter', art: [], text: ['.loading__title', '.btn--enter'] },
-  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo'], text: ['.title__name', '.title__tagline', '.btn--play'] },
+  { id: 'title', root: '.title', demo: '.title__demo', primary: '.btn--play', art: ['.title__logo'], text: ['.title__name', '.title__tagline', '.btn--play', '.btn--new', '.catalog-link', '.title__icons'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -94,11 +94,12 @@ function measure(screen) {
     if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  for (const b of rootEl.querySelectorAll('button, a[href]')) {
     if (!visible(b) || (screen.demo && b.closest(screen.demo))) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
-    if (r.width < 44 || r.height < 44) problems.push(`button ${desc(b)} smaller than 44px ${fmt(r)}`);
+    const min = b.matches('.catalog-link') ? 48 : 44;
+    if (r.width < min || r.height < min) problems.push(`control ${desc(b)} smaller than ${min}px ${fmt(r)}`);
   }
 
   for (const el of rootEl.querySelectorAll('img, .art, [class*="art--fallback"]')) {

@@ -1,11 +1,11 @@
 /* Browser gestures must not select the game/HUD or flash a tap overlay. */
-:where(.game, .game *, .overlay, .overlay *, button, button *, [role="button"], [role="button"] *, canvas, img) {
+:where(.game, .game *, .overlay, .overlay *, button, button *, .catalog-link, [role="button"], [role="button"] *, canvas, img) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
-:where(.game, .overlay, button, [role="button"]) { touch-action: manipulation; }
+:where(.game, .overlay, button, .catalog-link, [role="button"]) { touch-action: manipulation; }
 img { -webkit-user-drag: none; }
 /* Keep help/dialog prose selectable and preserve native scrolling and zoom. */
 :where([role="dialog"], [role="dialog"] *, .coach__copy, .coach__copy *, .coach__keys, .coach__keys *) {
@@ -13,7 +13,7 @@ img { -webkit-user-drag: none; }
   -webkit-user-select: text;
   -webkit-touch-callout: default;
 }
-:where(button, button *, [role="button"], [role="button"] *, img, canvas) {
+:where(button, button *, .catalog-link, [role="button"], [role="button"] *, img, canvas) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -165,6 +165,13 @@ img.art {
 }
 .btn:hover {
   background: #fff9ea;
+}
+.catalog-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  max-width: 100%;
 }
 .btn--primary {
   background: var(--orange);
@@ -536,7 +543,7 @@ img.art {
 .title__logo {
   min-height: 0;
   max-width: 100%;
-  max-height: min(52dvh, calc(100dvh - 280px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  max-height: min(52dvh, calc(100dvh - 350px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   width: min(52vw, 260px);
   height: auto;
 }
@@ -562,7 +569,7 @@ img.art {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 .title__icons {
   display: flex;
@@ -580,6 +587,16 @@ img.art {
   padding: 16px;
   background: rgba(18, 75, 71, 0.5);
 }
+.overlay--modal {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: var(--ink);
+}
+.overlay--modal::backdrop { background: transparent; }
 .panel {
   display: flex;
   flex-direction: column;
@@ -660,7 +677,7 @@ img.art {
   margin: 6px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
 }
@@ -692,6 +709,8 @@ img.art {
   border-style: dashed;
   cursor: default;
 }
+.panel--levels .levelcell { padding-inline: 0; }
+.panel--levels .stars--sm { gap: 1px; }
 
 /* On-screen coaching occupies its own grid region beside/below the board. */
 .game__coach {
@@ -749,6 +768,7 @@ img.art {
   .game__coach { gap: 4px; padding: 4px; }
   .title__actions:has(.btn--new) { display: grid; grid-template-columns: 1fr 1fr; }
   .title__actions:has(.btn--new) .btn { padding: 10px 16px; }
+  .title__actions:has(.btn--new) .catalog-link { grid-column: 1 / -1; justify-self: center; }
   .title__icons { grid-column: 1 / -1; justify-content: center; }
 
   .title__content {
@@ -771,6 +791,9 @@ img.art {
   .title__name, .title__tagline, .title__actions { grid-column: 2; }
   .title__name { font-size: clamp(24px, 4vw, 36px); }
   .title__actions { gap: 8px; }
+  .panel--levels { width: min(100%, 640px); max-width: 640px; }
+  .panel--levels .levelgrid { grid-template-columns: repeat(6, 1fr); }
+  .panel--levels .levelcell { aspect-ratio: auto; min-height: 48px; padding: 4px 6px; }
   .panel--win {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);

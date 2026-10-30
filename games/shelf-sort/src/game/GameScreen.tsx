@@ -148,6 +148,7 @@ export function GameScreen({
           levels={game.levels}
           progress={game.progress}
           current={game.level.number}
+          onSave={game.persist}
           onPick={(n) => {
             game.gotoLevel(n);
             setPicker(false);

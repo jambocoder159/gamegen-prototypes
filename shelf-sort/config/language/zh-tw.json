@@ -23,7 +23,8 @@
     "language": "切換語言",
     "newGame": "新遊戲",
     "help": "玩法說明",
-    "skip": "略過"
+    "skip": "略過",
+    "catalog": "返回目錄"
   },
   "hud": {
     "level": "關卡",

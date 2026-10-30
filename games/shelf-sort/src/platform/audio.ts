@@ -111,10 +111,14 @@ export class AudioManager {
     }
   }
 
+  suspend(): void {
+    if (this.ctx?.state === 'running') this.ctx.suspend().catch(() => {});
+  }
+
   private onVisibility = () => {
     if (!this.ctx) return;
     if (document.hidden) {
-      if (this.ctx.state === 'running') this.ctx.suspend().catch(() => {});
+      this.suspend();
     } else {
       if (this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});

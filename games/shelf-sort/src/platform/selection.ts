@@ -3,7 +3,7 @@
 export function guardGameSelection(surface: string, reading: string) {
   const root = document.getElementById('root');
   if (!root) return;
-  const controls = 'button, [role="button"], canvas, img';
+  const controls = 'button, .catalog-link, [role="button"], canvas, img';
   const guard = (event: Event) => {
     const target = event.target instanceof Element ? event.target : (event.target as Node)?.parentElement;
     if (!target || target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;

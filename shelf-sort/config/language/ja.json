@@ -23,7 +23,8 @@
     "language": "言語を変更",
     "newGame": "新しく遊ぶ",
     "help": "遊び方",
-    "skip": "スキップ"
+    "skip": "スキップ",
+    "catalog": "カタログに戻る"
   },
   "hud": {
     "level": "レベル",

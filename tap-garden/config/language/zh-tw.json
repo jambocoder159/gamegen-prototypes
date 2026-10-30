@@ -20,7 +20,8 @@
     "upgrades": "升級",
     "relics": "寶物",
     "rebirth": "轉生",
-    "close": "關閉"
+    "close": "關閉",
+    "backToCatalog": "返回目錄"
   },
   "hud": {
     "dew": "露珠",

@@ -14,6 +14,7 @@ import { U } from './config';
 import { PlotGrid } from './components/PlotGrid';
 import { Mascot } from './components/Mascot';
 import { Button } from './components/Button';
+import { CatalogLink } from './components/CatalogLink';
 import { LanguageControl, SoundControl } from './components/Controls';
 import { Art } from './components/Art';
 
@@ -104,6 +105,7 @@ export function TitleScreen({
           <Button className="btn btn--primary btn--play" onClick={onPlay}>
             {t('buttons.play')}
           </Button>
+          <CatalogLink />
           <div className="title__icons">
             <LanguageControl />
             <SoundControl />

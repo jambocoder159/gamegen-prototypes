@@ -7,6 +7,7 @@ import type { UseGarden } from '../useGarden';
 import { formatNumber, formatRate } from '../format';
 import { Dialog } from './Dialog';
 import { Button } from './Button';
+import { CatalogLink } from './CatalogLink';
 import { Art } from './Art';
 
 export function OfflineRatio({ state }: { state: GameState }) {
@@ -41,6 +42,7 @@ export function SettingsDialog({ g, floating, setFloating, onClose }: { g: UseGa
     <p>{t('extra.autoMergeHelp', { n: AUTO_MERGE_STAGE })}</p>
     <Button className="btn btn--merge-all" onClick={g.mergeAll}>{t('extra.mergeAll')}</Button>
     <OfflineRatio state={g.snap} />
+    <CatalogLink save={g.saveNow} />
   </Dialog>;
 }
 export function Coach({ g, step, setStep, dismiss }: { g: UseGarden; step: number; setStep: (v: number) => void; dismiss: () => void }) {

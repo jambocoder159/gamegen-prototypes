@@ -23,8 +23,8 @@ npm run pack            # builds tap-garden.zip, index.html and poster.png at ro
 on **4226**, configurable with `PORT=4226 npm run test:headless`, and stops only
 its own process. It also tests an isolated `/tap-garden/` mount. If a port is busy,
 inspect `ss -ltnp` and use `kill <pid>` only for a process you own.
-Axe uses `/workspace/deploy/node_modules/axe-core/axe.min.js`; if absent, the suite
-prints an explicit skip. Chrome must be at `/usr/bin/google-chrome`.
+Axe uses `/workspace/deploy/node_modules/axe-core/axe.min.js`, falling back to the
+local `axe-core` dev dependency. Chrome must be at `/usr/bin/google-chrome`.
 
 ## Play
 
@@ -47,6 +47,13 @@ Keys: **arrows** move plot focus; **Enter/Space** act; **T** taps; **B** buys a 
 **G** opens Upgrades; **R** opens Relics; **E** opens Rebirth; **Esc** closes dialogs.
 Dialog focus stays inside and returns to its opener. All purchases announce their
 result. Sound and language controls remain available on the garden and title.
+
+**Back to catalog** is on the title screen and in **Settings** during play. Both
+are keyboard-accessible links to `../`, localized in all four languages. Leaving
+from Settings synchronously saves the latest garden through the same persistence
+function as pagehide/visibilitychange, then suspends audio before native navigation.
+Leaving the title preserves the player save and its offline timestamp; the demo
+never replaces it. No catalog link occupies the playing HUD.
 
 ## Economy simulation
 
@@ -194,3 +201,8 @@ pot cues, crit/reduced-motion effects, browser-language mapping, and all new
 dialogs. Axe runs on title, gameplay, upgrades, relics, rebirth, Stats, Settings,
 offline, reset and celebration at 375px and 1440px. Final screenshots are in
 `../_reports/fix_tap-garden_*.png`.
+Catalog regression screenshots are `../_reports/back_tap-garden_title.png` and
+`../_reports/back_tap-garden_pause.png` (the existing Settings dialog). Tests cover
+all seven title viewports in every language, catalog navigation and synchronous
+saving at an isolated `/tap-garden/` mount, dialog focus trapping/restoration, and
+axe on title and Settings at 375px and 1440px in all four languages.

@@ -20,7 +20,8 @@
     "upgrades": "Upgrades",
     "relics": "Relics",
     "rebirth": "Rebirth",
-    "close": "Close"
+    "close": "Close",
+    "backToCatalog": "Back to catalog"
   },
   "hud": {
     "dew": "Dew",

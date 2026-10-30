@@ -1,11 +1,13 @@
 // Win overlay (star rating + Next / Replay / Levels, clerk cheering) and the
 // level-picker overlay (12 levels, locked/unlocked, best stars).
+import { useEffect, useRef } from 'react';
 import { useI18n } from '../../i18n';
 import { LEVEL_COUNT, type Level } from '../levels';
 import type { Progress } from '../progress';
 import type { WinInfo } from '../useGame';
 import { Button } from './Button';
 import { Art } from './Art';
+import { CatalogLink } from './CatalogLink';
 
 function Stars({ value, size }: { value: number; size: 'lg' | 'sm' }) {
   return (
@@ -75,16 +77,28 @@ export function LevelPicker({
   current,
   onPick,
   onClose,
+  onSave,
 }: {
   levels: Level[];
   progress: Progress;
   current: number; // current level number
   onPick: (n: number) => void;
   onClose: () => void;
+  onSave: () => void;
 }) {
   const { t } = useI18n();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previous = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      previous?.focus();
+    };
+  }, []);
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-label={t('levels.title')}>
+    <dialog ref={dialogRef} className="overlay overlay--modal" role="dialog" aria-modal="true" aria-label={t('levels.title')} onCancel={onClose}>
       <div className="panel panel--levels">
         <h2 className="panel__title">{t('levels.title')}</h2>
         <ul className="levelgrid">
@@ -114,8 +128,9 @@ export function LevelPicker({
           <Button className="btn" onClick={onClose}>
             {t('buttons.close')}
           </Button>
+          <CatalogLink onSave={onSave} />
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

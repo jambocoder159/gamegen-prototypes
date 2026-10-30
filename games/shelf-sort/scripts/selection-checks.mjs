@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 
 const reports = '/workspace/gamegen-games/_reports';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -109,7 +109,8 @@ export async function selectionChecks(browser, base, check, phase = 'after') {
       assert('reading content remains selectable',reading.select==='text'&&!reading.prevented,JSON.stringify(reading));
     }
     if (phase === 'after') {
-      const axeSource=readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js','utf8');
+      const sharedAxe='/workspace/deploy/node_modules/axe-core/axe.min.js';
+      const axeSource=readFileSync(existsSync(sharedAxe)?sharedAxe:new URL('../node_modules/axe-core/axe.min.js',import.meta.url),'utf8');
       for(const width of [375,1440]) {
         await page.setViewport({width,height:width===375?812:900});
         // Reload to get a title screen, then start a fresh play screen.

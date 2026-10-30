@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { applyMove, newGame, starsFor, undo as undoState, type GameState } from './logic';
 import { getLevels, LEVEL_COUNT, type Level } from './levels';
-import { loadProgress, recordWin, type Progress } from './progress';
+import { loadProgress, saveProgress, recordWin, type Progress } from './progress';
 import { GOODS_KEYS } from '../config/assets';
 import type { AudioManager } from '../platform/audio';
 import { clearRun, saveRun, type SavedRun } from './run';
@@ -51,6 +51,7 @@ export interface UseGame {
   restart: () => void;
   gotoLevel: (levelNumber: number) => void;
   nextLevel: () => void;
+  persist: () => void;
 }
 
 function nameOf(type: number): string {
@@ -107,11 +108,13 @@ export function useGame(audio: AudioManager, startLevel: number, resume?: SavedR
     return () => window.clearTimeout(id);
   }, [invalidFx]);
 
+  const persist = useCallback(() => {
+    saveProgress(progress);
+    if (win) clearRun();
+    else saveRun({ level: level.number, state, selected });
+  }, [progress, win, level.number, state, selected]);
+
   useEffect(() => {
-    const persist = () => {
-      if (win) clearRun();
-      else saveRun({ level: level.number, state, selected });
-    };
     persist();
     window.addEventListener('pagehide', persist);
     document.addEventListener('visibilitychange', persist);
@@ -119,7 +122,7 @@ export function useGame(audio: AudioManager, startLevel: number, resume?: SavedR
       window.removeEventListener('pagehide', persist);
       document.removeEventListener('visibilitychange', persist);
     };
-  }, [level.number, state, selected, win]);
+  }, [persist]);
 
   const tapSlot = useCallback(
     (i: number) => {
@@ -227,5 +230,6 @@ export function useGame(audio: AudioManager, startLevel: number, resume?: SavedR
     restart,
     gotoLevel,
     nextLevel,
+    persist,
   };
 }

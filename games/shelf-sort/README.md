@@ -22,7 +22,11 @@ port 4224 (`PORT` overrides it), and must run sequentially on that port. Headles
 QA checks gameplay, recovery, onboarding, languages, invalid input, responsive
 layout and axe WCAG violations on the gate/title/play/menu/dialogs at 375 and
 1440px. Title QA checks artwork/text separation across desktop and phone sizes.
+Catalog QA checks a nested game URL, four-language link names and focus rings,
+dialog focus, saving before pointer/keyboard navigation, and recovery/undo.
+QA uses the shared axe-core file when available, otherwise the local dev dependency.
 Final fix screenshots are in `../_reports/fix_shelf-sort_*.png`.
+Catalog screenshots: `../_reports/back_shelf-sort_{title,pause}.png`.
 `pack` writes `shelf-sort.zip`, with `index.html` and `poster.png` at its root.
 
 ## Play
@@ -55,6 +59,12 @@ clear the run. Storage uses a versioned, bounded move log (5,000 moves / 200 KB)
 replayed and checked field by field; invalid data safely resets. Storage errors
 never interrupt play. Best stars, unlocked levels and coach dismissal are also
 saved locally. The preload/Enter audio gate remains required after reload.
+
+**Back to catalog** appears on the title screen and in the in-game **Levels**
+dialog. This keyboard-accessible link opens `../` after synchronously saving
+progress and the current unfinished run (including selection and undo history)
+and suspending audio. The title preserves any existing run; finished runs stay
+cleared. The Levels dialog traps Tab focus and restores it when closed.
 
 ## Structure and limits
 

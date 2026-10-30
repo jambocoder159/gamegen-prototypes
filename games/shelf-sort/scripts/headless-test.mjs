@@ -9,18 +9,20 @@
 // go to qa/. Prints PASS/FAIL.
 
 import { spawn, execSync } from 'node:child_process';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 import { selectionChecks } from './selection-checks.mjs';
+import { catalogChecks } from './catalog-checks.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 mkdirSync(qa, { recursive: true });
 const reports = join(root, '..', '_reports');
 mkdirSync(reports, { recursive: true });
-const axeSource = readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js', 'utf8');
+const sharedAxe = '/workspace/deploy/node_modules/axe-core/axe.min.js';
+const axeSource = readFileSync(existsSync(sharedAxe) ? sharedAxe : join(root, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
 const PORT = Number(process.env.PORT) || 4224;
 const BASE_URL = `http://localhost:${PORT}/`;
@@ -180,11 +182,14 @@ async function main() {
       args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio'],
     });
     try {
-      await selectionChecks(browser, BASE_URL, check);
-      await runMain(browser);
-      await runManyShelves(browser);
-      await runFallback(browser);
-      await runFixes(browser);
+      if (process.env.CATALOG_ONLY !== '1') {
+        await selectionChecks(browser, BASE_URL, check);
+        await runMain(browser);
+        await runManyShelves(browser);
+        await runFallback(browser);
+        await runFixes(browser);
+      }
+      await catalogChecks(browser, BASE_URL, check, axeAudit, reports, playToWin);
     } finally {
       await browser.close();
     }

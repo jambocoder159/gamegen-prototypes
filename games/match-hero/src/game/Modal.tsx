@@ -18,7 +18,7 @@ export function Modal({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const root = ref.current;
-    root?.querySelector<HTMLElement>("button,select")?.focus();
+    root?.querySelector<HTMLElement>("button,select,a[href]")?.focus();
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape" && closable) {
         e.preventDefault();
@@ -27,7 +27,7 @@ export function Modal({
       if (e.key === "Tab") {
         const all = [
           ...root!.querySelectorAll<HTMLElement>(
-            'button:not(:disabled),select,input,[tabindex="0"]',
+            'button:not(:disabled),select,input,a[href],[tabindex="0"]',
           ),
         ];
         const first = all[0],

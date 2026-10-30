@@ -14,6 +14,8 @@ import {
 import * as L from "./logic";
 import { Art, Icon } from "./Art";
 import { Modal } from "./Modal";
+import { CatalogLink } from "./CatalogLink";
+import { persistRun } from "./persistence";
 import type { ImageKey } from "../config/assets";
 import { useImages } from "../platform/ImagesContext";
 import { CombatEffects } from "./effects";
@@ -112,7 +114,7 @@ export function GameScreen({ fresh }: { fresh: boolean }) {
   coachRef.current = coach;
   const refresh = () => render((n) => n + 1);
   const save = useCallback(() => {
-    if (!debug.current) write(L.SAVE_KEY, L.serialize(s));
+    if (!debug.current) persistRun(s);
   }, [s]);
   const close = useCallback(() => setModal(""), []);
   const announce = (message: string) => {
@@ -919,6 +921,10 @@ export function GameScreen({ fresh }: { fresh: boolean }) {
             </button>
             <p>{t("best", { n: s.bestEver })}</p>
             <p data-shard-passive>{t("shardPassive", { n: s.totalShards, p: Math.round(L.shardBonus(s.totalShards) * 100) })}</p>
+            <CatalogLink onSave={() => {
+              pauseRef.current = true;
+              if (!s.defeated) save();
+            }} />
           </div>
         </Modal>
       )}

@@ -128,5 +128,6 @@
   "relic_flame": "炎の心",
   "relicDesc_flame": "1レベルごとに炎の継続ダメージ+15%。",
   "shardPassive": "累計印：{n} · 全ダメージ +{p}%、ゴールド +{p}%。獲得した印1枚ごとに2%、上限100%。消費しても効果は永久です。",
-  "shardPassiveNext": "転生後：全ダメージ +{p}%、ゴールド +{p}%。"
+  "shardPassiveNext": "転生後：全ダメージ +{p}%、ゴールド +{p}%。",
+  "backToCatalog": "カタログに戻る"
 }

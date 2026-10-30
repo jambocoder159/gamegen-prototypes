@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/index';
 import { useImages, imgUrl } from './assets-context';
 import { PlateButton } from './controls';
+import { CatalogLink } from './CatalogLink';
 
 export function LoadingScreen({
   progress,
@@ -37,6 +38,7 @@ export function LoadingScreen({
           </div>
         )}
       </div>
+      <CatalogLink />
     </div>
   );
 }

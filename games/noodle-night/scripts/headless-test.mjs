@@ -1,22 +1,23 @@
 // Real browser coverage for gameplay, reloads, four languages, layout and axe.
 import { execSync, spawn } from 'node:child_process';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import { selectionChecks } from './selection-checks.mjs';
+import { axeSource } from './axe-source.mjs';
+import { catalogChecks } from './catalog-checks.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const qa = join(root, 'qa');
 const reports = join(root, '..', '_reports');
 for (const path of [qa, reports]) mkdirSync(path, {recursive:true});
-const PORT = Number(process.env.PORT) || 4223;
+const PORT = Number(process.env.PORT) || 4331;
 const BASE = `http://localhost:${PORT}/noodle-night/`;
 const results = [];
 const wait = ms => new Promise(r=>setTimeout(r,ms));
 function check(name, ok, detail='') {
   results.push({name,ok}); console.log(`${ok?'PASS':'FAIL'} ${name}${detail?' — '+detail:''}`);
 }
-const axeSource = readFileSync('/workspace/deploy/node_modules/axe-core/axe.min.js','utf8');
 if (!process.env.SKIP_BUILD) execSync('npm run build',{cwd:root,stdio:'inherit'});
 const server=spawn(process.execPath,[join(root,'node_modules/vite/bin/vite.js'),'preview','--port',String(PORT),'--strictPort','--base','/noodle-night/'],{cwd:root,stdio:'pipe'});
 let serverError='';server.stderr.on('data',d=>serverError+=d);
@@ -70,6 +71,7 @@ try {
   for(let i=0;i<80;i++){if(server.exitCode!==null)throw Error('preview exited '+serverError);try{if((await fetch(BASE)).ok)break;}catch{}await wait(200);}
   browser=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',headless:'new',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--mute-audio']});
   await selectionChecks(browser, BASE, check);
+  await catalogChecks(browser, BASE, check, reports);
   const page=await browser.newPage(); await page.setViewport({width:375,height:812});
   const consoleIssues=[],failedReq=[];
   page.on('console',m=>{if(['error','warning'].includes(m.type()))consoleIssues.push(m.text());});

@@ -10,21 +10,24 @@ extra, unrequested topping still counts as a mistake.
 
 ```bash
 npm install
-npm run dev -- --port 4223 --strictPort
+npm run dev -- --port 4331 --strictPort
 npm run build
 npm run check:i18n
 npm run test:logic
-PORT=4223 npm run test:headless
-PORT=4223 npm run test:title
+PORT=4331 npm run test:headless
+PORT=4331 npm run test:title
 npm run pack
 ```
 
 Browser scripts start and stop their own preview server; run them sequentially.
-They need Chrome at `/usr/bin/google-chrome`. The headless suite injects the local
-axe bundle at `/workspace/deploy/node_modules/axe-core/axe.min.js`, checks title,
+They need Chrome at `/usr/bin/google-chrome`. The headless suite uses the shared
+axe bundle at `/workspace/deploy/node_modules/axe-core/axe.min.js` when available
+(or the local `axe-core` dev dependency), checks title,
 play, help/pause and results at 375 and 1440 pixels, plays a real ×10 streak,
 reloads a partial bowl, checks four-language layouts and browser language mapping,
-and loads from `/noodle-night/` to exercise ZIP subpath hosting. The title suite
+and loads from `/noodle-night/` to exercise ZIP subpath hosting. Catalog checks
+cover all four languages, native parent-directory navigation, synchronous exit
+saves, keyboard focus and pause layouts at the seven required viewport sizes. The title suite
 checks title art/copy bounding boxes across portrait, short landscape and desktop
 viewports, including missing artwork. Screenshots are in `qa/` and
 `../_reports/fix_noodle-night_*.png`; `npm run pack` builds `noodle-night.zip`.
@@ -40,6 +43,15 @@ viewports, including missing artwork. Screenshots are in `qa/` and
   The pause button shows the same three illustrations and a compact key reference.
   Backgrounding the tab pauses the run. Reduced motion disables topping animation
   and chef animation; all state changes remain visible.
+
+The start gate, title menu (including Continue / New game), and pause/help dialog
+include **Back to catalog** (`返回目錄` / `返回目录` / `カタログに戻る`). The native
+`href="../"` link returns to the parent catalog. It synchronously calls the existing
+run saver before navigation, preserving partial bowls and customer progress without
+saving the title demo or a finished run, then suspends audio. It is absent from the
+play HUD. The pause dialog traps Tab among its controls and restores focus to Pause
+when resumed. Catalog screenshots are `../_reports/back_noodle-night_title.png`
+and `../_reports/back_noodle-night_pause.png`.
 
 ## Rules and persistence
 

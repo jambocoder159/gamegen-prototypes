@@ -55,8 +55,15 @@ export function App() {
 
   useEffect(() => {
     const onVis = () => audio.setHidden(document.hidden);
+    const onHide = () => audio.setHidden(true);
     document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', onHide);
+    window.addEventListener('pageshow', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('pagehide', onHide);
+      window.removeEventListener('pageshow', onVis);
+    };
   }, []);
 
   const enter = useCallback(() => {

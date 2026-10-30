@@ -14,11 +14,11 @@ import puppeteer from 'puppeteer-core';
 
 // --- per-game configuration ---------------------------------------------------
 const GAME = 'noodle-night';
-const DEFAULT_PORT = 4223;
+const DEFAULT_PORT = 4331;
 const LANG_KEY = 'noodle_night_lang';
 const SCREENS = [
-  { id: 'gate', root: '.loading-screen', primary: '.enter-btn', art: ['.loading-logo img', '.loading-logo .logo-fallback'], text: ['.loading-screen .game-title', '.enter-btn'] },
-  { id: 'title', root: '.title-screen', demo: '.demo-field', primary: '.play-btn', art: ['.title-logo', '.title-brand .logo-fallback'], text: ['.title-screen .game-title', '.game-tagline', '.title-best', '.play-btn'] },
+  { id: 'gate', root: '.loading-screen', primary: '.enter-btn', art: ['.loading-logo img', '.loading-logo .logo-fallback'], text: ['.loading-screen .game-title', '.enter-btn', '.loading-screen .catalog-link'] },
+  { id: 'title', root: '.title-screen', demo: '.demo-field', primary: '.play-btn', art: ['.title-logo', '.title-brand .logo-fallback'], text: ['.title-screen .game-title', '.game-tagline', '.title-best', '.play-btn', '.continue-btn', '.title-screen .catalog-link'] },
 ];
 // ------------------------------------------------------------------------------
 
@@ -94,11 +94,14 @@ function measure(screen) {
     if (primaryRect.height < 44 || primaryRect.width < 44) problems.push(`primary smaller than 44px ${fmt(primaryRect)}`);
   }
 
-  for (const b of rootEl.querySelectorAll('button')) {
+  const catalog = rootEl.querySelector('.catalog-link');
+  if (!catalog || catalog.getAttribute('href') !== '../') problems.push('catalog link missing or incorrect');
+  for (const b of rootEl.querySelectorAll('button, a[href]')) {
     if (!visible(b) || (screen.demo && b.closest(screen.demo))) continue;
     const r = b.getBoundingClientRect();
     if (!inside(r)) problems.push(`button ${desc(b)} outside viewport ${fmt(r)}`);
     if (r.width < 44 || r.height < 44) problems.push(`button ${desc(b)} smaller than 44px ${fmt(r)}`);
+    if (b.matches('.catalog-link') && r.height < 48) problems.push('catalog link smaller than 48px');
   }
 
   for (const el of rootEl.querySelectorAll('img, .art, [class*="art--fallback"]')) {

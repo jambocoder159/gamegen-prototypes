@@ -7,6 +7,7 @@ import { audio } from '../platform/audio';
 import { useViewport, usePrefersReducedMotion } from '../platform/layout';
 import { Btn } from './Btn';
 import { StepGuide } from './components/StepGuide';
+import { CatalogLink } from './CatalogLink';
 import { clearRun, loadBest, saveBest, saveRun, needsCoach, rememberCoach } from '../game/storage';
 import { Hud } from './components/Hud';
 import { PlayField } from './PlayField';
@@ -50,8 +51,30 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
 
   // The help panel doubles as pause: the loop freezes while it is open.
   const pausedRef = useRef(false);
+  const pauseButtonRef = useRef<HTMLButtonElement>(null);
+  const helpRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     pausedRef.current = help;
+  }, [help]);
+
+  useEffect(() => {
+    if (!help) return;
+    const dialog = helpRef.current!;
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const controls = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')];
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener('keydown', trap);
+    return () => {
+      document.removeEventListener('keydown', trap);
+      pauseButtonRef.current?.focus();
+    };
   }, [help]);
 
   // Fresh game whenever the seed changes (initial mount + "play again").
@@ -131,8 +154,8 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
     return () => cancelAnimationFrame(raf);
   }, [reduced, react]);
 
+  const persist = useCallback(() => saveRun(stateRef.current), []);
   useEffect(() => {
-    const persist = () => saveRun(stateRef.current);
     window.addEventListener('pagehide', persist);
     document.addEventListener('visibilitychange', persist);
     return () => {
@@ -140,7 +163,7 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
       window.removeEventListener('pagehide', persist);
       document.removeEventListener('visibilitychange', persist);
     };
-  }, []);
+  }, [persist]);
 
   // ---- actions ----
   const doToggle = useCallback((tp: Topping) => {
@@ -256,7 +279,7 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
               ?
             </span>
           </Btn>
-          <Btn className="icon-btn pause-btn" aria-label={t('help.pause')} disabled={over} onClick={() => { pausedRef.current = true; setHelp(true); }}>
+          <Btn ref={pauseButtonRef} className="icon-btn pause-btn" aria-label={t('help.pause')} disabled={over} onClick={() => { pausedRef.current = true; setHelp(true); }}>
             <span aria-hidden="true">Ⅱ</span>
           </Btn>
           <LangButton />
@@ -284,7 +307,7 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
       </div>
 
       {help && (
-        <div className="overlay help-overlay" role="dialog" aria-label={t('help.title')}>
+        <div ref={helpRef} className="overlay help-overlay" role="dialog" aria-modal="true" aria-label={t('help.title')}>
           <div className="panel help-panel">
             <h2>{t('help.title')}</h2>
             <StepGuide />
@@ -295,6 +318,7 @@ export function GameScreen({ seed, initialState }: { seed: number; initialState:
                 {t('help.resume')}
               </PlateButton>
             </div>
+            <CatalogLink onLeave={() => { pausedRef.current = true; persist(); }} />
           </div>
         </div>
       )}

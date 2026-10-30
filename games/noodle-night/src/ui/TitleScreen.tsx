@@ -11,6 +11,7 @@ import { SoundButton, LangButton, PlateButton } from './controls';
 import { createGame, step, drainEvents, type GameState } from '../game/logic';
 import { loadBest } from '../game/storage';
 import { createBot, stepBot, type BotState } from '../game/bot';
+import { CatalogLink } from './CatalogLink';
 
 function makeSeed(): number {
   return (performance.now() * 1000) % 2147483647 | 0 || 1;
@@ -93,15 +94,18 @@ export function TitleScreen({ onPlay, onContinue, canContinue }: { onPlay: () =>
           </div>
         </div>
 
-        <div className="title-actions">
-          <LangButton />
-          <div className="title-play-actions">
-            {canContinue && <PlateButton className="continue-btn" onClick={onContinue} autoFocus>{t('continue')}</PlateButton>}
-            <PlateButton className="play-btn" onClick={onPlay} autoFocus={!canContinue}>
-              {t(canContinue ? 'newGame' : 'play')}
-            </PlateButton>
+        <div className="title-navigation">
+          <div className="title-actions">
+            <LangButton />
+            <div className="title-play-actions">
+              {canContinue && <PlateButton className="continue-btn" onClick={onContinue} autoFocus>{t('continue')}</PlateButton>}
+              <PlateButton className="play-btn" onClick={onPlay} autoFocus={!canContinue}>
+                {t(canContinue ? 'newGame' : 'play')}
+              </PlateButton>
+            </div>
+            <SoundButton />
           </div>
-          <SoundButton />
+          <CatalogLink />
         </div>
       </div>
     </div>

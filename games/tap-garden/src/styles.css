@@ -1,3 +1,30 @@
+/* Browser gestures must not select the game/HUD or flash a tap overlay. */
+:where(.garden, .garden *, .overlay, .overlay *, button, button *, [role="button"], [role="button"] *, canvas, img) {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:where(.garden, .overlay, button, [role="button"]) { touch-action: manipulation; }
+img { -webkit-user-drag: none; }
+/* Keep help/dialog prose selectable and preserve native scrolling and zoom. */
+:where([role="dialog"], [role="dialog"] *, .coach p, .coach p *) {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+:where(button, button *, [role="button"], [role="button"] *, img, canvas) {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:where(input, textarea, select, [contenteditable="true"]) {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: auto;
+}
+
 /* Tap Garden — layout, text, hit areas and simple transforms/opacity only.
    No CSS-drawn art; the ready-made PNG/WEBP assets provide every visual. */
 

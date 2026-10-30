@@ -1,0 +1,11 @@
+import ts from 'typescript';
+import {readFileSync,writeFileSync,mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+const dir=mkdtempSync(tmpdir()+'/stitch-arena-');
+for(const name of ['config','sim','ai','progression'])writeFileSync(`${dir}/${name}.mjs`,ts.transpileModule(readFileSync(`src/game/${name}.ts`,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from '\.\/(\w+)'/g,"from './$1.mjs'"));
+writeFileSync(`${dir}/detect.mjs`,ts.transpileModule(readFileSync('src/i18n/detect.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
+export const L=await import(`${dir}/sim.mjs`);
+export const A=await import(`${dir}/ai.mjs`);
+export const P=await import(`${dir}/progression.mjs`);
+export const D=await import(`${dir}/detect.mjs`);
+export const {CONFIG,CHARS,STAGES}=await import(`${dir}/config.mjs`);

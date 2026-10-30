@@ -53,7 +53,9 @@ GameGen 後台上傳權限與審核；音效人耳驗收；實機驗證；關卡
 ## 8. Playtest fixes (October 2026)
 
 - First-run coach: three non-blocking steps (select / match / card), localized in
-  en / zh-tw / zh-cn / ja, skip and reopen with ?. Uses existing tile/card art.
+  en / zh-tw / zh-cn / ja, with Skip. The existing ? control opens a modal Quick
+  help dialog with keyboard guidance, Close and Back to catalog; focus returns
+  to ? on dismissal. Uses existing tile/card art.
 - Browser-language detection honors supported preferences in order; manually
   saved language takes priority. Run persistence is separate from best score,
   versioned and field-validated, with action saves and lifecycle flushes. A title

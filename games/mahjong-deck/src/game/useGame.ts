@@ -157,6 +157,7 @@ export interface UseGame {
   playCard: (type: CardKey) => void;
   chooseReward: (type: CardKey) => void;
   restart: () => void;
+  flush: () => void;
 }
 
 export function useGame(audio: AudioManager): UseGame {
@@ -173,18 +174,20 @@ export function useGame(audio: AudioManager): UseGame {
   const comboTimerRef = useRef<number>(0);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const flush = useCallback(() => {
+    if (!qaRun()) saveRun(stateRef.current);
+  }, []);
   useEffect(() => {
     if (!qaRun()) saveRun(state);
   }, [state]);
   useEffect(() => {
-    const flush = () => { if (!qaRun()) saveRun(stateRef.current); };
     window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', flush);
     return () => {
       window.removeEventListener('pagehide', flush);
       document.removeEventListener('visibilitychange', flush);
     };
-  }, []);
+  }, [flush]);
   const noticeSeq = useRef(0);
 
   const announce = useCallback((kind: NoticeKind, n?: number) => {
@@ -470,5 +473,6 @@ export function useGame(audio: AudioManager): UseGame {
     playCard,
     chooseReward,
     restart,
+    flush,
   };
 }

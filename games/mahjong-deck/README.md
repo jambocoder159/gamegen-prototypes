@@ -94,8 +94,8 @@ else starts at stage 1) and never touches saved data or the best score.
 ## Fixes and persistence
 
 A short, icon-led coach appears on the first run. It advances on selecting a
-bright tile, matching a pair, and using a card. Skip dismisses it; **?** reopens
-it without trapping focus or covering the board. Blocked tiles have opacity 1
+bright tile, matching a pair, and using a card. Skip dismisses it; **?** opens
+the keyboard-accessible Quick help dialog. Blocked tiles have opacity 1
 and an opaque darkened face; the bright tiles are playable. HUD labels are at
 least 18px, key numbers at least 22px, hearts 28px, icon controls 48px.
 
@@ -129,6 +129,23 @@ save fields/browser-language mapping, and runs 1,000 stage-5 novice simulations.
 reload recovery, corruption reset, random restarts, all-language Heal use and
 full-hand fit at 360×640, actual finale recovery/victory, and axe WCAG 2.2 AA
 checks at 375/1440 for title, play and all reward/result overlays. Axe is loaded
-locally from `/workspace/deploy/node_modules/axe-core/axe.min.js`.
+locally from `/workspace/deploy/node_modules/axe-core/axe.min.js`, with the local
+`axe-core` development dependency as a fallback when that shared file is absent.
 `PORT=4226 npm run test:title` checks art/text non-overlap in the title viewport
 matrix. Final fix screenshots are in `../_reports/fix_mahjong-deck_*.png`.
+
+**Back to catalog** is available on the loading/Enter screen, title (including
+Continue), and in Quick help opened with **?** during play. It is a native
+`href="../"` link, translated in all four languages. Activation synchronously
+flushes the current run through the same save function used on pagehide and
+visibilitychange, then suspends audio before navigation. Title links preserve
+the existing resumable run; completed runs stay cleared. Quick help traps focus,
+closes with Escape/Close, and restores focus to **?**. The introductory coach
+stays nonblocking. No catalog link appears in the play HUD.
+
+Catalog QA in `test:headless` serves the build at
+`/gamegen-prototypes/mahjong-deck/` on `PORT + 1`, checks keyboard/click saves
+before intercepted parent navigation, all-language fit, and title/help axe audits.
+Use `PORT=4363 npm run test:headless` and `PORT=4361 npm run test:title` for this
+task's isolated ports. Catalog screenshots: `../_reports/back_mahjong-deck_title.png`
+and `../_reports/back_mahjong-deck_pause.png`.

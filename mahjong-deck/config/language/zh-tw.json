@@ -18,7 +18,9 @@
     "unmute": "開啟音效",
     "language": "切換語言",
     "continue": "繼續遊戲",
-    "newGame": "新遊戲"
+    "newGame": "新遊戲",
+    "backToCatalog": "返回目錄",
+    "close": "關閉"
   },
   "hud": {
     "stage": "關卡",

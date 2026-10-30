@@ -2,6 +2,7 @@
 // ready the Enter button replaces the percentage in the same slot.
 import { useI18n } from '../i18n';
 import { Button } from './components/Button';
+import { CatalogLink } from './components/CatalogLink';
 
 export function LoadingScreen({
   progress,
@@ -27,6 +28,7 @@ export function LoadingScreen({
             <span className="loading__pct">{t('loading.progress', { pct })}</span>
           )}
         </div>
+        <CatalogLink />
       </div>
     </div>
   );

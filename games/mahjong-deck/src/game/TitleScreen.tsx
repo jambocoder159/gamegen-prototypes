@@ -10,6 +10,7 @@ import { findMatch, generateDeal, type Tile } from './logic';
 import { getStage } from './layouts';
 import { BoardView } from './components/BoardView';
 import { Button } from './components/Button';
+import { CatalogLink } from './components/CatalogLink';
 import { LanguageControl, SoundControl } from './components/Controls';
 import { Dealer } from './components/Dealer';
 import { loadRun, clearRun } from './save';
@@ -95,6 +96,7 @@ export function TitleScreen({
             {t(saved ? 'buttons.newGame' : 'buttons.play')}
           </Button>
           <div className="title__icons">
+            <CatalogLink />
             <LanguageControl />
             <SoundControl />
           </div>

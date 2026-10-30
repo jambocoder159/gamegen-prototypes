@@ -166,6 +166,19 @@ img.art {
 .btn:hover {
   background: #fff9ea;
 }
+.catalog-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  text-decoration: none;
+  text-align: center;
+}
+.catalog-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -5px;
+}
 .btn--primary {
   background: var(--gold);
   color: var(--ink);
@@ -709,7 +722,8 @@ img.art {
 }
 .title__icons {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 10px;
 }
 
 /* --- overlays ------------------------------------------------------------- */
@@ -883,7 +897,17 @@ img.art {
 .coach__icon { width: 32px; height: 36px; flex: 0 0 auto; }
 .coach__skip { padding: 6px 10px; min-height: 48px; font-size: 14px; }
 .help-btn { width: 48px; height: 48px; padding: 0; font-size: 24px; }
+.help-dialog {
+  width: min(94vw, 460px);
+  max-height: calc(100dvh - 32px);
+}
+.help-dialog::backdrop { background: rgba(14, 60, 32, 0.62); }
+.coach--help { display: flex; flex-direction: column; border: 0; padding: 0; }
+.coach--help p { flex: none; font-size: 16px; line-height: 1.5; }
 @media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .help-dialog { width: min(94vw, 640px); max-width: 640px; }
+  .coach--help { display: grid; grid-template-columns: 1fr 1fr; }
+  .coach--help h2, .coach--help p { grid-column: 1 / -1; }
   .game .hand { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 6px; }
   .game .card { width: 100%; flex-direction: row; min-height: 48px; }
   .game .card__art { width: 32px; flex: 0 0 auto; }
